@@ -7,19 +7,33 @@ Deine persönliche Tageszeitung im Boulevard-Look. Ein Python-Skript holt morgen
 
 | Seite | Inhalt |
 |---|---|
-| 1 | Titelseite: Aufmacher, drei Top-Meldungen, Werkstatt-Hinweis, Inhaltsverzeichnis |
-| 2 | **KI-Werkstatt:** Workshop des Tages (Schritte + fertiger Prompt für Claude Code), Automatisierung des Tages, Profi-Tipp, neue Anleitungen aus dem Netz |
+| 1 | Titelseite im Boulevard-Stil: Aufmacher mit Artikel, drei Top-Meldungen, Werkstatt-Hinweis, Inhaltsverzeichnis |
+| 2 | **KI-Werkstatt:** Workshop des Tages, Automatisierung des Tages, Profi-Tipp, neue Anleitungen |
 | 3 | Galatasaray |
 | 4 | Bundesliga |
 | 5 | Europas Top-Klubs · Nationalmannschaften · Boxen |
 | 6 | Die Welt heute |
 | 7 | Neues rund um Claude · Neues von der KI |
-| 8 | Smart Home & Tuya · Balkonkraftwerk-Angebote · Beamer & TV |
-| 9 | Forschung & Gentherapie · Technik & Erfindungen · Visionen |
+| 8 | Smart Home & Tuya · Smart-Home-Ideen aus der Community · Beamer & TV |
+| 9 | **Solar:** Spar-Tabelle, Solar-Tipp, Balkonkraftwerk-Angebote, Meldungen aus der Region |
+| 10 | Forschung & Gentherapie · Technik & Erfindungen · Visionen |
 
-Die Webseite hat ein modernes Karten-Design mit hellem und dunklem Modus (je nach Handy-Einstellung). In der KI-Werkstatt lassen sich die Prompts per Knopf kopieren.
+### Artikel schreibt Claude
 
-Die Workshops, Automatisierungs-Ideen und Profi-Tipps stehen in `werkstatt.py`. Sie wechseln täglich, eigene Einträge kannst du dort einfach ergänzen.
+Aus den wichtigsten Meldungen jeder Rubrik schreibt Claude eigene, kurze Artikel auf Deutsch. Türkische und englische Meldungen werden dabei übersetzt. Die Originaltexte werden nur gelesen und nie abgedruckt. Dafür brauchst du einen API-Schlüssel:
+
+1. Auf **platform.claude.com** anmelden, unter *API Keys* einen Schlüssel anlegen und Guthaben aufladen. Ein monatliches Ausgabenlimit lässt sich dort einstellen.
+2. Im Repo unter **Settings → Secrets and variables → Actions → New repository secret** den Namen `ANTHROPIC_API_KEY` und den Schlüssel eintragen.
+
+Ohne Schlüssel funktioniert alles weiter. Dann stehen statt der Artikel die Anreißer der Quellen in der Zeitung. Bereits geschriebene Artikel werden zwischengespeichert und nicht doppelt bezahlt.
+
+### Blättern, öffnen, herunterladen
+
+`lesen.html` zeigt die Zeitung zum Umblättern: wischen, tippen oder Pfeiltasten, am PC als Doppelseite. Dazu gibt es Zoom, eine Seitenübersicht, „PDF öffnen“ und „Download“.
+
+### Region
+
+Die Solar-Meldungen „aus deiner Nähe“ kommen aus den Orten in `REGION` (oben in `zeitung.py`).
 
 ## Lokal starten
 

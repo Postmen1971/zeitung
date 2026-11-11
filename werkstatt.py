@@ -248,7 +248,120 @@ WORKSHOPS = [
      ],
      "prompt": "Ich möchte, dass du direkt auf meine GitHub-Repositories zugreifen kannst. Erkläre mir, welcher MCP-Server dafür geeignet ist, richte ihn für dieses Projekt ein und zeig mir mit /mcp, dass die Verbindung funktioniert.",
      "link": "https://code.claude.com/docs/en/mcp"},
+
+    # ── Projekte rund um Tuya & Solar ──
+    {"titel": "Balkonkraftwerk-Ertrag mit einer Tuya-Steckdose messen",
+     "level": "Einsteiger+", "dauer": "45 Min", "feature": "Python-Skript + Diagramm",
+     "ziel": "Eine Tuya-Steckdose mit Strommessung zwischen Balkonkraftwerk und Hausnetz zeigt dir täglich, wie viel Sonne du geerntet hast.",
+     "schritte": [
+         "Eine Tuya/Smart-Life-Steckdose MIT Leistungsmessung besorgen und das Balkonkraftwerk darüber anschließen (Herstellerangaben zur Belastbarkeit beachten).",
+         "Ordner  solar-log  anlegen,  claude  starten, Prompt eingeben.",
+         "Skript alle 5 Minuten per Aufgabenplanung/cron laufen lassen – am Abend zeigt die HTML-Seite dein Tagesdiagramm.",
+     ],
+     "prompt": "Schreibe ein Python-Skript mit tinytuya, das alle 5 Minuten die aktuelle Leistung (Watt) meiner Tuya-Steckdose am Balkonkraftwerk ausliest und in solar.csv speichert. Baue dazu eine HTML-Seite mit einem Tages- und Monatsdiagramm, den erzeugten kWh und der Ersparnis bei 0,35 €/kWh. Erkläre, wie ich es automatisch starte.",
+     "link": "https://github.com/jasonacox/tinytuya"},
+
+    {"titel": "Solar-Prognose: Wann lohnt sich heute die Waschmaschine?",
+     "level": "Einsteiger+", "dauer": "40 Min", "feature": "Wetter-API + Telegram",
+     "ziel": "Jeden Morgen bekommst du eine Nachricht: „Heute 11–15 Uhr viel Sonne – Waschmaschine und Spülmaschine dann starten.“",
+     "schritte": [
+         "Ordner  solarprognose  anlegen,  claude  starten.",
+         "Den Prompt eingeben – die kostenlose Wetter-Schnittstelle Open-Meteo braucht keinen Schlüssel.",
+         "Bot-Token bei Telegram (@BotFather) holen, Skript täglich um 7 Uhr starten.",
+     ],
+     "prompt": "Schreibe ein Python-Skript, das über die kostenlose Open-Meteo-API die stündliche Sonneneinstrahlung für Waiblingen holt, für mein 800-W-Balkonkraftwerk (Südbalkon) die erwartete Leistung pro Stunde grob schätzt und mir per Telegram die 3 besten Stunden für Waschmaschine/Spülmaschine schickt. Erkläre die Schätzung in einfachen Worten.",
+     "link": "https://open-meteo.com/"},
+
+    {"titel": "Überschuss nutzen: Steckdose schaltet bei Sonnenstrom",
+     "level": "Fortgeschritten", "dauer": "1 Std", "feature": "Automatisierung mit Regeln",
+     "ziel": "Liefert das Balkonkraftwerk mehr als dein Haus gerade braucht, schaltet eine Tuya-Steckdose z. B. das E-Bike- oder Akku-Ladegerät ein.",
+     "schritte": [
+         "Du brauchst eine Messung am Balkonkraftwerk (Tuya-Steckdose) und – ideal – einen Lesekopf am Stromzähler.",
+         "Claude mit dem Prompt eine Regel bauen lassen: einschalten ab X Watt Überschuss, ausschalten bei Wolken (mit Verzögerung, damit es nicht ständig klickt).",
+         "Erst mit einer Lampe testen, dann mit dem Ladegerät.",
+     ],
+     "prompt": "Baue mir eine Home-Assistant-Automation (oder ein Python-Skript mit tinytuya): Wenn mein Balkonkraftwerk 10 Minuten lang mehr als 300 W liefert, schalte die Steckdose „Ladegerät“ ein; fällt die Leistung 10 Minuten unter 150 W, wieder aus. Höchstens 4 Schaltungen pro Stunde. Erkläre jede Zeile.",
+     "link": "https://www.home-assistant.io/docs/automation/"},
+
+    {"titel": "Zählerstand per Handyfoto: Claude liest ab",
+     "level": "Einsteiger", "dauer": "15 Min", "feature": "Bilder verstehen",
+     "ziel": "Du fotografierst einmal pro Woche den Stromzähler – Claude liest den Stand ab und führt deine Verbrauchstabelle.",
+     "schritte": [
+         "Fotos der Zähler in einen Ordner  zaehler  legen (Dateiname egal).",
+         "claude  im Ordner starten – Claude Code kann Bilder ansehen.",
+         "Prompt eingeben. Jede Woche einfach neues Foto dazulegen und „aktualisiere die Tabelle“ sagen.",
+     ],
+     "prompt": "In diesem Ordner liegen Fotos meines Stromzählers. Lies aus jedem Foto Datum (aus den Dateiinfos) und Zählerstand ab, trage alles in verbrauch.csv ein, berechne den Verbrauch pro Woche und erstelle eine HTML-Seite mit Diagramm. Wenn du einen Wert nicht sicher lesen kannst, frag mich.",
+     "link": "https://code.claude.com/docs/en/common-workflows"},
+
+    {"titel": "Alle Tuya-Geräte auf einen Blick: Geräteliste & Backup",
+     "level": "Einsteiger", "dauer": "20 Min", "feature": "Daten aufbereiten",
+     "ziel": "Eine übersichtliche Seite mit allen Smart-Life-Geräten: Name, Raum, IP-Adresse, Typ – praktisch bei Router-Wechsel oder Problemen.",
+     "schritte": [
+         "Mit dem tinytuya-Assistenten deine Geräteliste (devices.json) erzeugen lassen.",
+         "Im selben Ordner  claude  starten und den Prompt eingeben.",
+         "Die Seite ausdrucken oder als PDF speichern – dein Smart-Home-Notfallzettel.",
+     ],
+     "prompt": "Lies die devices.json von tinytuya und baue daraus eine übersichtliche HTML-Seite: Tabelle mit Name, Gerätetyp, IP, Geräte-ID (Local Key nur verdeckt mit Klick zum Anzeigen), gruppiert nach Raum, mit Suchfeld. Dazu ein Skript, das täglich prüft, welche Geräte nicht erreichbar sind.",
+     "link": "https://github.com/jasonacox/tinytuya"},
+
+    {"titel": "Urlaubsmodus: Anwesenheit mit Licht simulieren",
+     "level": "Einsteiger+", "dauer": "30 Min", "feature": "Zufalls-Zeitplan",
+     "ziel": "Während du weg bist, gehen Lampen abends zu wechselnden Zeiten an und aus – wie wenn jemand zu Hause wäre.",
+     "schritte": [
+         "Ordner anlegen,  claude  starten, Prompt eingeben (Lampennamen anpassen).",
+         "Einmal mit „Testlauf in 5 Minuten“ ausprobieren.",
+         "Vor dem Urlaub einschalten, danach wieder aus – oder per Home Assistant mit Schalter.",
+     ],
+     "prompt": "Schreibe ein Python-Skript mit tinytuya für meinen Urlaub: Zwischen Sonnenuntergang und 23:30 Uhr sollen die Lampen Wohnzimmer, Küche und Flur zufällig, aber realistisch an- und ausgehen (nie alle gleichzeitig, jeden Abend anders). Mit Schalter --start und --stop und Protokolldatei.",
+     "link": "https://github.com/jasonacox/tinytuya"},
+
+    # ── Mehr Claude-Projekte für jeden Tag ──
+    {"titel": "Stromrechnung & Verträge verstehen und vergleichen",
+     "level": "Einsteiger", "dauer": "15 Min", "feature": "Dokumente auswerten",
+     "ziel": "Claude liest deine Strom- oder Handyrechnung (PDF) und erklärt in einfachen Worten, was du zahlst und wo du sparen kannst.",
+     "schritte": [
+         "Rechnung als PDF in einen Ordner legen (persönliche Daten wie Kontonummer vorher schwärzen).",
+         "claude  starten und Prompt eingeben.",
+         "Nachfragen: „Wann kann ich kündigen?“ oder „Rechne mir 3.000 kWh mit 32 Cent aus.“",
+     ],
+     "prompt": "Lies die Stromrechnung in diesem Ordner und erkläre mir: Arbeitspreis, Grundpreis, Abschlag, Verbrauch im Vergleich zum Vorjahr, Kündigungsfrist. Rechne aus, was ich mit einem 800-W-Balkonkraftwerk bei geschätzt 500 kWh Eigenverbrauch pro Jahr sparen würde. Fasse alles in 5 Stichpunkten zusammen.",
+     "link": "https://code.claude.com/docs/en/common-workflows"},
+
+    {"titel": "Familien-Wochenplaner als Handy-App",
+     "level": "Einsteiger", "dauer": "40 Min", "feature": "Web-App + Speicher",
+     "ziel": "Termine, Einkaufsliste und Essensplan der Familie in einer App, die auf jedem Handy im Browser läuft.",
+     "schritte": [
+         "Ordner anlegen,  claude  starten, Prompt eingeben.",
+         "Ausprobieren, Wünsche nachschieben („Farben pro Person“, „Wochenansicht“).",
+         "Online stellen: Claude erklärt dir GitHub Pages – genau wie bei deiner Zeitung.",
+     ],
+     "prompt": "Baue einen Familien-Wochenplaner als einzelne HTML-Datei: Wochenansicht mit Terminen pro Person (eigene Farben), gemeinsame Einkaufsliste zum Abhaken, Essensplan für 7 Tage. Speicherung im Browser, Export/Import als Datei, großes, kinderfreundliches Design, für Handy optimiert.",
+     "link": "https://code.claude.com/docs/en/common-workflows"},
+
+    {"titel": "Eigene Chrome-Erweiterung: Preise in Euro pro kWh",
+     "level": "Fortgeschritten", "dauer": "45 Min", "feature": "Browser-Erweiterung",
+     "ziel": "Beim Surfen auf Shop-Seiten zeigt dir eine kleine Erweiterung bei Balkonkraftwerken automatisch „Preis pro Wp“ an.",
+     "schritte": [
+         "Ordner  erweiterung  anlegen,  claude  starten, Prompt eingeben.",
+         "In Chrome chrome://extensions öffnen, Entwicklermodus an, „Entpackte Erweiterung laden“ und den Ordner wählen.",
+         "Auf einer Shop-Seite testen und Claude Fehler beheben lassen.",
+     ],
+     "prompt": "Baue eine Chrome-Erweiterung (Manifest V3): Auf Produktseiten erkennt sie Preis und Modulleistung (Wp) eines Balkonkraftwerks im Seitentext und blendet oben rechts ein kleines Feld „x,xx € pro Wp“ ein. Nur lokal, keine Daten senden. Erkläre mir die Installation.",
+     "link": "https://code.claude.com/docs/en/common-workflows"},
+
+    {"titel": "Vorlesen lassen: Zeitung als Podcast für die Fahrt",
+     "level": "Fortgeschritten", "dauer": "45 Min", "feature": "claude -p + Sprachausgabe",
+     "ziel": "Jeden Morgen wird aus deiner MORGEN-KNALLER-Zeitung eine 5-Minuten-Audiodatei für das Auto.",
+     "schritte": [
+         "Repository deiner Zeitung klonen und  claude  starten.",
+         "Prompt eingeben – Claude baut einen zusätzlichen Schritt in den GitHub-Workflow.",
+         "Die MP3 erscheint neben dem PDF auf deiner Seite.",
+     ],
+     "prompt": "Erweitere diese Zeitung: Nach dem Bauen sollen die 8 wichtigsten Meldungen zu einem gesprochenen 5-Minuten-Nachrichtentext zusammengefasst und mit einer kostenlosen Text-zu-Sprache-Bibliothek als nachrichten.mp3 gespeichert werden. Auf der Webseite ein Abspielknopf. Teste lokal mit --demo.",
+     "link": "https://code.claude.com/docs/en/cli-reference"},
 ]
+
 
 # ──────────────────────────────────────────────────────────────────────
 #  AUTOMATISIERUNGS-IDEEN – kurz, mit Prompt zum Loslegen
@@ -294,7 +407,38 @@ AUTOMATISIERUNGEN = [
      "idee": "Jeden Sonntag eine Übersicht: Stromverbrauch pro Steckdose, Geräte die offline waren, Auffälligkeiten.",
      "werkzeuge": "Home Assistant Verlauf + claude -p",
      "prompt": "Schreibe ein Skript, das aus Home Assistant den Stromverbrauch aller Steckdosen der letzten Woche holt, die Top-3-Verbraucher und Auffälligkeiten findet und mit claude -p einen kurzen Bericht auf Deutsch erstellt."},
+
+    # ── Tuya-Ideen, wie sie Privatleute im Alltag nutzen ──
+    {"titel": "Kaffeemaschine vorheizen per Wecker",
+     "idee": "Die Siebträger- oder Filtermaschine hängt an einer Tuya-Steckdose und geht 15 Minuten vor dem Handywecker an – an Wochenenden später.",
+     "werkzeuge": "Smart-Life-Zeitplan oder Home Assistant mit Handy-Wecker",
+     "prompt": "Erstelle eine Home-Assistant-Automation: Die Steckdose „Kaffeemaschine“ schaltet 15 Minuten vor meinem nächsten Handy-Wecker ein und nach 45 Minuten automatisch aus. Am Wochenende nur, wenn der Wecker vor 10 Uhr klingelt."},
+    {"titel": "Gefrierschrank-Wächter",
+     "idee": "Ein günstiger Tuya-Temperatursensor im Gefrierschrank meldet, wenn es wärmer als −12 °C wird oder die Tür offen stand.",
+     "werkzeuge": "Tuya-Zigbee-Temperatursensor + Smart-Life-Benachrichtigung",
+     "prompt": "Erkläre mir Schritt für Schritt, wie ich in der Smart-Life-App eine Automation anlege, die mir eine Nachricht schickt, wenn mein Tuya-Temperatursensor im Gefrierschrank 10 Minuten lang über −12 °C misst. Und wie ich das zusätzlich in Home Assistant mit einem Verlaufsdiagramm sehe."},
+    {"titel": "Lüften-Erinnerung gegen Schimmel",
+     "idee": "Tuya-Hygrometer in Bad und Schlafzimmer: Steigt die Luftfeuchte über 65 %, blinkt eine Lampe kurz oder das Handy erinnert ans Lüften.",
+     "werkzeuge": "Tuya-Temperatur/Feuchte-Sensor + Smart-Life-Szene",
+     "prompt": "Baue eine Home-Assistant-Automation: Wenn die Luftfeuchte im Bad 15 Minuten über 65 % liegt, schick mir eine Nachricht „Bitte lüften“ und lass die Flurlampe zweimal kurz blinken – höchstens einmal pro Stunde, nachts nicht."},
+    {"titel": "Briefkasten-Melder",
+     "idee": "Ein Tuya-Tür/Fenster-Kontakt an der Briefkastenklappe meldet: „Post ist da!“ – mit Sperre, damit nicht jede Werbung dreimal piept.",
+     "werkzeuge": "Tuya-Zigbee-Türkontakt + Smart-Life",
+     "prompt": "Erstelle eine Automation für meinen Tuya-Türkontakt am Briefkasten: Beim Öffnen eine Handy-Nachricht „Post ist da“, danach 2 Stunden keine weitere Meldung. Zusätzlich ein Zähler, wie oft diese Woche Post kam."},
+    {"titel": "Kinder-Gute-Nacht-Licht",
+     "idee": "Um 19:30 dimmt das Kinderzimmerlicht langsam auf warmes Orange, um 20:15 aus – das Nachtlicht bleibt an. Klappt mit fast jeder Tuya-Lampe.",
+     "werkzeuge": "Tuya-RGB-Lampe + Smart-Life-Szene",
+     "prompt": "Schreibe mir eine Home-Assistant-Automation „Gute Nacht Kinderzimmer“: 19:30 Uhr Licht in 15 Minuten von 70 % Warmweiß auf 20 % Orange dimmen, 20:15 Uhr aus, Nachtlicht-Steckdose an. Am Freitag und Samstag 1 Stunde später."},
+    {"titel": "Heizkörper runter, wenn das Fenster offen ist",
+     "idee": "Tuya-Heizkörperthermostat plus Fensterkontakt: Fenster auf → Heizung aus, Fenster zu → zurück auf die alte Temperatur.",
+     "werkzeuge": "Tuya-Zigbee-Thermostat + Fensterkontakt",
+     "prompt": "Erstelle eine Home-Assistant-Automation: Wenn der Fensterkontakt im Schlafzimmer länger als 1 Minute offen ist, setze das Tuya-Thermostat auf 7 °C und merke dir die alte Temperatur; wird das Fenster geschlossen, stelle die alte Temperatur wieder her."},
+    {"titel": "Balkonkraftwerk-Tagesbericht aufs Handy",
+     "idee": "Jeden Abend um 21 Uhr: „Heute 3,1 kWh Sonnenstrom – gespart: ca. 1,09 €. Monat bisher: 41 kWh.“",
+     "werkzeuge": "Tuya-Messsteckdose + Python oder Home Assistant",
+     "prompt": "Baue mir ein Skript, das jeden Abend die heute erzeugte Energie meines Balkonkraftwerks aus der Tuya-Messsteckdose liest und mir per Telegram eine Nachricht mit kWh, Ersparnis (0,35 €/kWh), Monatssumme und dem besten Tag des Monats schickt."},
 ]
+
 
 # ──────────────────────────────────────────────────────────────────────
 #  PROFI-TIPPS – kurz und aus der offiziellen Doku
@@ -322,3 +466,43 @@ def heute(tag_nr: int):
     return (WORKSHOPS[tag_nr % len(WORKSHOPS)],
             AUTOMATISIERUNGEN[tag_nr % len(AUTOMATISIERUNGEN)],
             TIPPS[tag_nr % len(TIPPS)])
+
+
+# ──────────────────────────────────────────────────────────────────────
+#  SOLAR-ECKE – Balkonkraftwerk-Tipps und Ersparnis
+#  (Regeln Stand 2026: 800 VA Wechselrichter, bis 2.000 Wp Module,
+#   Eintrag im Marktstammdatenregister binnen eines Monats)
+# ──────────────────────────────────────────────────────────────────────
+SOLAR_TIPPS = [
+    ("Die Regeln in einem Satz", "Bis 800 Watt Wechselrichter und bis 2.000 Wp Modulleistung gelten die einfachen Regeln: keine Anmeldung beim Netzbetreiber, aber Eintrag im Marktstammdatenregister innerhalb eines Monats."),
+    ("Ausrichtung schlägt Größe", "Ein leicht schräg aufgestelltes Modul nach Süden bringt deutlich mehr als ein senkrechtes am Geländer. Wer nur senkrecht kann: lieber ein Modul mehr nehmen."),
+    ("Ost + West statt nur Süd", "Je ein Modul nach Osten und Westen liefert morgens und abends Strom – genau dann, wenn viele zu Hause sind. Das erhöht den Eigenverbrauch."),
+    ("Grundlast ist dein Freund", "Kühlschrank, Router, Gefrierschrank und Standby laufen den ganzen Tag. Diese Grundlast „frisst“ den Sonnenstrom am zuverlässigsten – miss sie mit einer Tuya-Steckdose."),
+    ("Große Verbraucher mittags", "Waschmaschine, Spülmaschine und Trockner möglichst zwischen 11 und 15 Uhr starten – viele Geräte haben eine Startzeitvorwahl."),
+    ("Speicher: erst rechnen, dann kaufen", "Ein Speicher lohnt sich vor allem, wenn mittags niemand zu Hause ist. Wichtig: Er muss im Marktstammdatenregister gesondert angemeldet werden."),
+    ("Verschattung kostet viel", "Schon ein Schatten auf einem Teil des Moduls kann die Leistung stark senken. Prüfe vor dem Kauf zu verschiedenen Uhrzeiten, wann Sonne auf den Balkon fällt."),
+    ("Vermieter fragen – aber mit Rückenwind", "Ein pauschales Verbot ist in der Regel nicht mehr möglich. Vermieter und Eigentümergemeinschaft dürfen aber bei Art und Befestigung mitreden – sauber planen und anfragen."),
+    ("Ertrag selbst ausrechnen", "Der kostenlose PVGIS-Rechner der EU zeigt für deine Adresse, Neigung und Ausrichtung den erwarteten Jahresertrag – genauer als jede Faustregel."),
+    ("Im Winter tief stellen", "Im Winter steht die Sonne flach. Wer die Neigung verstellen kann, holt mit steilerem Winkel (60–70°) mehr heraus."),
+    ("Messen motiviert", "Eine Messsteckdose oder die App des Wechselrichters zeigt dir täglich, was du erzeugst. Wer sieht, wann Strom da ist, verbraucht ihn auch eher selbst."),
+    ("Angebote richtig vergleichen", "Vergleiche den Preis pro Wp (Euro geteilt durch Modulleistung) und prüfe: Wechselrichter mit 800 W? Halterung dabei? Stecker und Kabellänge passend für deinen Balkon?"),
+]
+
+# Grobe Schätzung für den Raum Stuttgart/Rems-Murr: ca. 1.000 kWh pro kWp und Jahr bei optimaler Südausrichtung.
+# Faktoren für typische Balkon-Montagen (Schätzwerte). Genauer: PVGIS-Rechner.
+ERTRAG_PRO_KWP = 1000
+AUSRICHTUNGEN = {"Süd, schräg (ca. 30°)": 1.0, "Süd, senkrecht am Geländer": 0.7,
+                 "Ost oder West, schräg": 0.8, "Ost oder West, senkrecht": 0.55}
+
+
+def ersparnis(wp: float, ausrichtung: str, eigenverbrauch: float = 0.6, preis: float = 0.35, kosten: float = 0.0):
+    """Jahresertrag (kWh), selbst genutzte kWh, Ersparnis (€/Jahr) und Amortisation (Jahre)."""
+    kwh = wp / 1000 * ERTRAG_PRO_KWP * AUSRICHTUNGEN.get(ausrichtung, 0.8)
+    kwh = min(kwh, 800 / 1000 * 1300)        # 800-W-Wechselrichter begrenzt grob den Jahresertrag
+    selbst = kwh * eigenverbrauch
+    euro = selbst * preis
+    return round(kwh), round(selbst), round(euro), (round(kosten / euro, 1) if kosten and euro else None)
+
+
+def solar_heute(tag_nr: int):
+    return SOLAR_TIPPS[tag_nr % len(SOLAR_TIPPS)]

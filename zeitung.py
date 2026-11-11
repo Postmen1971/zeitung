@@ -55,6 +55,7 @@ WEB_PRO_RESSORT = 7          # ... davon auf der Webseite gezeigt
 MAX_ALTER_STUNDEN = 36       # ältere Meldungen fliegen raus
 TIMEOUT_SEKUNDEN = 15
 FOTOS_SUCHEN = True          # fehlende Fotos von der Artikelseite holen (og:image)
+REGION = ["Waiblingen", "Rems-Murr", "Fellbach", "Schorndorf", "Winnenden", "Stuttgart"]   # "aus deiner Nähe"
 BASIS = Path(__file__).resolve().parent
 STATUS_DATEI = BASIS / "gelesen.json"   # merkt sich, was schon da war (für "NEU")
 
@@ -67,6 +68,8 @@ FAVORITEN = {
     "claude code": 5, "tutorial": 2, "anleitung": 2, "automatisier": 3,
     "claude": 5, "anthropic": 4, "künstliche intelligenz": 2, "ki-modell": 2,
     "tuya": 6, "smart life": 5, "home assistant": 4, "matter": 2, "zigbee": 2,
+    "waiblingen": 6, "rems-murr": 6, "fellbach": 5, "schorndorf": 5, "winnenden": 5, "stuttgart": 3,
+    "ersparnis": 3, "sparen": 2, "förder": 3,
     "balkonkraftwerk": 4, "angebot": 2, "deal": 2, "rabatt": 2, "tiefstpreis": 3, "bestpreis": 3,
     "beamer": 4, "projektor": 3, "oled": 2, "fernseher": 2, "4k": 1,
     "roboter": 2, "erfindung": 3, "fusion": 2, "raumfahrt": 2, "quanten": 2,
@@ -162,6 +165,22 @@ RESSORTS = [
      "feeds": [F(gnews("Tuya")), F(gnews("Tuya smart", "en")), F(gnews("Smart Home Neuheiten")), F(gnews("Smart Life App")),
                F(gnews("Home Assistant")), F("https://www.home-assistant.io/atom.xml"),
                F("https://stadt-bremerhaven.de/feed/", True), F("https://www.smartdroid.de/feed/", True)]},
+    {"id": "smartideen", "dach": "SMART HOME", "titel": "Smart-Home-Ideen aus der Community", "stil": "smarthome",
+     "stichwoerter": ["tuya", "smart life", "home assistant", "automation", "smart home", "smarthome", "zigbee",
+                      "sensor", "dashboard", "idee", "project", "setup", "diy"],
+     "feeds": [F("https://www.reddit.com/r/homeassistant/top/.rss?t=day"),
+               F("https://www.reddit.com/r/smarthome/top/.rss?t=day"),
+               F("https://www.reddit.com/r/tuya/top/.rss?t=week"),
+               F("https://community.home-assistant.io/tag/tuya.rss"),
+               F("https://dev.to/feed/tag/homeassistant"),
+               F(gnews("Smart Home Ideen Tipps")), F(gnews("Tuya Smart Life Tipps")),
+               F(gnews("Home Assistant Projekt Ideen"))]},
+    {"id": "solar", "dach": "SOLAR", "titel": "Solar & Balkonkraftwerk aus der Region", "stil": "balkon",
+     "stichwoerter": ["balkonkraftwerk", "steckersolar", "solar", "photovoltaik", "pv-anlage", "pv ", "energie"],
+     "feeds": [F(gnews("Balkonkraftwerk " + " OR ".join(REGION))), F(gnews("Photovoltaik Rems-Murr-Kreis")),
+               F(gnews("Solar Förderung Stuttgart Region")), F(gnews("Balkonkraftwerk Baden-Württemberg")),
+               F(gnews("Balkonkraftwerk Erfahrung Ersparnis")), F(gnews("Balkonkraftwerk Tipps Ertrag")),
+               F(gnews("Balkonkraftwerk Speicher lohnt sich"))]},
     {"id": "balkon", "dach": "SOLAR", "titel": "Balkonkraftwerk-Angebote", "stil": "balkon",
      "stichwoerter": ["balkonkraftwerk", "balkon-kraftwerk", "steckersolar", "stecker-solar", "mini-pv",
                       "mini-solar", "solarmodul", "solaranlage für den balkon", "balkonsolar", "pv-speicher",
@@ -209,15 +228,16 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "bbci": "BBC Sport", "simonwillison": "Simon Willison", "reddit.com/r/ClaudeAI": "r/ClaudeAI",
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
            "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
-           "reddit.com/r/ClaudeCode": "r/ClaudeCode", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+           "reddit.com/r/ClaudeCode": "r/ClaudeCode", "r/homeassistant": "r/homeassistant",
+           "r/smarthome": "r/smarthome", "r/tuya": "r/tuya", "community.home-assistant": "Home Assistant Community", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
 
 # Reihenfolge der Rubriken auf der Webseite
 WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "gs", "bundesliga", "europa", "national", "boxen", "welt",
-                   "smarthome", "balkon", "tv", "forschung", "technik", "visionen"]
+                   "smarthome", "smartideen", "solar", "balkon", "tv", "forschung", "technik", "visionen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
 PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"],
-              ["smarthome", "balkon", "tv"], ["forschung", "technik", "visionen"]]
+              ["smarthome", "smartideen", "tv"], ["solar", "balkon"], ["forschung", "technik", "visionen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
     "Damlaya damlaya göl olur. – Tropfen für Tropfen wird ein See.",
@@ -530,6 +550,153 @@ def anreichern(ausgabe):
 
 
 # ════════════════════════════════════════════════════════════════════
+#  ARTIKEL – Claude schreibt aus jeder Meldung einen eigenen Zeitungsartikel
+# ════════════════════════════════════════════════════════════════════
+# Braucht einen API-Schlüssel von https://platform.claude.com (Umgebungsvariable
+# ANTHROPIC_API_KEY, bei GitHub als "Secret"). Ohne Schlüssel druckt die Zeitung
+# die Anreißer der Quellen. Die Originaltexte werden nur gelesen, nie abgedruckt.
+
+KI_MODELL = os.environ.get("KI_MODELL", "claude-haiku-5-5")
+ARTIKEL_PRO_RESSORT = 6            # so viele Meldungen pro Rubrik bekommen einen Artikel
+ARTIKEL_CACHE = BASIS / "artikel_cache.json"
+
+ARTIKEL_ANWEISUNG = """Du bist Redakteur einer deutschen Boulevardzeitung. Schreibe aus der folgenden Meldung einen
+eigenständigen Zeitungsartikel auf Deutsch.
+
+Regeln:
+- Ausschließlich in eigenen Worten. Übernimm keine Sätze aus der Quelle; höchstens ein kurzes Zitat (unter 15 Wörtern) in Anführungszeichen.
+- Nur Fakten aus der Quelle. Nichts erfinden, keine Zahlen, Namen oder Zitate ergänzen. Fehlen Infos, schreib kürzer.
+- Ton: lebendig und packend wie Boulevard, aber korrekt und fair. Keine Beleidigungen, keine Übertreibung von Tatsachen.
+- Ist die Quelle türkisch oder englisch: auf Deutsch übersetzen und erklären, was für deutsche Leser unklar sein könnte.
+- Länge des Artikeltextes: etwa {woerter} Wörter in 2–3 Absätzen.
+
+Antworte NUR mit JSON in dieser Form:
+{{"dachzeile": "max. 4 Wörter", "schlagzeile": "max. 9 Wörter, knackig", "vorspann": "1 Satz, max. 25 Wörter", "text": "Absätze getrennt durch \\n\\n"}}
+
+Rubrik: {rubrik}
+Original-Schlagzeile: {titel}
+Quelle: {quelle}
+Kurzbeschreibung: {teaser}
+
+Text der Originalseite (nur zum Lesen):
+{seite}"""
+
+
+def artikeltext_holen(url: str) -> str:
+    """Liest den Fließtext einer Artikelseite (nur als Grundlage für Claude)."""
+    if not url.startswith("http") or "news.google.com" in url:
+        return ""
+    daten = laden(url, 900_000)[0].decode("utf-8", "replace")
+    daten = re.sub(r"(?is)<(script|style|noscript|svg|nav|footer|header|aside|form)[^>]*>.*?</\1>", " ", daten)
+    m = re.search(r"(?is)<article[^>]*>(.*?)</article>", daten)
+    bereich = m.group(1) if m and len(m.group(1)) > 1500 else daten
+    absaetze = [saeubern(p) for p in re.findall(r"(?is)<p[^>]*>(.*?)</p>", bereich)]
+    absaetze = [p for p in absaetze if len(p) > 60 and "cookie" not in p.lower()]
+    return "\n".join(absaetze)[:7000]
+
+
+def cache_laden() -> dict:
+    try:
+        return json.loads(ARTIKEL_CACHE.read_text("utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def claude_fragen(prompt: str, schluessel: str) -> str:
+    daten = json.dumps({"model": KI_MODELL, "max_tokens": 900,
+                        "messages": [{"role": "user", "content": prompt}]}).encode()
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=daten, headers={
+        "x-api-key": schluessel, "anthropic-version": "2023-06-01", "content-type": "application/json"})
+    with urllib.request.urlopen(req, timeout=90) as r:
+        antwort = json.loads(r.read().decode())
+    return "".join(b.get("text", "") for b in antwort.get("content", []) if b.get("type") == "text")
+
+
+def artikel_schreiben(ausgabe):
+    """Ergänzt a['ki'] = {dachzeile, schlagzeile, vorspann, text} für die wichtigsten Meldungen."""
+    schluessel = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not schluessel:
+        print("  Artikel: kein ANTHROPIC_API_KEY – die Zeitung nutzt die Anreißer der Quellen.")
+        return
+    cache = cache_laden()
+    jobs = []
+    for r, liste in ausgabe:
+        for i, a in enumerate(liste[:ARTIKEL_PRO_RESSORT]):
+            woerter = 170 if i == 0 else 90
+            jobs.append((r, a, woerter))
+
+    fehler, neu = [], 0
+
+    def schreibe(job):
+        r, a, woerter = job
+        k = hashlib.sha1(f"{a['link']}|{woerter}".encode()).hexdigest()[:20]
+        if k in cache:
+            return a, cache[k], k, False
+        try:
+            seite = artikeltext_holen(a["link"])
+        except Exception:
+            seite = ""
+        if len(seite) < 300:
+            woerter = min(woerter, 60)          # wenig Material -> kurzer Artikel
+        prompt = ARTIKEL_ANWEISUNG.format(woerter=woerter, rubrik=r["titel"], titel=a["titel"],
+                                          quelle=a.get("quelle", ""), teaser=a["teaser"] or "-",
+                                          seite=seite or "(nicht verfügbar – nur Schlagzeile und Kurzbeschreibung nutzen)")
+        text = claude_fragen(prompt, schluessel)
+        m = re.search(r"\{.*\}", text, re.S)
+        ki = json.loads(m.group(0))
+        if not ki.get("text"):
+            raise ValueError("leer")
+        return a, ki, k, True
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        for fut in concurrent.futures.as_completed([pool.submit(schreibe, j) for j in jobs]):
+            try:
+                a, ki, k, frisch = fut.result()
+                a["ki"] = ki
+                cache[k] = ki
+                neu += frisch
+            except Exception as ex:
+                fehler.append(f"{type(ex).__name__}: {str(ex)[:120]}")
+    # Cache klein halten
+    if len(cache) > 1500:
+        cache = dict(list(cache.items())[-1500:])
+    try:
+        ARTIKEL_CACHE.write_text(json.dumps(cache, ensure_ascii=False), "utf-8")
+    except OSError:
+        pass
+    fertig = sum(1 for _, l in ausgabe for a in l if a.get("ki"))
+    print(f"  Artikel: {fertig} fertig ({neu} neu geschrieben)" + (f", {len(fehler)} Fehler, z. B. {fehler[0]}" if fehler else ""))
+
+
+def schlagzeile(a) -> str:
+    return (a.get("ki") or {}).get("schlagzeile") or a["titel"]
+
+
+def dachzeile(a, r) -> str:
+    return (a.get("ki") or {}).get("dachzeile") or r["titel"]
+
+
+def vorspann(a) -> str:
+    return (a.get("ki") or {}).get("vorspann") or ""
+
+
+def artikel_absaetze(a, max_woerter: int):
+    """Absätze des Artikels (KI-Text oder Anreißer), auf max_woerter gekürzt."""
+    text = (a.get("ki") or {}).get("text") or a["teaser"] or ""
+    absaetze, zaehler = [], 0
+    for p in [x.strip() for x in text.split("\n") if x.strip()]:
+        w = p.split()
+        if zaehler + len(w) > max_woerter:
+            rest = max_woerter - zaehler
+            if rest > 12:
+                absaetze.append(" ".join(w[:rest]) + " …")
+            break
+        absaetze.append(p)
+        zaehler += len(w)
+    return absaetze
+
+
+# ════════════════════════════════════════════════════════════════════
 #  DEMO-DATEN (zum Testen ohne Internet)
 # ════════════════════════════════════════════════════════════════════
 
@@ -550,6 +717,16 @@ def demo_bild(stil: str, nr: int) -> str:
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
+DEMO_TEXT = ("Das ist Blindtext für die Demo-Ausgabe. Im echten Lauf schreibt Claude hier einen eigenen Artikel "
+             "aus der Originalmeldung – in eigenen Worten, auf Deutsch und ohne etwas dazuzuerfinden. Türkische und "
+             "englische Meldungen werden dabei gleich übersetzt.\n\nSo bekommt jede Meldung einen richtigen Zeitungstext "
+             "mit Vorspann, mehreren Absätzen und Quellenangabe. Die Länge passt sich der Stelle in der Zeitung an: "
+             "Aufmacher bekommen mehr Text, kleine Meldungen weniger. Wer mehr wissen will, tippt auf die Schlagzeile "
+             "und landet beim Originalartikel.\n\nNoch mehr Blindtext, damit man sieht, wie sich lange Artikel in den "
+             "Spalten verhalten. Die Zeitung schneidet zu lange Texte sauber ab, damit nichts über den Seitenrand läuft "
+             "und jede Seite aufgeräumt aussieht, genau wie eine gedruckte Boulevardzeitung am Kiosk.")
+
+
 def demo_sammeln():
     jetzt = dt.datetime.now(dt.timezone.utc)
     ausgabe = []
@@ -564,6 +741,9 @@ def demo_sammeln():
                           "mitliefert. Im echten Lauf steht hier der Anfang der Meldung aus der Quelle.",
                 "datum": jetzt - dt.timedelta(hours=n * 3 + i), "quelle": "Demo-Quelle",
                 "bild": demo_bild(r["stil"], n) if n in (0, 1, 3) else "", "neu": n < 2,
+                "ki": {"dachzeile": f"{r['titel']} aktuell", "schlagzeile": f"Platzhalter-Schlagzeile Nr. {n + 1} aus {r['titel']}",
+                       "vorspann": "Hier steht der fett gedruckte Vorspann: ein Satz, der neugierig macht und das Wichtigste verrät.",
+                       "text": DEMO_TEXT},
                 "punkte": 20 - n - (0 if r["id"] == "gs" else 1)})
         ausgabe.append((r, liste))
     return ausgabe, []
@@ -690,6 +870,14 @@ main{padding:24px 0 40px}
 .mini .th{flex:0 0 76px;height:58px;border-radius:12px;background:var(--fl2) center/cover}
 .mini b{display:block;font-size:14px;line-height:1.3;font-weight:600}
 .mini .kat{font-size:11.5px;font-weight:600;color:var(--c)}
+/* Zeitung von heute */
+.ausgabe{display:flex;gap:22px;align-items:center;background:var(--fl);border:1px solid var(--rand);border-radius:24px;padding:20px;margin-bottom:36px;box-shadow:var(--schatten)}
+.cover{flex:0 0 150px;height:212px;border-radius:8px;background:#fff center/cover;box-shadow:0 10px 30px rgba(0,0,0,.25);transform:rotate(-2deg);transition:transform .2s}
+.cover:hover{transform:rotate(0) scale(1.03)}
+.ausgabe h2{font-size:24px;margin:6px 0 6px}.ausgabe p{color:var(--tx2);max-width:560px}
+.knoepfe{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn.rot{background:#d0021b;color:#fff}.btn.hell{background:var(--fl2);color:var(--tx)}
+@media(max-width:600px){.ausgabe{flex-direction:column;align-items:flex-start}.cover{flex-basis:auto;width:130px;height:184px}}
 /* Werkstatt */
 .werkstatt{margin-bottom:40px}
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--c,var(--akzent))}
@@ -717,6 +905,18 @@ ol.schritte li::before{content:counter(s);flex:0 0 26px;height:26px;border-radiu
 .wcard.tipp{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:0}
 .wcard.tipp p,.wcard.tipp .eyebrow{color:rgba(255,255,255,.92)}
 .werkzeug{font-size:12.5px;color:var(--tx3);margin:8px 0 10px}
+/* Solar-Rechner */
+.rechner .felder{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin:14px 0}
+.rechner label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--tx2)}
+.rechner label b{color:var(--tx)}
+.rechner input[type=range]{accent-color:#f59e0b}
+.rechner select,.rechner input[type=number]{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--rand);background:var(--fl2);color:var(--tx)}
+.ergebnis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 8px}
+.ergebnis div{background:var(--fl2);border-radius:12px;padding:10px 12px}
+.ergebnis small{display:block;font-size:11.5px;color:var(--tx3)}
+.ergebnis b{font-family:"Space Grotesk",Inter,sans-serif;font-size:20px}
+.ergebnis .gruen{background:color-mix(in srgb,#16a34a 15%,transparent)}.ergebnis .gruen b{color:#16a34a}
+@media(max-width:600px){.rechner .felder,.ergebnis{grid-template-columns:1fr 1fr}}
 /* Rubriken */
 .sec{margin-bottom:40px}
 .shead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
@@ -802,7 +1002,41 @@ def werkstatt_html(r_werk, news) -> str:
     return "\n".join(teile)
 
 
-def html_bauen(ausgabe, fehler, demo=False, pdf_name="") -> str:
+def solar_html(r, liste) -> str:
+    tipp = werkstatt.solar_heute(dt.date.today().toordinal()) if werkstatt and hasattr(werkstatt, "solar_heute") else None
+    ausr = getattr(werkstatt, "AUSRICHTUNGEN", {"Süd, senkrecht am Geländer": 0.7}) if werkstatt else {"Süd, senkrecht am Geländer": 0.7}
+    basis = getattr(werkstatt, "ERTRAG_PRO_KWP", 1000) if werkstatt else 1000
+    opts = "".join(f'<option value="{f}"{" selected" if "senkrecht" in n and "Süd" in n else ""}>{e(n)}</option>' for n, f in ausr.items())
+    teile = [f"""<section class="sec" id="r-solar" style="--c:{farbe(r)}"><div class="shead"><span class="sicon">🌞</span>
+<h2>{e(r['titel'])}</h2><span class="linie"></span><span class="anz">{len(liste)} Meldungen</span></div>
+<div class="wgrid" style="margin-bottom:16px"><article class="wcard rechner"><span class="eyebrow" style="--c:#d97706">☀️ Ersparnis-Rechner</span>
+<h3>Was bringt dir ein Balkonkraftwerk?</h3>
+<div class="felder">
+<label>Modulleistung <b><span id="wpw">900</span> Wp</b><input id="wp" type="range" min="300" max="2000" step="50" value="900"></label>
+<label>Montage<select id="au">{opts}</select></label>
+<label>Eigenverbrauch <b><span id="evw">60</span> %</b><input id="ev" type="range" min="20" max="100" step="5" value="60"></label>
+<label>Strompreis (€/kWh)<input id="pr" type="number" min="0.1" max="1" step="0.01" value="0.35"></label>
+<label>Kaufpreis (€)<input id="kp" type="number" min="0" step="10" value="450"></label></div>
+<div class="ergebnis"><div><small>Ertrag / Jahr</small><b id="r1">–</b></div><div><small>selbst genutzt</small><b id="r2">–</b></div>
+<div class="gruen"><small>Ersparnis / Jahr</small><b id="r3">–</b></div><div><small>hat sich bezahlt nach</small><b id="r4">–</b></div></div>
+<p class="werkzeug">Grobe Schätzung für den Raum Stuttgart (ca. {basis} kWh pro kWp bei optimaler Lage, max. 800-W-Wechselrichter).
+Genauer für deine Adresse: <a href="https://re.jrc.ec.europa.eu/pvg_tools/de/" target="_blank" rel="noopener" style="text-decoration:underline">PVGIS-Rechner der EU</a>.</p></article>
+<div class="wside">{f'<article class="wcard tipp" style="background:linear-gradient(135deg,#f59e0b,#ea580c)"><span class="eyebrow">🌞 Solar-Tipp des Tages</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></article>' if tipp else ''}
+<article class="wcard"><span class="eyebrow" style="--c:#d97706">📋 Die Regeln 2026</span><p style="margin-top:8px">Bis <b>800 W</b> Wechselrichter und <b>2.000 Wp</b> Module:
+keine Anmeldung beim Netzbetreiber, aber Eintrag im <b>Marktstammdatenregister</b> innerhalb eines Monats. Ein Speicher wird dort gesondert angemeldet.</p></article></div></div>
+<script>(function(){{const B={basis},$=i=>document.getElementById(i);function rechne(){{const wp=+$('wp').value,f=+$('au').value,ev=+$('ev').value/100,
+pr=+$('pr').value||0,kp=+$('kp').value||0;$('wpw').textContent=wp;$('evw').textContent=Math.round(ev*100);
+let kwh=Math.min(wp/1000*B*f,1040);const selbst=kwh*ev,eur=selbst*pr;$('r1').textContent=Math.round(kwh)+' kWh';
+$('r2').textContent=Math.round(selbst)+' kWh';$('r3').textContent=Math.round(eur)+' €';$('r4').textContent=eur>0&&kp>0?(kp/eur).toFixed(1).replace('.',',')+' Jahren':'–';}}
+['wp','au','ev','pr','kp'].forEach(i=>$(i).addEventListener('input',rechne));rechne();}})();</script>"""]
+    if liste:
+        erste = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
+        teile.append('<div class="grid">' + karte(erste, r, gross=True) + "".join(karte(a, r) for a in liste if a is not erste) + "</div>")
+    teile.append("</section>")
+    return "\n".join(teile)
+
+
+def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_name="zeitung.pdf") -> str:
     heute = dt.datetime.now()
     nach_id = {r["id"]: (r, l[:WEB_PRO_RESSORT]) for r, l in ausgabe}
     reihenfolge = [i for i in WEB_REIHENFOLGE if i in nach_id] + [i for i in nach_id if i not in WEB_REIHENFOLGE]
@@ -820,7 +1054,8 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="") -> str:
 
     chips = "".join(f'<a href="#r-{i}" style="--c:{farbe(nach_id[i][0])}">{ICONS.get(i, "•")} {e(nach_id[i][0]["titel"])}</a>'
                     for i in reihenfolge)
-    pdf = f'<a class="btn" href="{e(pdf_name)}">📰 PDF-Ausgabe</a>' if pdf_name else ""
+    pdf = (f'<a class="btn" href="lesen.html">📰 Zeitung lesen</a>' if leser else
+           f'<a class="btn" href="{e(pdf_name)}">📰 PDF-Ausgabe</a>' if pdf_name else "")
     neu = sum(1 for _, a in alle if a.get("neu"))
     s = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
@@ -843,10 +1078,22 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="") -> str:
                      f'<div><span class="kat">{ICONS.get(r["id"], "")} {e(r["titel"])}</span><b>{e(a["titel"])}</b></div></a>')
         s.append("</div></section>")
 
+    if pdf_name:
+        cover = ('<a class="cover" href="lesen.html" style="background-image:url(\'seiten/mini-01.jpg\')"></a>' if leser else "")
+        s.append(f"""<section class="ausgabe">{cover}<div><span class="eyebrow" style="--c:#d0021b">📰 Die Zeitung von heute</span>
+<h2>{e(ZEITUNG_NAME)} vom {e(datum_heute())}</h2><p>{len(PDF_SEITEN) + 1} Seiten im Boulevard-Format mit Artikeln, Fotos und der KI-Werkstatt –
+zum Umblättern direkt hier im Browser oder als PDF.</p><div class="knoepfe">
+{'<a class="btn rot" href="lesen.html">Jetzt durchblättern</a>' if leser else ''}
+<a class="btn hell" href="{e(pdf_name)}" target="_blank" rel="noopener">PDF öffnen</a>
+<a class="btn hell" href="{e(pdf_name)}" download="{e(download_name)}">⬇ Herunterladen</a></div></div></section>""")
+
     for rid in reihenfolge:
         r, liste = nach_id[rid]
         if rid == "werkstatt":
             s.append(werkstatt_html(r, liste[:6]))
+            continue
+        if rid == "solar":
+            s.append(solar_html(r, [a for a in liste if id(a) not in benutzt] or liste))
             continue
         liste = [a for a in liste if id(a) not in benutzt] or liste
         s.append(f'<section class="sec" id="r-{rid}" style="--c:{farbe(r)}"><div class="shead"><span class="sicon">{ICONS.get(rid, "•")}</span>'
@@ -869,114 +1116,11 @@ Alle Meldungen führen zur Originalquelle.{fehl}</div></footer><script>{JS}</scr
     return "\n".join(s)
 
 
-# ════════════════════════════════════════════════════════════════════
-#  PDF-ZEITUNG – modernes Magazin-Layout (wird mit Chrome/Edge zu PDF)
-# ════════════════════════════════════════════════════════════════════
-
-DRUCK_CSS = """
-@page{size:A4;margin:0}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-body{font-family:Inter,"Segoe UI",Arial,sans-serif;color:#0f172a;background:#fff;font-size:9pt}
-a{color:inherit;text-decoration:none}
-.H{font-family:"Space Grotesk",Inter,Arial,sans-serif;font-weight:700;letter-spacing:-.02em;line-height:1.08}
-.seite{width:210mm;height:297mm;padding:10mm 11mm 8mm;display:flex;flex-direction:column;overflow:hidden;
- page-break-after:always;break-after:page;position:relative}
-.seite:last-child{page-break-after:auto;break-after:auto}
-.dach{font-weight:700;color:var(--k,#8b5cf6);font-size:7.5pt;letter-spacing:.06em;text-transform:uppercase}
-.neu{display:inline-block;background:var(--k,#8b5cf6);color:#fff;padding:.2mm 1.6mm;border-radius:3mm;margin-right:1.5mm;font-size:6.5pt;letter-spacing:.04em}
-.meta{font-size:6.8pt;color:#94a3b8;margin-top:1.4mm}
-.foto{background:#e2e8f0 center/cover no-repeat;position:relative;border-radius:3mm;overflow:hidden}
-.foto.leer{background:linear-gradient(135deg,var(--a),var(--b));display:flex;align-items:center;justify-content:center}
-.foto.leer .wort{color:#fff;opacity:.55;font-size:20pt}
-/* Titelseite */
-.tkopf{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:3mm}
-.marke{font-size:34pt;line-height:.9}
-.marke .b2{font-weight:400;background:linear-gradient(90deg,#8b5cf6,#ec4899,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
-.tinfo{text-align:right;font-size:8.5pt;color:#475569;line-height:1.5}
-.tinfo b{color:#0f172a;font-size:10pt}
-.balken{height:1.2mm;border-radius:1mm;background:linear-gradient(90deg,#8b5cf6,#ec4899,#f59e0b);margin-bottom:5mm}
-.tauf .foto{height:80mm;border-radius:4mm}
-.tauf .pillbox{position:absolute;left:5mm;top:5mm}
-.pill{display:inline-block;background:var(--k,#8b5cf6);color:#fff;font-weight:700;font-size:8pt;padding:1mm 3mm;border-radius:4mm}
-.tauf h1{margin:4mm 0 2mm}
-.tteaser{font-size:10pt;line-height:1.45;color:#334155}
-.tdrei{display:grid;grid-template-columns:repeat(3,1fr);gap:5mm;margin-top:5mm;padding-top:4mm;border-top:.3mm solid #e2e8f0;flex:1;min-height:0;overflow:hidden}
-.tdrei article .foto{height:27mm;margin-bottom:2mm}
-.tdrei h3{font-size:11.5pt;margin:.8mm 0 1.2mm}
-.tdrei p{font-size:8pt;line-height:1.4;color:#475569}
-.tfuss{display:grid;grid-template-columns:1.15fr 1fr;gap:5mm;margin-top:3mm}
-.wteaser{border-radius:3.5mm;padding:4mm;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899)}
-.wteaser .klein{font-size:7pt;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.9}
-.wteaser .H{font-size:12pt;margin:1.5mm 0}
-.wteaser p{font-size:8pt;opacity:.92}
-.index{background:#f1f5f9;border-radius:3.5mm;padding:3.5mm 4mm}
-.index b{display:block;font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:1.5mm}
-.index div{display:flex;justify-content:space-between;gap:3mm;padding:.7mm 0;font-size:8.2pt;border-bottom:.2mm solid #e2e8f0}
-.index div:last-child{border:0}
-.index i{font-style:normal;font-weight:700;color:#8b5cf6}
-.spruchzeile{font-size:7.5pt;color:#64748b;font-style:italic;margin-top:.8mm}
-/* Innenseiten */
-.ikopf{display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;padding-bottom:2.5mm;
- border-bottom:.3mm solid #e2e8f0;margin-bottom:5mm}
-.ikopf .H{font-size:10pt;color:#0f172a}
-.ikopf .nr{font-weight:700;color:#0f172a;background:#f1f5f9;border-radius:3mm;padding:.6mm 2.5mm}
-.block{display:flex;flex-direction:column;min-height:0;overflow:hidden;flex:1}
-.block + .block{border-top:.3mm solid #e2e8f0;padding-top:4mm;margin-top:4mm}
-.bkopf{display:flex;align-items:center;gap:2.5mm;margin-bottom:3.5mm}
-.bkopf .strich{width:1.6mm;height:7mm;border-radius:1mm;background:var(--k)}
-.bkopf b{font-size:18pt}
-.bkopf span{font-size:7.5pt;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-left:auto}
-.btop{position:relative;margin-bottom:4mm}
-.voll .btop .foto{height:100mm;border-radius:4mm}
-.voll .btop .ueber{position:absolute;left:0;right:0;bottom:0;padding:16mm 6mm 5mm;color:#fff;
- background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.78))}
-.voll .btop .ueber .dach{color:#fff;opacity:.9}
-.voll .btop .bteaser{font-size:9.5pt;line-height:1.45;color:#334155;margin-top:3mm}
-.halb .btop,.drittel .btop{display:grid;grid-template-columns:1.05fr 1fr;gap:5mm}
-.halb .btop .foto{height:54mm}
-.drittel .btop .foto{height:36mm}
-.halb .btop h2{margin:.8mm 0 2mm}.drittel .btop h2{margin:.6mm 0 1.4mm}
-.halb .btop .bteaser{font-size:8.6pt;line-height:1.42;color:#475569}
-.drittel .btop .bteaser{font-size:8pt;line-height:1.38;color:#475569}
-.drittel .bkopf{margin-bottom:2.5mm}.drittel .bkopf b{font-size:14pt}
-.spalten{flex:1;min-height:0;column-gap:6mm;column-fill:balance;column-count:3}
-.drittel .spalten{column-count:2}
-.spalten article{break-inside:avoid;margin-bottom:3.5mm}
-.spalten article .foto{height:24mm;margin:.5mm 0 2mm}
-.spalten h4{font-size:10pt;margin:.6mm 0 1.2mm}
-.spalten p{font-size:7.8pt;line-height:1.4;color:#475569}
-.leerbox{color:#94a3b8;font-size:9pt;padding:4mm 0}
-.impressum{font-size:6.5pt;color:#94a3b8;border-top:.3mm solid #e2e8f0;padding-top:1.5mm;margin-top:3mm}
-/* Werkstatt-Seite */
-.wkopf{border-radius:5mm;padding:6mm;color:#fff;background:linear-gradient(135deg,#6d28d9,#db2777 60%,#f59e0b)}
-.wkopf .klein{font-size:7.5pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.9}
-.wkopf h1{font-size:21pt;margin:2mm 0 2mm}
-.wkopf p{font-size:9.5pt;opacity:.95;max-width:165mm}
-.badges{display:flex;gap:2mm;margin-top:3mm}
-.badge{background:rgba(255,255,255,.18);border-radius:3mm;padding:.8mm 2.5mm;font-size:7.5pt;font-weight:600}
-.wbody{display:grid;grid-template-columns:1.25fr 1fr;gap:6mm;margin-top:5mm}
-.wbody h3{font-size:12pt;margin-bottom:2.5mm}
-.schritte{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:2.4mm}
-.schritte li{counter-increment:s;display:flex;gap:2.5mm;font-size:8.6pt;line-height:1.42}
-.schritte li::before{content:counter(s);flex:0 0 5.2mm;height:5.2mm;border-radius:50%;background:#8b5cf6;color:#fff;font-weight:700;
- font-size:7.5pt;display:flex;align-items:center;justify-content:center}
-.prompt{background:#0f172a;color:#e2e8f0;border-radius:3mm;padding:3mm 3.5mm;font:7.8pt/1.5 "JetBrains Mono",Consolas,monospace;white-space:pre-wrap}
-.prompt .pk{display:block;font:700 6.5pt Inter,Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;margin-bottom:1.5mm}
-.kasten{border-radius:3.5mm;padding:4mm;background:#f1f5f9;margin-bottom:4mm}
-.kasten .klein{font-size:7pt;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0891b2}
-.kasten h4{font-size:11pt;margin:1.2mm 0 1.5mm}
-.kasten p{font-size:8.2pt;line-height:1.42;color:#475569;margin-bottom:2mm}
-.kasten.tipp{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff}
-.kasten.tipp .klein,.kasten.tipp p{color:rgba(255,255,255,.92)}
-.wnews{margin-top:5mm;padding-top:4mm;border-top:.3mm solid #e2e8f0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
-"""
-
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "balkon": "#eab308", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "balkon": "☀️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "smartideen": "💡", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1029,28 +1173,246 @@ def groesse(titel: str, basis: float) -> str:
     return f"font-size:{basis * faktor:.1f}pt"
 
 
+# ════════════════════════════════════════════════════════════════════
+#  PDF-ZEITUNG – klassischer Boulevard-Look mit Artikeln
+# ════════════════════════════════════════════════════════════════════
+
+FONTS_DRUCK = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
+               '<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700;900'
+               '&family=Roboto:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">')
+
+DRUCK_CSS = """
+@font-face{font-family:"KnallerFett";font-weight:400;src:local("Anton"),local("Impact"),local("DejaVu Sans Condensed Bold"),local("DejaVuSansCondensed-Bold"),local("Arial Black")}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:Roboto,Arial,Helvetica,sans-serif;color:#111;background:#fff;font-size:8.4pt;line-height:1.33;hyphens:auto;-webkit-hyphens:auto}
+a{color:inherit;text-decoration:none}
+.H{font-family:Anton,KnallerFett,Impact,sans-serif;font-weight:400;text-transform:uppercase;line-height:.95;letter-spacing:.1px;hyphens:manual}
+.C{font-family:"Roboto Condensed","Arial Narrow",Arial,sans-serif}
+.seite{width:210mm;height:297mm;padding:7mm 8mm 6mm;display:flex;flex-direction:column;overflow:hidden;page-break-after:always;break-after:page;position:relative}
+.seite:last-child{page-break-after:auto;break-after:auto}
+.dach{font-family:"Roboto Condensed",Arial,sans-serif;font-weight:900;color:#d0021b;text-transform:uppercase;font-size:8.5pt;letter-spacing:.2px;margin-bottom:.8mm}
+.neu{background:#d0021b;color:#fff;padding:0 1.2mm;margin-right:1.2mm;font-size:7pt}
+/* Schlagzeilen-Varianten */
+.hl span{padding:.2mm 1.6mm;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.hl.rot span{background:#d0021b;color:#fff}
+.hl.gelb span{background:#ffd400;color:#111}
+.hl.schwarz span{background:#111;color:#fff}
+.hl.rotschrift{color:#d0021b}
+/* Fotos */
+figure{position:relative;overflow:hidden;background:#222}
+.foto{width:100%;height:100%;background:#333 center/cover no-repeat}
+.foto.leer{background:repeating-linear-gradient(-45deg,var(--a) 0 6mm,var(--b) 6mm 12mm);display:flex;align-items:center;justify-content:center}
+.foto.leer .wort{color:#fff;font-size:22pt;opacity:.9;transform:rotate(-6deg);text-shadow:.8mm .8mm 0 rgba(0,0,0,.35)}
+figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);color:#fff;font:700 6.4pt "Roboto Condensed",Arial,sans-serif;padding:.8mm 2mm}
+.stoerer{position:absolute;top:4mm;right:4mm;width:24mm;height:24mm;border-radius:50%;background:#ffd400;color:#d0021b;
+ display:flex;align-items:center;justify-content:center;text-align:center;font-size:12pt;line-height:.95;transform:rotate(-12deg);
+ box-shadow:.8mm .8mm 0 rgba(0,0,0,.35);padding:2mm}
+/* Artikeltext */
+.txt p{margin-bottom:1.4mm}
+.txt p.lead{font-weight:700;font-size:9.2pt;line-height:1.3}
+.txt p:last-child::after{content:" ■";color:#d0021b;font-size:7pt}
+.quelle{font:700 6.6pt "Roboto Condensed",Arial,sans-serif;color:#777;text-transform:uppercase;margin-top:.6mm}
+/* Titelseite */
+.mast{display:flex;align-items:stretch;gap:4mm;border-bottom:1.6mm solid #111;padding-bottom:2.5mm}
+.logo{background:#d0021b;color:#fff;width:46mm;height:30mm;display:flex;flex-direction:column;justify-content:center;align-items:center;
+ font-size:23pt;line-height:.92;text-align:center}
+.mastmid{flex:1;display:flex;flex-direction:column;justify-content:space-between}
+.slogan{font-weight:900;color:#d0021b;font-size:9pt;letter-spacing:.6px}
+.anrisse div{font-size:8pt;font-weight:700;padding:.5mm 0;border-bottom:.2mm solid #ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.anrisse b{color:#d0021b;text-transform:uppercase;font-weight:900;margin-right:1.5mm}
+.mastinfo{text-align:right;font-size:8pt;line-height:1.4;display:flex;flex-direction:column;justify-content:space-between}
+.mastinfo b{font-size:10pt;white-space:nowrap}.preis{font-family:Anton,KnallerFett,Impact,sans-serif;font-size:13pt;color:#d0021b}
+.aufm{margin-top:3mm}
+.aufm h1{margin:1mm 0 3mm}
+.aufmgrid{display:grid;grid-template-columns:1.55fr 1fr;gap:4mm;height:86mm}
+.aufmgrid .txt{overflow:hidden;column-count:1}
+.reihe{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;border-top:1.2mm solid #111;margin-top:3mm;padding-top:2.5mm;flex:1;min-height:0}
+.reihe article{overflow:hidden;display:flex;flex-direction:column}
+.reihe figure{height:25mm;margin-bottom:1.5mm;flex:0 0 auto}
+.reihe h3{font-size:13pt;margin-bottom:1.2mm}
+.reihe .txt{font-size:7.9pt;overflow:hidden;flex:1;min-height:0}
+.seitehinweis{margin-top:1mm;flex:0 0 auto;font:900 7pt "Roboto Condensed",Arial,sans-serif;color:#d0021b;text-transform:uppercase}
+.tfuss{display:grid;grid-template-columns:1.2fr 1fr;gap:4mm;margin-top:2.5mm;height:33mm}
+.wbox{background:#ffd400;padding:2.5mm 3mm;position:relative;overflow:hidden}
+.wbox .klein{font:900 7pt "Roboto Condensed",Arial,sans-serif;color:#d0021b;letter-spacing:.4px}
+.wbox .H{font-size:14pt;margin:1mm 0}
+.wbox p{font-size:7.8pt}
+.inhalt{border:.5mm solid #111;padding:1.6mm 2.5mm;font:7.2pt "Roboto Condensed",Arial,sans-serif;overflow:hidden}
+.inhalt b{display:block;font-family:Anton,KnallerFett,Impact,sans-serif;font-weight:400;font-size:9pt;margin-bottom:.5mm}
+.inhalt div{display:flex;justify-content:space-between;gap:2mm;border-bottom:.2mm dotted #999;padding:.1mm 0;white-space:nowrap;overflow:hidden}
+.inhalt div span{overflow:hidden;text-overflow:ellipsis}
+.inhalt i{font-style:normal;font-weight:900;color:#d0021b}
+/* Innenseiten */
+.kopf{display:flex;align-items:center;gap:3mm;border-bottom:1mm solid #111;padding-bottom:1.5mm;margin-bottom:3mm;font:8pt "Roboto Condensed",Arial,sans-serif}
+.kopf .rubrik{background:#d0021b;color:#fff;font-size:15pt;padding:.8mm 3mm}
+.kopf .kname{font-family:Anton,KnallerFett,Impact,sans-serif;font-size:10pt;color:#d0021b;margin-left:auto}
+.kopf .snr{font-size:15pt;background:#111;color:#fff;padding:.6mm 2.5mm}
+.block{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.block + .block{border-top:1.2mm solid #111;padding-top:2.5mm;margin-top:2.5mm}
+.label{display:flex;align-items:center;gap:2mm;margin-bottom:1.6mm}
+.label b{font-family:Anton,KnallerFett,Impact,sans-serif;font-weight:400;font-size:11pt;color:#fff;background:var(--k);padding:.4mm 2.5mm;text-transform:uppercase}
+.label span{flex:1;height:.6mm;background:var(--k)}
+.haupt h2{margin-bottom:2mm}
+.voll{flex:1}
+.voll .hauptgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:4mm;height:88mm}
+.voll .hauptgrid .txt{overflow:hidden}
+.vier{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3mm 5mm;margin-top:3mm;border-top:.4mm solid #111;padding-top:2.5mm;flex:1;min-height:0}
+.vier article{overflow:hidden;display:grid;grid-template-columns:36mm 1fr;gap:3mm;border-bottom:.3mm solid #ccc;padding-bottom:2mm}
+.vier article.ohne{grid-template-columns:1fr}
+.vier figure{height:30mm}
+.vier h3{font-size:12.5pt;margin-bottom:1mm}
+.vier .txt{font-size:8pt;overflow:hidden}
+.halb{flex:1}
+.halb .hauptgrid{display:grid;grid-template-columns:1fr 1fr;gap:4mm;height:56mm}
+.halb .txt{overflow:hidden}
+.zwei{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-top:3.5mm;flex:1;min-height:0;border-top:.3mm solid #999;padding-top:2mm}
+.zwei article{overflow:hidden}
+.zwei h3{font-size:11pt;margin-bottom:1mm}
+.zwei .txt{font-size:7.9pt}
+.drittel{flex:1}
+.drittel .hauptgrid{display:grid;grid-template-columns:62mm 1fr;gap:4mm;flex:1;min-height:0}
+.drittel figure{height:100%}
+.drittel .txt{overflow:hidden;font-size:8pt}
+.drittel h2{margin-bottom:1.5mm}
+.drittel .nebenbei{font-size:7.6pt;border-top:.3mm dotted #999;margin-top:1.5mm;padding-top:1mm}
+.drittel .nebenbei b{font-family:"Roboto Condensed",Arial,sans-serif;font-weight:900}
+.leerbox{color:#888;font-style:italic;padding:3mm 0}
+.impressum{font:6.4pt "Roboto Condensed",Arial,sans-serif;color:#777;border-top:.3mm solid #999;padding-top:1mm;margin-top:2mm}
+/* Werkstatt-Seite */
+.wtitel{margin:1mm 0 3mm}
+.wgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:5mm}
+.ziel{font-weight:700;font-size:10pt;line-height:1.3;margin-bottom:3mm}
+.badges{display:flex;gap:1.5mm;margin-bottom:3mm}
+.badge{background:#111;color:#fff;font:700 7.5pt "Roboto Condensed",Arial,sans-serif;padding:.6mm 2mm}
+.badge.g{background:#ffd400;color:#111}
+.schritte{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:2mm;margin-bottom:3mm}
+.schritte li{counter-increment:s;display:flex;gap:2.5mm;font-size:8.8pt;line-height:1.35}
+.schritte li::before{content:counter(s);flex:0 0 6mm;height:6mm;background:#d0021b;color:#fff;font-family:Anton,KnallerFett,Impact,sans-serif;
+ font-size:10pt;display:flex;align-items:center;justify-content:center}
+.prompt{background:#111;color:#f5f5f5;padding:3mm;font:7.8pt/1.45 "JetBrains Mono",Consolas,monospace;white-space:pre-wrap;border-left:2mm solid #ffd400}
+.prompt .pk{display:block;font:900 7pt "Roboto Condensed",Arial,sans-serif;color:#ffd400;text-transform:uppercase;margin-bottom:1mm}
+.kasten{border:.6mm solid #111;margin-bottom:3mm}
+.kasten .kk{background:#d0021b;color:#fff;font-family:Anton,KnallerFett,Impact,sans-serif;font-size:11pt;padding:.6mm 2.5mm;text-transform:uppercase}
+.kasten .ki{padding:2.5mm}
+.kasten h4{font-size:12pt;margin-bottom:1.2mm}
+.kasten p{font-size:8.2pt;margin-bottom:1.5mm}
+.kasten.gelb{background:#ffd400;border-color:#ffd400}.kasten.gelb .kk{background:#111}
+.wnews{border-top:1.2mm solid #111;margin-top:4mm;padding-top:2.5mm;display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;flex:1;min-height:0;overflow:hidden}
+.wnews article{overflow:hidden}
+.wnews h4{font-size:10.5pt;margin-bottom:1mm}
+.wnews .txt{font-size:7.6pt}
+/* Solar-Seite */
+.sgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:5mm;margin-top:2mm}
+.halbspalte .txt{font-size:8.2pt}
+.tab{width:100%;border-collapse:collapse;font:7.8pt "Roboto Condensed",Arial,sans-serif}
+.tab th{text-align:left;background:#111;color:#fff;padding:.8mm 1.2mm;font-weight:700}
+.tab td{padding:.9mm 1.2mm;border-bottom:.2mm solid #ccc}
+.tab tr:nth-child(odd) td{background:#fffbe0}
+.fussnote{font-size:6.6pt!important;color:#555;margin-top:1.5mm}
+.deals{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5mm 4mm}
+.deals article{border-left:1.2mm solid #ffd400;padding-left:2mm;overflow:hidden;max-height:24mm}
+.deals h4{font-size:9.5pt;margin-bottom:.6mm}
+.deals p{font-size:7.4pt}
+"""
+
+
+def hl(titel: str, stil: str, basis: float, tag: str = "h2") -> str:
+    """Boulevard-Schlagzeile: schwarz, rot/gelb/schwarz hinterlegt oder rote Schrift."""
+    gr = groesse(titel, basis)
+    if stil in ("rot", "gelb", "schwarz"):
+        return f'<{tag} class="H hl {stil}" style="{gr}"><span>{e(titel)}</span></{tag}>'
+    return f'<{tag} class="H{" hl rotschrift" if stil == "rotschrift" else ""}" style="{gr}">{e(titel)}</{tag}>'
+
+
+def text_html(a, woerter: int, lead=True) -> str:
+    teile = []
+    vs = vorspann(a)
+    if lead and vs:
+        teile.append(f'<p class="lead">{e(vs)}</p>')
+    for p in artikel_absaetze(a, woerter):
+        teile.append(f"<p>{e(p)}</p>")
+    if not teile:
+        teile.append('<p>Mehr dazu in der Originalmeldung.</p>')
+    teile.append(f'<div class="quelle">Quelle: {e(a.get("quelle") or "")} · {e(zeit_text(a.get("datum")))}</div>')
+    return '<div class="txt">' + "".join(teile) + "</div>"
+
+
+def bild(a, r, stoerer: str = "") -> str:
+    src = a.get("bild_druck") or (a["bild"] if a["bild"].startswith("data:") else "")
+    st = f'<div class="stoerer H">{e(stoerer)}</div>' if stoerer else ""
+    if src:
+        return (f'<figure><div class="foto" style="background-image:url(\'{src}\')"></div>{st}'
+                f'<figcaption>Foto: {e(a.get("quelle") or r["titel"])}</figcaption></figure>')
+    k = farbe(r)
+    return f'<figure><div class="foto leer" style="--a:{k};--b:#111"><span class="wort H">{e(r["dach"])}</span></div>{st}</figure>'
+
+
+STILE = ["rot", "schwarz", "gelb", "plain", "rotschrift"]
+
+
 def werkstatt_seite(seitennr, kopf, r_werk, news) -> str:
     ws, auto, tipp = werkstatt_heute()
     if not ws:
         return ""
     schritte = "".join(f"<li><span>{e(x)}</span></li>" for x in ws["schritte"])
-    s = [f"""<div class="seite">{kopf}<section class="wkopf"><div class="klein">KI-Werkstatt · Workshop des Tages</div>
-<h1 class="H">{e(ws['titel'])}</h1><p>{e(ws['ziel'])}</p>
-<div class="badges"><span class="badge">{e(ws['level'])}</span><span class="badge">Dauer: {e(ws['dauer'])}</span><span class="badge">{e(ws['feature'])}</span></div></section>
-<div class="wbody"><div><h3 class="H">So geht's</h3><ol class="schritte">{schritte}</ol>
-<div class="prompt" style="margin-top:4mm"><span class="pk">Prompt für Claude Code – abtippen oder von der Webseite kopieren</span>{e(ws['prompt'])}</div></div>
-<div><div class="kasten"><div class="klein">Automatisierung des Tages</div><h4 class="H">{e(auto['titel'])}</h4>
-<p>{e(auto['idee'])}</p><p style="font-size:7.5pt;color:#64748b">Werkzeuge: {e(auto['werkzeuge'])}</p>
-<div class="prompt"><span class="pk">Prompt</span>{e(kuerzen(auto['prompt'], 260))}</div></div>
-<div class="kasten tipp"><div class="klein">Profi-Tipp</div><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div></div>"""]
+    s = [f"""<div class="seite">{kopf}<div class="dach">Workshop des Tages · {e(ws['feature'])}</div>
+{hl(ws['titel'], 'rot', 26, 'h1').replace('<h1 class="', '<h1 class="wtitel ')}
+<div class="wgrid"><div><div class="badges"><span class="badge">{e(ws['level'])}</span><span class="badge g">Dauer: {e(ws['dauer'])}</span></div>
+<p class="ziel">{e(ws['ziel'])}</p><ol class="schritte">{schritte}</ol>
+<div class="prompt"><span class="pk">Dein Prompt für Claude Code (auf der Webseite zum Kopieren)</span>{e(ws['prompt'])}</div></div>
+<div><div class="kasten"><div class="kk">Automatisierung des Tages</div><div class="ki"><h4 class="H">{e(auto['titel'])}</h4>
+<p>{e(auto['idee'])}</p><p><b>Werkzeuge:</b> {e(auto['werkzeuge'])}</p>
+<div class="prompt" style="border-left-color:#d0021b"><span class="pk">Prompt</span>{e(kuerzen(auto['prompt'], 240))}</div></div></div>
+<div class="kasten gelb"><div class="kk">Profi-Tipp</div><div class="ki"><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div></div></div>"""]
     if news:
-        s.append('<section class="wnews block" style="--k:#8b5cf6"><div class="bkopf"><span class="strich"></span>'
-                 '<b class="H" style="font-size:13pt">Neu: Anleitungen & Ideen aus dem Netz</b></div><div class="spalten">')
-        for a in news[:6]:
-            s.append(f"""<article><div class="dach">{neu_tag(a)}{e(a.get('quelle') or '')}</div>
-<h4 class="H" style="{groesse(a['titel'], 10)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h4>
-<p>{e(kuerzen(a['teaser'], 120))}</p></article>""")
-        s.append("</div></section>")
+        s.append('<section class="wnews">')
+        for a in news[:3]:
+            s.append(f'<article><div class="dach">{neu_tag(a)}{e(dachzeile(a, r_werk))}</div>'
+                     f'<h4 class="H">{e(schlagzeile(a))}</h4>{text_html(a, 130)}</article>')
+        s.append("</section>")
+    s.append("</div>")
+    return "\n".join(s)
+
+
+SOLAR_BEISPIELE = [("1 Modul · 450 Wp · senkrecht nach Süden", 450, "Süd, senkrecht am Geländer"),
+                   ("2 Module · 900 Wp · senkrecht nach Süden", 900, "Süd, senkrecht am Geländer"),
+                   ("2 Module · 900 Wp · schräg nach Süden", 900, "Süd, schräg (ca. 30°)"),
+                   ("4 Module · 1.800 Wp · Ost/West schräg", 1800, "Ost oder West, schräg")]
+
+
+def solar_seite(seitennr, kopf, r_solar, solar_news, r_balkon, deals) -> str:
+    tipp = werkstatt.solar_heute(dt.date.today().toordinal()) if werkstatt and hasattr(werkstatt, "solar_heute") else None
+    s = [f"""<div class="seite">{kopf}<div class="dach">Sonnenstrom vom Balkon · Ideen, Angebote und Meldungen aus {e(REGION[0])} & Umgebung</div>
+{hl("Sonne vom Balkon: So viel kannst du sparen", "gelb", 28, "h1")}<div class="sgrid">"""]
+    if solar_news:
+        a = solar_news[0]
+        s.append(f"""<article class="haupt halbspalte"><div class="dach">{neu_tag(a)}{e(dachzeile(a, r_solar))}</div>
+{hl(schlagzeile(a), 'plain', 16)}<figure style="height:46mm;margin:1.5mm 0 2mm">{bild(a, r_solar)[8:-9]}</figure>{text_html(a, 110)}</article>""")
+    else:
+        s.append("<div></div>")
+    zeilen = ""
+    if werkstatt and hasattr(werkstatt, "ersparnis"):
+        for name, wp, ausr in SOLAR_BEISPIELE:
+            kwh, selbst, euro, _ = werkstatt.ersparnis(wp, ausr)
+            zeilen += f"<tr><td>{e(name)}</td><td>{kwh}</td><td>{selbst}</td><td><b>{euro} €</b></td></tr>"
+    s.append(f"""<div>{f'<div class="kasten gelb"><div class="kk">Solar-Tipp des Tages</div><div class="ki"><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div>' if tipp else ''}
+<div class="kasten"><div class="kk">So viel bringt dein Balkonkraftwerk</div><div class="ki"><table class="tab">
+<tr><th>Anlage</th><th>kWh/Jahr</th><th>selbst genutzt</th><th>Ersparnis/Jahr</th></tr>{zeilen}</table>
+<p class="fussnote">Grobe Schätzung für den Raum Stuttgart: ca. 1.000 kWh pro kWp bei optimaler Lage, 60 % Eigenverbrauch,
+0,35 €/kWh. Deine Werte: kostenloser PVGIS-Rechner der EU oder der Rechner auf der Webseite.</p></div></div></div></div>""")
+    s.append('<div class="label" style="--k:#eab308;margin-top:3mm"><b>Angebote des Tages</b><span></span></div><div class="deals">')
+    for a in deals[:6]:
+        s.append(f'<article><div class="dach">{neu_tag(a)}{e(a.get("quelle") or "")}</div>'
+                 f'<h4 class="H">{e(a["titel"])}</h4><p>{e(" ".join(artikel_absaetze(a, 22)))}</p></article>')
+    s.append("</div>")
+    if len(solar_news) > 1:
+        s.append('<div class="zwei" style="flex:1">')
+        for a in solar_news[1:3]:
+            s.append(f'<article><div class="dach">{neu_tag(a)}{e(dachzeile(a, r_solar))}</div>'
+                     f'{hl(schlagzeile(a), "plain", 11, "h3")}{text_html(a, 60, lead=False)}</article>')
+        s.append("</div>")
     s.append("</div>")
     return "\n".join(s)
 
@@ -1060,23 +1422,16 @@ def druck_bauen(ausgabe, demo=False) -> str:
     r_nach_id = {r["id"]: (r, l) for r, l in ausgabe}
     auf_r, auf = aufmacher_finden([(r, l) for r, l in ausgabe if r["id"] != "werkstatt"])
     benutzt = {id(auf)} if auf else set()
-    spruch = SPRUECHE[heute.toordinal() % len(SPRUECHE)]
     nr = heute.timetuple().tm_yday
-    teil1, teil2 = ZEITUNG_NAME.split("-")[0], "-".join(ZEITUNG_NAME.split("-")[1:])
+    seite_von = {}
+    for n, ids in enumerate(PDF_SEITEN, start=2):
+        for i in ids:
+            seite_von[i] = n
 
     s = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>
-{FONTS}<style>{DRUCK_CSS}</style></head><body>"""]
+{FONTS_DRUCK}<style>{DRUCK_CSS}</style></head><body>"""]
 
     # ── Titelseite ──
-    s.append(f"""<div class="seite"><header class="tkopf"><div class="marke H">{e(teil1)}<span class="b2">{e(teil2)}</span></div>
-<div class="tinfo"><b>{e(datum_heute())}</b><br>Ausgabe Nr. {nr} · {"DEMO" if demo else e(UNTERTITEL)}
-<div class="spruchzeile">„{e(spruch)}“</div></div></header><div class="balken"></div>""")
-    if auf:
-        k = farbe(auf_r)
-        s.append(f"""<section class="tauf" style="--k:{k}">{foto(auf, auf_r, extra=f'<span class="pillbox"><span class="pill">{e(auf_r["titel"])}</span></span>')}
-<h1 class="H" style="{groesse(auf['titel'], 27)}"><a href="{e(auf['link'])}">{e(auf['titel'])}</a></h1>
-<p class="tteaser">{e(kuerzen(auf['teaser'], 300))}</p>{meta(auf)}</section>""")
-
     kandidaten = []
     for r, l in ausgabe:
         if r["id"] == "werkstatt" or (auf_r and r["id"] == auf_r["id"]):
@@ -1085,74 +1440,290 @@ def druck_bauen(ausgabe, demo=False) -> str:
         if beste:
             kandidaten.append((r, max(beste[:3], key=lambda x: x["punkte"] + (3 if x["bild"] else 0))))
     kandidaten.sort(key=lambda x: x[1]["punkte"] + (3 if x[1]["bild"] else 0), reverse=True)
-    s.append('<section class="tdrei">')
-    for r, a in kandidaten[:3]:
+    reihe, anrisse = kandidaten[:3], kandidaten[3:6]
+    for _, a in reihe:
         benutzt.add(id(a))
-        s.append(f"""<article style="--k:{farbe(r)}">{foto(a, r)}<div class="dach">{neu_tag(a)}{e(r['titel'])}</div>
-<h3 class="H" style="{groesse(a['titel'], 11.5)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h3>
-<p>{e(kuerzen(a['teaser'], 150))}</p>{meta(a)}</article>""")
+
+    name = ZEITUNG_NAME.replace("-", " ").split()
+    logo = "".join(f"<span>{e(w)}</span>" for w in name)
+    anr = "".join(f'<div><b>{e(r["dach"])}</b>{e(schlagzeile(a))}</div>' for r, a in anrisse)
+    s.append(f"""<div class="seite"><header class="mast"><div class="logo H">{logo}</div>
+<div class="mastmid"><div class="slogan C">{e(UNTERTITEL.upper())}</div><div class="anrisse C">{anr}</div></div>
+<div class="mastinfo C"><div><b>{e(datum_heute())}</b><br>Nr. {nr} · {"DEMO-AUSGABE" if demo else "Persönliche Ausgabe"}</div>
+<div class="preis">0,00 €</div></div></header>""")
+    if auf:
+        s.append(f"""<section class="aufm"><div class="dach">{neu_tag(auf)}{e(dachzeile(auf, auf_r))}</div>
+{hl(schlagzeile(auf), 'plain', 44, 'h1')}
+<div class="aufmgrid">{bild(auf, auf_r, stoerer=auf_r['dach'] + '!')}{text_html(auf, 170)}</div></section>""")
+    s.append('<section class="reihe">')
+    for i, (r, a) in enumerate(reihe):
+        s.append(f"""<article style="--k:{farbe(r)}">{bild(a, r)}<div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>
+{hl(schlagzeile(a), ['rot', 'schwarz', 'gelb'][i % 3], 13, 'h3')}{text_html(a, 55, lead=False)}
+<div class="seitehinweis">Mehr {e(r['titel'])} auf Seite {seite_von.get(r['id'], '')}</div></article>""")
     s.append("</section>")
+    ws, _, _ = werkstatt_heute()
+    wbox = (f'<div class="wbox"><div class="klein">HEUTE IN DER KI-WERKSTATT · SEITE {seite_von.get("werkstatt", 2)}</div>'
+            f'<div class="H">{e(ws["titel"])}</div><p>{e(ws["ziel"])} {e(ws["level"])}, {e(ws["dauer"])} – mit fertigem Prompt.</p></div>'
+            if ws else "<div></div>")
 
     def seiten_name(ids):
         if ids == ["werkstatt"]:
-            return "KI-Werkstatt: Workshop des Tages"
+            return "KI-Werkstatt"
+        if ids == ["solar", "balkon"]:
+            return "Solar & Balkonkraftwerk: Sparen, Angebote, Region"
         return " · ".join(r_nach_id[i][0]["titel"] for i in ids if i in r_nach_id)
 
-    index = "".join(f'<div><span>{e(seiten_name(ids))}</span><i>{n}</i></div>' for n, ids in enumerate(PDF_SEITEN, start=2))
-    ws, _, _ = werkstatt_heute()
-    wteaser = (f'<div class="wteaser"><div class="klein">Heute in der KI-Werkstatt · Seite '
-               f'{next((n for n, ids in enumerate(PDF_SEITEN, start=2) if ids == ["werkstatt"]), 2)}</div>'
-               f'<div class="H">{e(ws["titel"])}</div><p>{e(ws["level"])} · {e(ws["dauer"])} · mit fertigem Prompt für Claude Code</p></div>'
-               if ws else '<div></div>')
-    s.append(f'<footer class="tfuss">{wteaser}<div class="index"><b>In dieser Ausgabe</b>{index}</div></footer></div>')
+    inhalt = "".join(f'<div><span>{e(seiten_name(ids))}</span><i>{n}</i></div>' for n, ids in enumerate(PDF_SEITEN, start=2))
+    s.append(f'<footer class="tfuss">{wbox}<div class="inhalt"><b>HEUTE IN IHRER ZEITUNG</b>{inhalt}</div></footer></div>')
 
     # ── Innenseiten ──
     for seitennr, ids in enumerate(PDF_SEITEN, start=2):
-        kopf = (f'<header class="ikopf"><span class="H">{e(teil1)}<span style="font-weight:400">{e(teil2)}</span></span>'
-                f'<span>{e(datum_heute())}</span><span class="nr">Seite {seitennr}</span></header>')
+        erste = r_nach_id.get(ids[0], (None, None))[0]
+        rubrik = "KI-WERKSTATT" if ids == ["werkstatt"] else "SOLAR" if ids == ["solar", "balkon"] else (erste["dach"] if erste else "")
+        kopf = (f'<header class="kopf"><span class="rubrik H">{e(rubrik)}</span><span class="kname">{e(ZEITUNG_NAME)}</span>'
+                f'<span>{e(datum_heute())}</span><span class="snr H">{seitennr}</span></header>')
         if ids == ["werkstatt"]:
             r_w, news = r_nach_id.get("werkstatt", (None, []))
             s.append(werkstatt_seite(seitennr, kopf, r_w, news))
             continue
+        if ids == ["solar", "balkon"]:
+            r_s, sn = r_nach_id.get("solar", ({"titel": "Solar", "dach": "SOLAR", "id": "solar"}, []))
+            r_b, dl = r_nach_id.get("balkon", ({"titel": "Angebote", "dach": "SOLAR", "id": "balkon"}, []))
+            s.append(solar_seite(seitennr, kopf, r_s, sn, r_b, dl))
+            continue
         art = {1: "voll", 2: "halb"}.get(len(ids), "drittel")
         s.append(f'<div class="seite">{kopf}')
-        for rid in ids:
+        for bi, rid in enumerate(ids):
             if rid not in r_nach_id:
                 continue
             r, liste = r_nach_id[rid]
             liste = [a for a in liste if id(a) not in benutzt] or liste
             k = farbe(r)
-            s.append(f'<section class="block {art}" style="--k:{k}"><div class="bkopf"><span class="strich"></span>'
-                     f'<b class="H">{e(r["titel"])}</b><span>{len(liste)} Meldungen</span></div>')
+            label = f'<div class="label"><b>{e(r["titel"])}</b><span></span></div>' if art != "voll" else ""
+            s.append(f'<section class="block {art}" style="--k:{k}">{label}')
             if not liste:
                 s.append('<p class="leerbox">Heute keine Meldungen in dieser Rubrik.</p></section>')
                 continue
             top = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
-            rest = [a for a in liste if a is not top][: {"voll": 7, "halb": 3, "drittel": 2}[art]]
+            rest = [a for a in liste if a is not top]
+            stil = STILE[(seitennr + bi) % len(STILE)]
             if art == "voll":
-                ueber = (f'<div class="ueber"><div class="dach">{neu_tag(top)}{e(top.get("quelle") or r["titel"])}</div>'
-                         f'<h2 class="H" style="{groesse(top["titel"], 22)}"><a href="{e(top["link"])}">{e(top["titel"])}</a></h2></div>')
-                s.append(f'<article class="btop">{foto(top, r, extra=ueber)}'
-                         f'<p class="bteaser">{e(kuerzen(top["teaser"], 300))}</p>{meta(top)}</article>')
+                s.append(f"""<article class="haupt"><div class="dach">{neu_tag(top)}{e(dachzeile(top, r))}</div>
+{hl(schlagzeile(top), stil, 34)}<div class="hauptgrid">{bild(top, r, stoerer='NEU!' if top.get('neu') else '')}{text_html(top, 170)}</div></article>
+<div class="vier">""")
+                for j, a in enumerate(rest[:4]):
+                    mit = bool(a.get("bild_druck") or a["bild"].startswith("data:"))
+                    s.append(f"""<article class="{'' if mit else 'ohne'}">{bild(a, r) if mit else ''}<div><div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>
+{hl(schlagzeile(a), 'gelb' if j == 1 else 'plain', 12.5, 'h3')}{text_html(a, 60 if mit else 85, lead=False)}</div></article>""")
+                s.append("</div>")
+            elif art == "halb":
+                s.append(f"""<article class="haupt"><div class="dach">{neu_tag(top)}{e(dachzeile(top, r))}</div>
+{hl(schlagzeile(top), stil, 21)}<div class="hauptgrid">{bild(top, r)}{text_html(top, 95)}</div></article><div class="zwei">""")
+                for a in rest[:2]:
+                    s.append(f'<article><div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>'
+                             f'{hl(schlagzeile(a), "plain", 11, "h3")}{text_html(a, 50, lead=False)}</article>')
+                s.append("</div>")
             else:
-                gr = 16 if art == "halb" else 12.5
-                s.append(f"""<article class="btop">{foto(top, r)}<div><div class="dach">{neu_tag(top)}{e(top.get('quelle') or r['titel'])}</div>
-<h2 class="H" style="{groesse(top['titel'], gr)}"><a href="{e(top['link'])}">{e(top['titel'])}</a></h2>
-<p class="bteaser">{e(kuerzen(top['teaser'], 260 if art == 'halb' else 170))}</p>{meta(top)}</div></article>""")
-            s.append('<div class="spalten">')
-            for i, a in enumerate(rest):
-                bild = foto(a, r) if hat_foto(a) and (art == "voll" or (art == "halb" and i == 0)) else ""
-                s.append(f"""<article><div class="dach">{neu_tag(a)}{e(a.get('quelle') or r['titel'])}</div>{bild}
-<h4 class="H" style="{groesse(a['titel'], 10)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h4>
-<p>{e(kuerzen(a['teaser'], {"voll": 210, "halb": 150, "drittel": 110}[art]))}</p>{meta(a)}</article>""")
-            s.append("</div></section>")
+                neben = rest[0] if rest else None
+                nb = (f'<div class="nebenbei"><b>{e(schlagzeile(neben))}.</b> {e(" ".join(artikel_absaetze(neben, 28)))}</div>'
+                      if neben else "")
+                s.append(f"""<article class="haupt" style="display:flex;flex-direction:column;flex:1;min-height:0">
+<div class="dach">{neu_tag(top)}{e(dachzeile(top, r))}</div>{hl(schlagzeile(top), stil, 15)}
+<div class="hauptgrid">{bild(top, r)}<div style="overflow:hidden">{text_html(top, 70)}{nb}</div></div></article>""")
+            s.append("</section>")
         if seitennr == len(PDF_SEITEN) + 1:
             s.append(f'<div class="impressum">{e(ZEITUNG_NAME)} wird automatisch aus RSS-Feeds erstellt '
-                     f'({heute.strftime("%d.%m.%Y, %H:%M Uhr")}). Texte und Fotos gehören den jeweiligen Quellen; '
-                     f'Schlagzeilen sind anklickbar und führen zum Originalartikel. Nur für den privaten Gebrauch.</div>')
+                     f'({heute.strftime("%d.%m.%Y, %H:%M Uhr")}). Artikel: von Claude (KI) in eigenen Worten aus den genannten Quellen zusammengefasst – '
+                     f'Angaben ohne Gewähr, Fotos gehören den Quellen. Nur für den privaten Gebrauch.</div>')
         s.append("</div>")
     s.append("</body></html>")
     return "\n".join(s)
+
+
+# ════════════════════════════════════════════════════════════════════
+#  BLÄTTER-LESER – die PDF-Zeitung im Browser umblättern
+# ════════════════════════════════════════════════════════════════════
+
+def seiten_bilder(pdf_datei: Path, ordner: Path, dpi: int = 150):
+    """Macht aus jeder PDF-Seite ein JPG (+ Vorschaubild). Nutzt PyMuPDF, sonst pdftoppm."""
+    ziel = ordner / "seiten"
+    if ziel.exists():
+        shutil.rmtree(ziel)
+    ziel.mkdir(parents=True)
+    try:
+        import fitz  # PyMuPDF
+        doc = fitz.open(str(pdf_datei))
+        for n, seite in enumerate(doc, start=1):
+            seite.get_pixmap(dpi=dpi).save(str(ziel / f"seite-{n:02d}.png"))
+    except ImportError:
+        if not shutil.which("pdftoppm"):
+            print("⚠ Für den Blätter-Leser fehlt PyMuPDF (pip install pymupdf) oder pdftoppm.")
+            return []
+        subprocess.run(["pdftoppm", "-r", str(dpi), "-png", str(pdf_datei), str(ziel / "roh")],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
+        for f in sorted(ziel.glob("roh-*.png")):
+            f.rename(ziel / f"seite-{int(f.stem.split('-')[-1]):02d}.png")
+    seiten, minis = [], []
+    for f in sorted(ziel.glob("seite-*.png")):
+        try:   # als JPG speichern (kleiner) + Vorschaubild
+            from PIL import Image
+            bild = Image.open(f).convert("RGB")
+            gross = f.with_suffix(".jpg")
+            bild.save(gross, "JPEG", quality=80, optimize=True)
+            mini = f.with_name(f.stem.replace("seite", "mini") + ".jpg")
+            bild.thumbnail((240, 340))
+            bild.save(mini, "JPEG", quality=70)
+            f.unlink()
+            seiten.append(f"seiten/{gross.name}")
+            minis.append(f"seiten/{mini.name}")
+        except Exception:
+            seiten.append(f"seiten/{f.name}")
+            minis.append(f"seiten/{f.name}")
+    return list(zip(seiten, minis))
+
+
+LESER_CSS = """
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#1b1d22;color:#fff;font:14px/1.4 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+a{color:inherit;text-decoration:none}
+.leiste{position:fixed;left:0;right:0;top:0;height:54px;display:flex;align-items:center;gap:8px;padding:0 12px;
+ background:rgba(20,22,27,.92);backdrop-filter:blur(10px);z-index:10;border-bottom:1px solid rgba(255,255,255,.08)}
+.leiste .titel{font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leiste .titel span{color:#ff4d5e}
+.k{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.08);
+ color:#fff;font-weight:600;font-size:13px;border:0;cursor:pointer;white-space:nowrap}
+.k:hover{background:rgba(255,255,255,.16)}.k.rot{background:#d0021b}.k.rot:hover{background:#e3122c}
+.buehne{position:fixed;top:54px;bottom:92px;left:0;right:0;display:flex;align-items:center;justify-content:center;perspective:2600px}
+.buch{position:relative;display:flex}
+.buch .s{position:relative;background:#fff center/contain no-repeat;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.buch .s.leer{background:transparent;box-shadow:none}
+.buch .s.links::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0) 85%,rgba(0,0,0,.18));pointer-events:none}
+.buch .s.rechts::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,0) 15%);pointer-events:none}
+.blatt{position:absolute;top:0;transform-style:preserve-3d;transform-origin:left center;transition:transform .75s cubic-bezier(.45,.05,.3,1);z-index:5}
+.blatt .f,.blatt .b{position:absolute;inset:0;background:#fff center/contain no-repeat;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.blatt .b{transform:rotateY(180deg)}
+.blatt .f::after,.blatt .b::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(0,0,0,0) 30%);opacity:.0;transition:opacity .75s}
+.blatt.dreht .f::after,.blatt.dreht .b::after{opacity:1}
+.pfeil{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.12);
+ color:#fff;font-size:22px;cursor:pointer;z-index:6}
+.pfeil:hover{background:rgba(255,255,255,.25)}.pfeil.l{left:12px}.pfeil.r{right:12px}
+.pfeil[disabled]{opacity:.2;cursor:default}
+.leiste2{position:fixed;left:0;right:0;bottom:0;height:92px;background:rgba(20,22,27,.95);display:flex;align-items:center;gap:8px;
+ padding:0 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.08);scrollbar-width:thin}
+.mini{flex:0 0 auto;width:52px;height:74px;background:#fff center/cover;border-radius:4px;opacity:.55;cursor:pointer;border:2px solid transparent;position:relative}
+.mini.an{opacity:1;border-color:#ff4d5e}
+.mini span{position:absolute;bottom:-1px;right:2px;font-size:10px;font-weight:700;color:#111;text-shadow:0 0 3px #fff}
+.nr{font-variant-numeric:tabular-nums;color:#aab;font-size:13px;white-space:nowrap}
+.lupe{position:fixed;inset:0;background:#111;z-index:30;overflow:auto;display:none;-webkit-overflow-scrolling:touch}
+.lupe.an{display:block}
+.lupe img{display:block;width:100%;max-width:1400px;margin:0 auto 12px}
+.lupe .zu{position:fixed;top:12px;right:12px;z-index:31}
+.hinweis{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:8px 14px;border-radius:999px;font-size:12.5px;white-space:nowrap;
+ transition:opacity .6s;pointer-events:none}
+@media(max-width:640px){.hinweis{font-size:11px;bottom:90px}.leiste .k .t{display:none}.pfeil{display:none}.leiste2{height:80px}.buehne{bottom:80px}.mini{width:44px;height:62px}}
+"""
+
+LESER_JS = r"""
+const P = SEITEN, M = MINIS, n = P.length;
+const buch = document.querySelector('.buch'), nrEl = document.querySelector('.nr');
+const L = document.querySelector('.pfeil.l'), R = document.querySelector('.pfeil.r');
+P.forEach(u => { const i = new Image(); i.src = u; });
+let doppel = false, v = 0, laeuft = false, W = 0, H = 0;
+const ansicht = k => doppel ? (k === 0 ? [null, 0] : [2*k-1, 2*k < n ? 2*k : null]) : [k];
+const anzahl = () => doppel ? Math.floor(n/2) + 1 : n;
+const bg = (el, s) => { if (s === null || s === undefined) { el.classList.add('leer'); el.style.backgroundImage = 'none'; }
+  else { el.classList.remove('leer'); el.style.backgroundImage = `url('${P[s]}')`; } };
+function masse(){
+  doppel = innerWidth > innerHeight && innerWidth >= 900;
+  const b = document.querySelector('.buehne').getBoundingClientRect();
+  const maxH = b.height - 24, maxW = (b.width - (innerWidth < 640 ? 16 : 130)) / (doppel ? 2 : 1);
+  H = Math.min(maxH, maxW * 297/210); W = H * 210/297;
+}
+function bauen(){
+  masse();
+  buch.innerHTML = '';
+  (doppel ? ['links','rechts'] : ['einzel']).forEach(c => { const d = document.createElement('div'); d.className = 's ' + c;
+    d.style.width = W + 'px'; d.style.height = H + 'px'; buch.appendChild(d); });
+  zeigen();
+}
+function zeigen(){
+  const a = ansicht(v), s = buch.querySelectorAll('.s');
+  a.forEach((x, i) => bg(s[i], x));
+  const seiten = a.filter(x => x !== null);
+  nrEl.textContent = `Seite ${seiten.map(x => x+1).join('–')} / ${n}`;
+  document.querySelectorAll('.mini').forEach((m, i) => m.classList.toggle('an', seiten.includes(i)));
+  const akt = document.querySelector('.mini.an'); if (akt) akt.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
+  L.disabled = v === 0; R.disabled = v >= anzahl() - 1;
+  history.replaceState(null, '', '#s' + (seiten[0] + 1));
+}
+function blatt(vorne, hinten, start, ende, fertig){
+  const b = document.createElement('div'); b.className = 'blatt';
+  b.style.width = W + 'px'; b.style.height = H + 'px'; b.style.left = doppel ? W + 'px' : '0px';
+  b.innerHTML = '<div class="f"></div><div class="b"></div>';
+  bg(b.querySelector('.f'), vorne); bg(b.querySelector('.b'), hinten);
+  if (hinten === null) b.querySelector('.b').style.background = '#f4f1ea';
+  b.style.transition = 'none'; b.style.transform = `rotateY(${start}deg)`;
+  buch.appendChild(b); b.getBoundingClientRect();
+  b.style.transition = ''; b.classList.add('dreht'); b.style.transform = `rotateY(${ende}deg)`;
+  let ok = false; const zu = () => { if (ok) return; ok = true; fertig(); b.remove(); laeuft = false; };
+  b.addEventListener('transitionend', zu); setTimeout(zu, 900);
+}
+function vor(){
+  if (laeuft || v >= anzahl() - 1) return; laeuft = true;
+  const alt = ansicht(v), neu = ansicht(v + 1), s = buch.querySelectorAll('.s');
+  if (doppel){ bg(s[1], neu[1]); blatt(alt[1], neu[0], 0, -180, () => { v++; zeigen(); }); }
+  else { bg(s[0], neu[0]); blatt(alt[0], null, 0, -180, () => { v++; zeigen(); }); }
+}
+function zurueck(){
+  if (laeuft || v <= 0) return; laeuft = true;
+  const alt = ansicht(v), neu = ansicht(v - 1), s = buch.querySelectorAll('.s');
+  if (doppel){ bg(s[0], neu[0]); blatt(neu[1], alt[0], -180, 0, () => { v--; zeigen(); }); }
+  else { blatt(neu[0], null, -180, 0, () => { v--; zeigen(); }); }
+}
+function springen(seite){ v = doppel ? Math.floor((seite + 1) / 2) : seite; zeigen(); }
+R.onclick = vor; L.onclick = zurueck;
+addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === ' ') vor(); if (e.key === 'ArrowLeft') zurueck();
+  if (e.key === 'Escape') lupe(false); });
+let x0 = null, y0 = null;
+buch.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive:true});
+buch.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) (dx < 0 ? vor : zurueck)(); x0 = null; });
+let ct; buch.addEventListener('click', e => { const r = buch.getBoundingClientRect(), rechts = e.clientX - r.left > r.width / 2;
+  clearTimeout(ct); ct = setTimeout(() => (rechts ? vor : zurueck)(), 240); });
+buch.addEventListener('dblclick', () => { clearTimeout(ct); lupe(true); });
+document.querySelectorAll('.mini').forEach((m, i) => m.onclick = () => springen(i));
+const LU = document.querySelector('.lupe');
+function lupe(an){ if (an){ const a = ansicht(v).filter(x => x !== null);
+  LU.querySelector('.bilder').innerHTML = a.map(x => `<img src="${P[x]}" alt="Seite ${x+1}">`).join(''); }
+  LU.classList.toggle('an', an); }
+document.querySelector('.lupeauf').onclick = () => lupe(true);
+LU.querySelector('.zu').onclick = () => lupe(false);
+let tw; addEventListener('resize', () => { clearTimeout(tw); tw = setTimeout(() => { const s = ansicht(v).find(x => x !== null) || 0; bauen(); springen(s); }, 150); });
+const start = parseInt((location.hash.match(/s(\d+)/) || [])[1] || '1') - 1;
+bauen(); if (start > 0) springen(Math.min(start, n - 1));
+setTimeout(() => { const h = document.querySelector('.hinweis'); if (h) h.style.opacity = 0; }, 3500);
+"""
+
+
+def lesen_bauen(seiten, pdf_name: str, download_name: str) -> str:
+    bilder = [s for s, _ in seiten]
+    minis = "".join(f'<div class="mini" style="background-image:url(\'{e(m)}\')" title="Seite {i}"><span>{i}</span></div>'
+                    for i, (_, m) in enumerate(seiten, start=1))
+    js = LESER_JS.replace("SEITEN", json.dumps(bilder)).replace("MINIS", json.dumps([m for _, m in seiten]))
+    return f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{e(ZEITUNG_NAME)} lesen – {e(datum_heute())}</title><style>{LESER_CSS}</style></head><body>
+<div class="leiste"><a class="k" href="index.html" title="Zur Webseite">←<span class="t"> Webseite</span></a>
+<div class="titel"><span>{e(ZEITUNG_NAME)}</span> · {e(datum_heute())}</div>
+<button class="k lupeauf" title="Vergrößern">🔍<span class="t"> Zoom</span></button>
+<a class="k" href="{e(pdf_name)}" target="_blank" rel="noopener" title="PDF im Browser öffnen">📄<span class="t"> PDF öffnen</span></a>
+<a class="k rot" href="{e(pdf_name)}" download="{e(download_name)}" title="PDF herunterladen">⬇<span class="t"> Download</span></a></div>
+<div class="buehne"><div class="buch"></div></div>
+<button class="pfeil l" title="Zurück (←)">‹</button><button class="pfeil r" title="Weiter (→)">›</button>
+<div class="leiste2"><span class="nr"></span>{minis}</div>
+<div class="hinweis">Wischen oder tippen zum Umblättern · Doppeltipp = Zoom</div>
+<div class="lupe"><button class="k rot zu">✕ Schließen</button><div class="bilder"></div></div>
+<script>{js}</script></body></html>"""
 
 
 def browser_finden():
@@ -1207,6 +1778,7 @@ def main():
     else:
         ausgabe, fehler = zeitung_sammeln()
         anreichern(ausgabe)
+        artikel_schreiben(ausgabe)
 
     ordner = Path(args.ausgabe)
     ordner.mkdir(parents=True, exist_ok=True)
@@ -1224,8 +1796,15 @@ def main():
         if pdf_ok:
             shutil.copyfile(pdf_tag, ordner / "zeitung.pdf")   # immer die neueste
             print(f"✔ PDF-Zeitung -> {pdf_tag}")
+            seiten = seiten_bilder(pdf_tag, ordner)
+            if seiten:
+                (ordner / "lesen.html").write_text(
+                    lesen_bauen(seiten, "zeitung.pdf", f"{ZEITUNG_NAME}_{tag}.pdf"), "utf-8")
+                print(f"✔ Blätter-Leser -> {ordner / 'lesen.html'} ({len(seiten)} Seiten)")
 
-    seite = html_bauen(ausgabe, fehler, demo=args.demo, pdf_name="zeitung.pdf" if pdf_ok else "")
+    leser_ok = (ordner / "lesen.html").exists() and pdf_ok
+    seite = html_bauen(ausgabe, fehler, demo=args.demo, pdf_name="zeitung.pdf" if pdf_ok else "",
+                       leser=leser_ok, download_name=f"{ZEITUNG_NAME}_{tag}.pdf")
     datei = ordner / f"zeitung_{tag}.html"
     datei.write_text(seite, "utf-8")
     (ordner / "index.html").write_text(seite, "utf-8")   # immer die neueste Ausgabe

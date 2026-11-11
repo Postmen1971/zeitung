@@ -30,16 +30,19 @@ jobs:
       # merkt sich gelesene Meldungen zwischen den Läufen (für "NEU")
       - uses: actions/cache@v4
         with:
-          path: gelesen.json
+          path: |
+            gelesen.json
+            artikel_cache.json
           key: gelesen-${{ github.run_id }}
           restore-keys: gelesen-
 
-      - name: Pillow für kleinere Fotos im PDF
-        run: pip install --quiet pillow
+      - name: Pillow (kleinere Fotos) und PyMuPDF (Seiten für den Blätter-Leser)
+        run: pip install --quiet pillow pymupdf
 
       - name: Zeitung bauen
         env:
           TZ: Europe/Berlin
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python zeitung.py --ausgabe _site --pdf
 
       - uses: actions/upload-pages-artifact@v3
