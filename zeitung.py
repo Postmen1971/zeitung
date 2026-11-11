@@ -149,8 +149,7 @@ RESSORTS = [
      "stichwoerter": ["claude", "anthropic"],
      "feeds": [F(gnews("Claude Anthropic")), F(gnews("Claude AI Anthropic", "en"), True),
                F(gnews("Claude Code tips", "en"), True),
-               F("https://the-decoder.de/feed/", True), F("https://simonwillison.net/atom/everything/", True),
-               F("https://www.reddit.com/r/ClaudeAI/top/.rss?t=day")]},
+               F("https://the-decoder.de/feed/", True), F("https://simonwillison.net/atom/everything/", True)]},
     {"id": "ki", "dach": "KI", "titel": "Neues von der KI", "stil": "digital",
      "stichwoerter": [" ki", "ki-", "künstliche intelligenz", " ai ", "ai-", "chatgpt", "openai",
                       "gemini", "llm", "sprachmodell", "machine learning", "nvidia"],
@@ -358,6 +357,7 @@ def feed_lesen(daten: bytes, feed_url: str):
 # ════════════════════════════════════════════════════════════════════
 
 def schluessel(titel: str) -> str:
+    titel = re.sub(r"^\s*-?\d+°\s*-\s*", "", titel)          # mydealz-Temperatur ("189° - ") ignorieren
     t = re.sub(r"[^a-z0-9äöüßçğışö ]", "", titel.lower())
     return re.sub(r"\s+", " ", t)[:70]
 
