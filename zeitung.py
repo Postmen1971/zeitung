@@ -79,9 +79,9 @@ FAVORITEN = {
 SPERRLISTE = ["horoskop", "gewinnspiel", "anzeige", "sponsored", "rabattcode", "live hören", "quoten", "tipp, prognose", "wettbasis"]
 
 
-def gnews(suche: str, sprache: str = "de") -> str:
-    """Google-News-Suche als RSS (letzte 2 Tage)."""
-    q = urllib.parse.quote(f"{suche} when:2d")
+def gnews(suche: str, sprache: str = "de", tage: int = 2) -> str:
+    """Google-News-Suche als RSS (Standard: letzte 2 Tage)."""
+    q = urllib.parse.quote(f"{suche} when:{tage}d")
     region = {"de": "hl=de&gl=DE&ceid=DE:de",
               "tr": "hl=tr&gl=TR&ceid=TR:tr",
               "en": "hl=en-US&gl=US&ceid=US:en"}[sprache]
@@ -168,17 +168,20 @@ RESSORTS = [
     {"id": "smartideen", "dach": "SMART HOME", "titel": "Smart-Home-Ideen aus der Community", "stil": "smarthome",
      "stichwoerter": ["tuya", "smart life", "home assistant", "automation", "smart home", "smarthome", "zigbee",
                       "sensor", "dashboard", "idee", "project", "setup", "diy"],
-     "feeds": [F("https://www.reddit.com/r/homeassistant/top/.rss?t=day"),
-               F("https://www.reddit.com/r/smarthome/top/.rss?t=day"),
-               F("https://www.reddit.com/r/tuya/top/.rss?t=week"),
-               F("https://community.home-assistant.io/tag/tuya.rss"),
-               F("https://dev.to/feed/tag/homeassistant"),
-               F(gnews("Smart Home Ideen Tipps")), F(gnews("Tuya Smart Life Tipps")),
-               F(gnews("Home Assistant Projekt Ideen"))]},
+     "max_alter": 24 * 14,     # Ideen dürfen bis zu 2 Wochen alt sein
+     "feeds": [F("https://hackaday.com/category/home-hacks/feed/"),
+               F("https://smarthomescene.com/feed/"),
+               F("https://dev.to/feed/tag/homeassistant"), F("https://dev.to/feed/tag/smarthome"),
+               F("https://dev.to/feed/tag/iot", True),
+               F(gnews("Tuya Ideen Automation", tage=14)), F(gnews("Smart Home DIY Projekt", tage=14)),
+               F(gnews("Home Assistant Automation Beispiele", tage=14)),
+               F(gnews("Tuya automation ideas", "en", tage=14), True),
+               F(gnews("Smart Life App Szenen Tipps", tage=14))]},
     {"id": "solar", "dach": "SOLAR", "titel": "Solar & Balkonkraftwerk aus der Region", "stil": "balkon",
      "stichwoerter": ["balkonkraftwerk", "steckersolar", "solar", "photovoltaik", "pv-anlage", "pv ", "energie"],
-     "feeds": [F(gnews("Balkonkraftwerk " + " OR ".join(REGION))), F(gnews("Photovoltaik Rems-Murr-Kreis")),
-               F(gnews("Solar Förderung Stuttgart Region")), F(gnews("Balkonkraftwerk Baden-Württemberg")),
+     "max_alter": 24 * 7,
+     "feeds": [F(gnews("Balkonkraftwerk " + " OR ".join(REGION), tage=7)), F(gnews("Photovoltaik Rems-Murr-Kreis", tage=7)),
+               F(gnews("Solar Förderung Stuttgart Region", tage=7)), F(gnews("Balkonkraftwerk Baden-Württemberg", tage=7)),
                F(gnews("Balkonkraftwerk Erfahrung Ersparnis")), F(gnews("Balkonkraftwerk Tipps Ertrag")),
                F(gnews("Balkonkraftwerk Speicher lohnt sich"))]},
     {"id": "balkon", "dach": "SOLAR", "titel": "Balkonkraftwerk-Angebote", "stil": "balkon",
@@ -229,7 +232,7 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
            "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
            "reddit.com/r/ClaudeCode": "r/ClaudeCode", "r/homeassistant": "r/homeassistant",
-           "r/smarthome": "r/smarthome", "r/tuya": "r/tuya", "community.home-assistant": "Home Assistant Community", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+           "hackaday": "Hackaday", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
 
 # Reihenfolge der Rubriken auf der Webseite
 WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "gs", "bundesliga", "europa", "national", "boxen", "welt",
@@ -441,7 +444,7 @@ def zeitung_sammeln():
                     continue
                 if feed["filtern"] and r["stichwoerter"] and not any(s in text for s in r["stichwoerter"]):
                     continue
-                if a["datum"] and (jetzt - a["datum"]).total_seconds() > MAX_ALTER_STUNDEN * 3600:
+                if a["datum"] and (jetzt - a["datum"]).total_seconds() > r.get("max_alter", MAX_ALTER_STUNDEN) * 3600:
                     continue
                 kandidaten.append(a)
         auswahl = []
