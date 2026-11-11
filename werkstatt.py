@@ -269,7 +269,7 @@ WORKSHOPS = [
          "Den Prompt eingeben – die kostenlose Wetter-Schnittstelle Open-Meteo braucht keinen Schlüssel.",
          "Bot-Token bei Telegram (@BotFather) holen, Skript täglich um 7 Uhr starten.",
      ],
-     "prompt": "Schreibe ein Python-Skript, das über die kostenlose Open-Meteo-API die stündliche Sonneneinstrahlung für Waiblingen holt, für mein 800-W-Balkonkraftwerk (Südbalkon) die erwartete Leistung pro Stunde grob schätzt und mir per Telegram die 3 besten Stunden für Waschmaschine/Spülmaschine schickt. Erkläre die Schätzung in einfachen Worten.",
+     "prompt": "Schreibe ein Python-Skript, das über die kostenlose Open-Meteo-API die stündliche Sonneneinstrahlung für Ebersbach an der Fils holt, für mein 800-W-Balkonkraftwerk (Südbalkon) die erwartete Leistung pro Stunde grob schätzt und mir per Telegram die 3 besten Stunden für Waschmaschine/Spülmaschine schickt. Erkläre die Schätzung in einfachen Worten.",
      "link": "https://open-meteo.com/"},
 
     {"titel": "Überschuss nutzen: Steckdose schaltet bei Sonnenstrom",
@@ -488,7 +488,7 @@ SOLAR_TIPPS = [
     ("Angebote richtig vergleichen", "Vergleiche den Preis pro Wp (Euro geteilt durch Modulleistung) und prüfe: Wechselrichter mit 800 W? Halterung dabei? Stecker und Kabellänge passend für deinen Balkon?"),
 ]
 
-# Grobe Schätzung für den Raum Stuttgart/Rems-Murr: ca. 1.000 kWh pro kWp und Jahr bei optimaler Südausrichtung.
+# Grobe Schätzung für den Raum Göppingen/Stuttgart: ca. 1.000 kWh pro kWp und Jahr bei optimaler Südausrichtung.
 # Faktoren für typische Balkon-Montagen (Schätzwerte). Genauer: PVGIS-Rechner.
 ERTRAG_PRO_KWP = 1000
 AUSRICHTUNGEN = {"Süd, schräg (ca. 30°)": 1.0, "Süd, senkrecht am Geländer": 0.7,

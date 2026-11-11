@@ -55,7 +55,8 @@ WEB_PRO_RESSORT = 7          # ... davon auf der Webseite gezeigt
 MAX_ALTER_STUNDEN = 36       # ältere Meldungen fliegen raus
 TIMEOUT_SEKUNDEN = 15
 FOTOS_SUCHEN = True          # fehlende Fotos von der Artikelseite holen (og:image)
-REGION = ["Waiblingen", "Rems-Murr", "Fellbach", "Schorndorf", "Winnenden", "Stuttgart"]   # "aus deiner Nähe"
+REGION = ["Ebersbach", "Göppingen", "Uhingen", "Reichenbach an der Fils", "Plochingen", "Esslingen"]   # "aus deiner Nähe"
+WOHNORT = {"name": "Ebersbach an der Fils", "lat": 48.716, "lon": 9.524}   # für den Wetter- und Solar-Kasten
 BASIS = Path(__file__).resolve().parent
 STATUS_DATEI = BASIS / "gelesen.json"   # merkt sich, was schon da war (für "NEU")
 
@@ -68,7 +69,7 @@ FAVORITEN = {
     "claude code": 5, "tutorial": 2, "anleitung": 2, "automatisier": 3,
     "claude": 5, "anthropic": 4, "künstliche intelligenz": 2, "ki-modell": 2,
     "tuya": 6, "smart life": 5, "home assistant": 4, "matter": 2, "zigbee": 2,
-    "waiblingen": 6, "rems-murr": 6, "fellbach": 5, "schorndorf": 5, "winnenden": 5, "stuttgart": 3,
+    "ebersbach": 8, "göppingen": 7, "uhingen": 6, "fils": 4, "plochingen": 4, "esslingen": 3, "stuttgart": 2,
     "ersparnis": 3, "sparen": 2, "förder": 3,
     "balkonkraftwerk": 4, "angebot": 2, "deal": 2, "rabatt": 2, "tiefstpreis": 3, "bestpreis": 3,
     "beamer": 4, "projektor": 3, "oled": 2, "fernseher": 2, "4k": 1,
@@ -177,18 +178,23 @@ RESSORTS = [
                F(gnews("Home Assistant Automation Beispiele", tage=14)),
                F(gnews("Tuya automation ideas", "en", tage=14), True),
                F(gnews("Smart Life App Szenen Tipps", tage=14))]},
-    {"id": "solar", "dach": "SOLAR", "titel": "Solar & Balkonkraftwerk aus der Region", "stil": "balkon",
+    {"id": "solar", "dach": "SOLAR", "titel": "Solar aus Göppingen & Umgebung", "stil": "balkon",
      "stichwoerter": ["balkonkraftwerk", "steckersolar", "solar", "photovoltaik", "pv-anlage", "pv ", "energie"],
-     "max_alter": 24 * 7,
-     "feeds": [F(gnews("Balkonkraftwerk " + " OR ".join(REGION), tage=7)), F(gnews("Photovoltaik Rems-Murr-Kreis", tage=7)),
-               F(gnews("Solar Förderung Stuttgart Region", tage=7)), F(gnews("Balkonkraftwerk Baden-Württemberg", tage=7)),
+     "max_alter": 24 * 21,     # regionale Solar-Meldungen sind selten – 3 Wochen zurück
+     "feeds": [F(gnews("Balkonkraftwerk Göppingen OR Ebersbach OR Uhingen", tage=21)),
+               F(gnews("Photovoltaik Landkreis Göppingen", tage=21)), F(gnews("Solar Göppingen", tage=21)),
+               F(gnews("Stadtwerke Göppingen Solar OR Photovoltaik", tage=30)),
+               F(gnews("Energieagentur Landkreis Göppingen", tage=30)),
+               F(gnews("Balkonkraftwerk Esslingen OR Plochingen OR Filstal", tage=21)),
+               F(gnews("Balkonkraftwerk Baden-Württemberg", tage=7)),
                F(gnews("Balkonkraftwerk Erfahrung Ersparnis")), F(gnews("Balkonkraftwerk Tipps Ertrag")),
                F(gnews("Balkonkraftwerk Speicher lohnt sich"))]},
     {"id": "balkon", "dach": "SOLAR", "titel": "Balkonkraftwerk-Angebote", "stil": "balkon",
      "stichwoerter": ["balkonkraftwerk", "balkon-kraftwerk", "steckersolar", "stecker-solar", "mini-pv",
                       "mini-solar", "solarmodul", "solaranlage für den balkon", "balkonsolar", "pv-speicher",
                       "anker solix", "ecoflow", "zendure", "growatt", "hoymiles", "deye", "wechselrichter"],
-     "feeds": [F(gnews("Balkonkraftwerk Angebot")), F(gnews("Balkonkraftwerk Deal Preis")),
+     "feeds": [F(gnews("Balkonkraftwerk Angebot Göppingen OR Esslingen OR Stuttgart", tage=14)),
+               F(gnews("Balkonkraftwerk Angebot")), F(gnews("Balkonkraftwerk Deal Preis")),
                F(gnews("Balkonkraftwerk mit Speicher Angebot")), F(gnews("Balkonkraftwerk Test")),
                F("https://www.mydealz.de/rss/gruppe/balkonkraftwerk", True),
                F("https://www.mydealz.de/rss/hot", True)]},
@@ -691,13 +697,80 @@ def artikel_absaetze(a, max_woerter: int):
         w = p.split()
         if zaehler + len(w) > max_woerter:
             rest = max_woerter - zaehler
-            if rest > 12:
+            if rest > 12 or (not absaetze and rest > 0):
                 absaetze.append(" ".join(w[:rest]) + " …")
             break
         absaetze.append(p)
         zaehler += len(w)
     return absaetze
 
+
+
+# ════════════════════════════════════════════════════════════════════
+#  WETTER & SOLAR-ERTRAG FÜR DEN WOHNORT (Open-Meteo, kostenlos, ohne Schlüssel)
+# ════════════════════════════════════════════════════════════════════
+
+WETTER_TEXT = {0: "sonnig", 1: "heiter", 2: "wolkig", 3: "bedeckt", 45: "Nebel", 48: "Nebel", 51: "Niesel", 53: "Niesel",
+               55: "Niesel", 61: "Regen", 63: "Regen", 65: "starker Regen", 66: "Eisregen", 67: "Eisregen", 71: "Schnee",
+               73: "Schnee", 75: "viel Schnee", 77: "Schnee", 80: "Schauer", 81: "Schauer", 82: "Starkregen",
+               85: "Schneeschauer", 86: "Schneeschauer", 95: "Gewitter", 96: "Gewitter", 99: "Gewitter"}
+BALKON_KWP, BALKON_FAKTOR = 0.8, 0.75 * 0.7      # 800 Wp, Systemverluste, senkrechte Montage (grob)
+
+
+def wetter_holen():
+    url = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=Europe%2FBerlin&forecast_days=3"
+           "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunshine_duration,"
+           "shortwave_radiation_sum").format(**WOHNORT)
+    d = json.loads(laden(url)[0].decode())["daily"]
+    tage = []
+    for i in range(len(d["time"])):
+        mj = d["shortwave_radiation_sum"][i] or 0
+        kwh = mj / 3.6 * BALKON_KWP * BALKON_FAKTOR
+        tage.append({"datum": dt.date.fromisoformat(d["time"][i]), "code": d["weather_code"][i],
+                     "max": round(d["temperature_2m_max"][i]), "min": round(d["temperature_2m_min"][i]),
+                     "regen": d["precipitation_probability_max"][i] or 0,
+                     "sonne_h": round((d["sunshine_duration"][i] or 0) / 3600, 1), "solar_kwh": round(kwh, 1)})
+    return tage
+
+
+def wetter_demo():
+    heute = dt.date.today()
+    return [{"datum": heute + dt.timedelta(days=i), "code": c, "max": t, "min": t - 7, "regen": r, "sonne_h": h, "solar_kwh": k}
+            for i, (c, t, r, h, k) in enumerate([(1, 12, 10, 6.5, 1.9), (3, 9, 40, 1.2, 0.6), (61, 7, 80, 0.3, 0.3)])]
+
+
+def wetter_symbol(code: int, groesse: str = "11mm") -> str:
+    """Kleines Wettersymbol als SVG (keine Emoji-Schrift nötig)."""
+    sonne = '<circle cx="14" cy="13" r="7" fill="#ffc107"/>'
+    wolke = '<path d="M9 26h17a6 6 0 0 0 0-12 8 8 0 0 0-15-2 6 6 0 0 0-2 14z" fill="{f}"/>'
+    if code in (0, 1):
+        innen = sonne + "".join(f'<line x1="14" y1="13" x2="{14 + 11 * __import__("math").cos(w)}" y2="{13 + 11 * __import__("math").sin(w)}" '
+                               f'stroke="#ffc107" stroke-width="2"/>' for w in [i * 0.785 for i in range(8)])
+    elif code == 2:
+        innen = sonne + wolke.format(f="#cfd8dc")
+    elif code in (3, 45, 48):
+        innen = wolke.format(f="#90a4ae")
+    elif code in (71, 73, 75, 77, 85, 86):
+        innen = wolke.format(f="#90a4ae") + "".join(f'<circle cx="{x}" cy="31" r="1.6" fill="#4fc3f7"/>' for x in (12, 18, 24))
+    elif code >= 95:
+        innen = wolke.format(f="#607d8b") + '<path d="M18 26l-4 7h4l-2 6 7-9h-4l2-4z" fill="#ffc107"/>'
+    else:
+        innen = wolke.format(f="#90a4ae") + "".join(f'<line x1="{x}" y1="29" x2="{x - 2}" y2="35" stroke="#1e88e5" stroke-width="2"/>' for x in (13, 19, 25))
+    return f'<svg viewBox="0 0 36 38" style="width:{groesse};height:{groesse}">{innen}</svg>'
+
+
+WETTER = []          # wird in main() gefüllt
+
+
+# Links zu Solar-Angeboten in der Nähe (öffnen jeweils die aktuelle Suche)
+def angebote_links():
+    ort = urllib.parse.quote_plus
+    return [("Balkonkraftwerk kaufen in Göppingen", f"https://www.google.com/search?q={ort('Balkonkraftwerk kaufen Göppingen')}"),
+            ("Solar-Fachbetriebe bei Ebersbach (Karte)", f"https://www.google.com/maps/search/{ort('Photovoltaik Fachbetrieb Ebersbach an der Fils')}"),
+            ("Baumärkte mit Balkonkraftwerk bei Göppingen", f"https://www.google.com/maps/search/{ort('Baumarkt Göppingen')}"),
+            ("Gebrauchte Balkonkraftwerke (Kleinanzeigen)", f"https://www.google.com/search?q={ort('site:kleinanzeigen.de Balkonkraftwerk Göppingen')}"),
+            ("Förderung im Kreis Göppingen", f"https://www.google.com/search?q={ort('Förderung Balkonkraftwerk Landkreis Göppingen')}"),
+            ("Alle aktuellen Deals (mydealz)", "https://www.mydealz.de/search?q=balkonkraftwerk")]
 
 # ════════════════════════════════════════════════════════════════════
 #  DEMO-DATEN (zum Testen ohne Internet)
@@ -1022,7 +1095,7 @@ def solar_html(r, liste) -> str:
 <label>Kaufpreis (€)<input id="kp" type="number" min="0" step="10" value="450"></label></div>
 <div class="ergebnis"><div><small>Ertrag / Jahr</small><b id="r1">–</b></div><div><small>selbst genutzt</small><b id="r2">–</b></div>
 <div class="gruen"><small>Ersparnis / Jahr</small><b id="r3">–</b></div><div><small>hat sich bezahlt nach</small><b id="r4">–</b></div></div>
-<p class="werkzeug">Grobe Schätzung für den Raum Stuttgart (ca. {basis} kWh pro kWp bei optimaler Lage, max. 800-W-Wechselrichter).
+<p class="werkzeug">Grobe Schätzung für den Raum Göppingen (ca. {basis} kWh pro kWp bei optimaler Lage, max. 800-W-Wechselrichter).
 Genauer für deine Adresse: <a href="https://re.jrc.ec.europa.eu/pvg_tools/de/" target="_blank" rel="noopener" style="text-decoration:underline">PVGIS-Rechner der EU</a>.</p></article>
 <div class="wside">{f'<article class="wcard tipp" style="background:linear-gradient(135deg,#f59e0b,#ea580c)"><span class="eyebrow">🌞 Solar-Tipp des Tages</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></article>' if tipp else ''}
 <article class="wcard"><span class="eyebrow" style="--c:#d97706">📋 Die Regeln 2026</span><p style="margin-top:8px">Bis <b>800 W</b> Wechselrichter und <b>2.000 Wp</b> Module:
@@ -1182,7 +1255,7 @@ def groesse(titel: str, basis: float) -> str:
 
 FONTS_DRUCK = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
                '<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700;900'
-               '&family=Roboto:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">')
+               '&family=Roboto:wght@400;700&family=PT+Serif:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">')
 
 DRUCK_CSS = """
 @font-face{font-family:"KnallerFett";font-weight:400;src:local("Anton"),local("Impact"),local("DejaVu Sans Condensed Bold"),local("DejaVuSansCondensed-Bold"),local("Arial Black")}
@@ -1318,6 +1391,68 @@ figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);
 .deals article{border-left:1.2mm solid #ffd400;padding-left:2mm;overflow:hidden;max-height:24mm}
 .deals h4{font-size:9.5pt;margin-bottom:.6mm}
 .deals p{font-size:7.4pt}
+/* ===== Bild-Look: Serifen-Text, schwarze Schlagzeilen, wenig Farbe ===== */
+body{font-family:"PT Serif",Georgia,"Times New Roman",serif;font-size:8pt;line-height:1.3}
+.S{font-family:"PT Serif",Georgia,serif;font-weight:700;line-height:1.08;letter-spacing:-.1px}
+.G{font-family:Anton,KnallerFett,Impact,sans-serif;font-weight:400;line-height:.9;letter-spacing:-.6px;color:#111;hyphens:manual}
+.vier h3.H,.zwei h3.H,.deals h4.H,.wnews h4.H,.reihe h3.H{font-family:"PT Serif",Georgia,serif;font-weight:700;text-transform:none;line-height:1.1}
+.kopf{border-bottom:none;padding-bottom:0;margin-bottom:2mm;align-items:flex-end}
+.kopf .rubrik{background:none;color:#111;font-size:22pt;padding:0;line-height:.9}
+.kopf .kname{font-size:9pt}
+.kopf .snr{background:#d0021b}
+.kopf + *{border-top:.9mm solid #111;padding-top:2mm}
+.label b{background:#d0021b}.label span{background:#111;height:.4mm}
+.dach{color:#d0021b}
+/* Titelseite */
+.tb{padding:6mm 7mm 5mm}
+.tb-oben{display:grid;grid-template-columns:42mm 1fr 46mm;gap:3mm;height:46mm}
+.tb-datum{font-size:7pt;font-weight:900;letter-spacing:.3px;margin-bottom:.8mm}
+.tb-logo .logo{width:42mm;height:33mm;font-size:21pt}
+.tb-slogan{font-size:6pt;font-weight:900;color:#d0021b;text-transform:uppercase;margin-top:.8mm;line-height:1.2}
+.tb-portraits{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:27mm 1fr;gap:1.5mm}
+.tb-portraits figure{height:27mm}
+.tb-portraits figcaption{display:none}
+.pcap{position:absolute;left:0;bottom:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:5.8pt;font-weight:700;padding:.4mm 1mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-ph{grid-column:1/-1;font-size:13.5pt;overflow:hidden}
+.sh{font-size:6.5pt;font-weight:900;color:#d0021b;text-transform:uppercase;white-space:nowrap}
+.tb-anz{border:.5mm solid #111;padding:2mm 2.5mm;background:#fff6c9;display:flex;flex-direction:column;gap:1mm;overflow:hidden}
+.anzk{font-size:6.5pt;font-weight:900;color:#fff;background:#d0021b;align-self:flex-start;padding:.2mm 1.5mm}
+.tb-anz .H{font-size:12.5pt;text-transform:none;line-height:1}
+.tb-anz p{font-size:7pt}.anzf{margin-top:auto;font-size:7.5pt;font-weight:900;color:#d0021b}
+.tb-dach{margin-top:2.5mm;font-size:8.5pt;font-weight:900;color:#d0021b;text-transform:uppercase}
+.tb .G{margin:.5mm 0 2.5mm}
+.tb-haupt{display:grid;grid-template-columns:40mm 1fr 47mm;grid-template-rows:minmax(0,1fr);gap:3mm;flex:1;min-height:0;border-top:.9mm solid #111;padding-top:2mm}
+.tb-links{border-right:.3mm solid #111;padding-right:2.5mm;overflow:hidden;display:flex;flex-direction:column;font-size:7.3pt;line-height:1.28}
+.kn{margin-bottom:1.5mm;hyphens:auto;flex:0 1 auto;overflow:hidden;min-height:0}.kn b{color:#d0021b;font-family:"Roboto Condensed",Arial,sans-serif;font-weight:900}
+.kn .kt{font-weight:700}.kn i{font-style:normal;font-family:"Roboto Condensed",Arial,sans-serif;font-weight:900;font-size:6.3pt;color:#d0021b}
+.zitat{border-top:.9mm solid #d0021b;padding-top:1mm;margin:1mm 0 2mm;flex:0 0 auto}
+.zq{font-family:Anton,KnallerFett,Impact,sans-serif;color:#d0021b;font-size:30pt;line-height:1;height:7mm;overflow:hidden}
+.zitat .S{font-size:9.5pt}.zk{font-size:6pt;font-weight:900;margin-top:.8mm}
+.kitipp{border:.4mm solid #111;padding:1.5mm;font-size:7pt;flex:0 0 auto}.kitipp .kk{background:#111;color:#fff;font-weight:900;font-size:7pt;
+ margin:-1.5mm -1.5mm 1mm;padding:.4mm 1.5mm}.kitipp b{font-size:8pt}
+.tb-mitte{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.tb-mitte figure{height:74mm;flex:0 0 auto}
+.tb-mitte .vs{font-size:12pt;margin:2mm 0 1.5mm}
+.txt2{column-count:2;column-gap:3.5mm;column-rule:.2mm solid #bbb;font-size:7.9pt;overflow:hidden;flex:1;min-height:0}
+.txt2 p{margin-bottom:1.2mm}.txt2 .quelle{break-inside:avoid}
+.tb-rechts{border-left:.3mm solid #111;padding-left:2.5mm;overflow:hidden;display:flex;flex-direction:column;gap:2mm}
+.rotlabel{background:#d0021b;color:#fff;font-size:7pt;font-weight:900;padding:.3mm 1.6mm;text-transform:uppercase}
+.serie h3{font-size:13pt;margin:1mm 0 1.5mm}.serie .txt{font-size:7.5pt;margin-top:1.5mm}
+.gv{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm}
+.gv>div{border:.4mm solid #111;font-size:6.6pt;line-height:1.2;overflow:hidden}
+.gv .gk{color:#fff;font-weight:900;font-size:7pt;text-align:center;padding:.4mm 0}
+.gv .gw .gk{background:#2e7d32}.gv .vl .gk{background:#c62828}
+.gvb{height:16mm;background:#ddd center/cover}.gv p{padding:1mm}
+.wetter{border:.4mm solid #111;font-family:"Roboto Condensed",Arial,sans-serif}
+.wk{background:#0d47a1;color:#fff;font-weight:900;font-size:7pt;padding:.4mm 1.5mm}
+.wt{display:grid;grid-template-columns:15mm 9mm 1fr auto auto;align-items:center;gap:1mm;font-size:7pt;padding:0 1.5mm;border-bottom:.2mm solid #ddd}
+.wt b{font-size:10pt}.wt .mn{color:#666}.wt .rg{color:#1e88e5;font-size:6.5pt}
+.solarz{font-size:6.8pt;padding:1mm 1.5mm;background:#fff6c9}
+.tb-banner{background:#111;color:#fff;display:flex;align-items:center;gap:3mm;padding:2mm 3mm;margin-top:2mm}
+.tb-banner .G{color:#fff;font-size:19pt;text-transform:uppercase;flex:1;line-height:.95}
+.tb-banner .bd{color:#ffd400;font-weight:900;font-size:7.5pt;text-transform:uppercase}
+.tb-banner .bs{background:#ffd400;color:#111;font-weight:900;font-size:8pt;padding:.5mm 2mm;white-space:nowrap}
+.tb-inhalt{font-size:6.6pt;margin-top:1.2mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tb-inhalt b{color:#d0021b}
 """
 
 
@@ -1352,7 +1487,7 @@ def bild(a, r, stoerer: str = "") -> str:
     return f'<figure><div class="foto leer" style="--a:{k};--b:#111"><span class="wort H">{e(r["dach"])}</span></div>{st}</figure>'
 
 
-STILE = ["rot", "schwarz", "gelb", "plain", "rotschrift"]
+STILE = ["plain", "plain", "rot", "plain", "schwarz"]
 
 
 def werkstatt_seite(seitennr, kopf, r_werk, news) -> str:
@@ -1403,7 +1538,7 @@ def solar_seite(seitennr, kopf, r_solar, solar_news, r_balkon, deals) -> str:
     s.append(f"""<div>{f'<div class="kasten gelb"><div class="kk">Solar-Tipp des Tages</div><div class="ki"><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div>' if tipp else ''}
 <div class="kasten"><div class="kk">So viel bringt dein Balkonkraftwerk</div><div class="ki"><table class="tab">
 <tr><th>Anlage</th><th>kWh/Jahr</th><th>selbst genutzt</th><th>Ersparnis/Jahr</th></tr>{zeilen}</table>
-<p class="fussnote">Grobe Schätzung für den Raum Stuttgart: ca. 1.000 kWh pro kWp bei optimaler Lage, 60 % Eigenverbrauch,
+<p class="fussnote">Grobe Schätzung für den Raum Göppingen: ca. 1.000 kWh pro kWp bei optimaler Lage, 60 % Eigenverbrauch,
 0,35 €/kWh. Deine Werte: kostenloser PVGIS-Rechner der EU oder der Rechner auf der Webseite.</p></div></div></div></div>""")
     s.append('<div class="label" style="--k:#eab308;margin-top:3mm"><b>Angebote des Tages</b><span></span></div><div class="deals">')
     for a in deals[:6]:
@@ -1434,50 +1569,120 @@ def druck_bauen(ausgabe, demo=False) -> str:
     s = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>
 {FONTS_DRUCK}<style>{DRUCK_CSS}</style></head><body>"""]
 
-    # ── Titelseite ──
-    kandidaten = []
+    # ── Titelseite – Aufbau wie eine echte Boulevard-Titelseite ──
+    GEWINN = ["gewinnt", "sieg", "siegt", "rekord", "durchbruch", "triumph", "meister", "jubel", "rettet", "feiert",
+              "kazandı", "galibiyet", "zafer", "bestpreis", "tiefstpreis", "erfolg", "geschafft"]
+    VERLUST = ["verliert", "niederlage", "pleite", "rückruf", "streik", "absturz", "kaybetti", "mağlubiyet", "scheitert",
+               "entlassen", "insolvenz", "panne", "ausfall", "sperre", "teurer", "warnt", "blamage", "aus für"]
+    pool = []
     for r, l in ausgabe:
-        if r["id"] == "werkstatt" or (auf_r and r["id"] == auf_r["id"]):
+        if r["id"] == "werkstatt":
             continue
-        beste = [a for a in l if a is not auf]
-        if beste:
-            kandidaten.append((r, max(beste[:3], key=lambda x: x["punkte"] + (3 if x["bild"] else 0))))
-    kandidaten.sort(key=lambda x: x[1]["punkte"] + (3 if x[1]["bild"] else 0), reverse=True)
-    reihe, anrisse = kandidaten[:3], kandidaten[3:6]
-    for _, a in reihe:
-        benutzt.add(id(a))
+        pool += [(r, a) for a in l[:5] if a is not auf]
+    pool.sort(key=lambda x: x[1]["punkte"] + (3 if x[1]["bild"] else 0), reverse=True)
 
-    name = ZEITUNG_NAME.replace("-", " ").split()
-    logo = "".join(f"<span>{e(w)}</span>" for w in name)
-    anr = "".join(f'<div><b>{e(r["dach"])}</b>{e(schlagzeile(a))}</div>' for r, a in anrisse)
-    s.append(f"""<div class="seite"><header class="mast"><div class="logo H">{logo}</div>
-<div class="mastmid"><div class="slogan C">{e(UNTERTITEL.upper())}</div><div class="anrisse C">{anr}</div></div>
-<div class="mastinfo C"><div><b>{e(datum_heute())}</b><br>Nr. {nr} · {"DEMO-AUSGABE" if demo else "Persönliche Ausgabe"}</div>
-<div class="preis">0,00 €</div></div></header>""")
+    def nimm(bed, anzahl, rubriken_einmal=True):
+        out, rub = [], set()
+        for r, a in pool:
+            if id(a) in benutzt or not bed(r, a) or (rubriken_einmal and r["id"] in rub):
+                continue
+            out.append((r, a)); benutzt.add(id(a)); rub.add(r["id"])
+            if len(out) == anzahl:
+                break
+        return out
+
+    def enthaelt(a, woerter):
+        t = f" {schlagzeile(a)} {a['titel']} ".lower()
+        return any(w in t for w in woerter)
+
+    gewinner = nimm(lambda r, a: enthaelt(a, GEWINN), 1)
+    verlierer = nimm(lambda r, a: enthaelt(a, VERLUST), 1)
+    oben = nimm(lambda r, a: hat_foto(a), 3)
+    rechts = nimm(lambda r, a: hat_foto(a), 1)
+    banner = nimm(lambda r, a: True, 1)
+    kurz = nimm(lambda r, a: True, 5, rubriken_einmal=False)
+    ws, _, tipp = werkstatt_heute()
+    seite = lambda r: seite_von.get(r["id"], "")
+
+    def riesen_groesse(t):
+        return max(30, min(84, 2650 / max(len(t), 1)))
+
+    logo = "".join(f"<span>{e(w)}</span>" for w in ZEITUNG_NAME.replace("-", " ").split())
+    s.append(f"""<div class="seite tb"><div class="tb-oben"><div class="tb-logo"><div class="tb-datum C">{e(datum_heute().upper())}</div>
+<div class="logo H">{logo}</div><div class="tb-slogan C">Unabhängig · Persönlich · Nr. {nr} · 0,00 €{" · DEMO" if demo else ""}</div></div>
+<div class="tb-portraits">""")
+    for r, a in oben:
+        s.append(f'<figure>{bild(a, r)[8:-9]}<span class="pcap C">{e(dachzeile(a, r))}</span></figure>')
+    if oben:
+        r0, a0 = oben[0]
+        s.append(f'<div class="tb-ph S">{e(schlagzeile(a0))} <span class="sh C">Seite {seite(r0)}</span></div>')
+    s.append("</div>")
+    if ws:
+        s.append(f"""<div class="tb-anz"><div class="anzk C">KI-WERKSTATT · SEITE {seite_von.get('werkstatt', 2)}</div>
+<div class="H">{e(ws['titel'])}</div><p>{e(ws['level'])} · {e(ws['dauer'])} · mit fertigem Prompt für Claude Code</p>
+<div class="anzf C">Heute selbst ausprobieren!</div></div>""")
+    else:
+        s.append("<div></div>")
+    s.append("</div>")
+
     if auf:
-        s.append(f"""<section class="aufm"><div class="dach">{neu_tag(auf)}{e(dachzeile(auf, auf_r))}</div>
-{hl(schlagzeile(auf), 'plain', 44, 'h1')}
-<div class="aufmgrid">{bild(auf, auf_r, stoerer=auf_r['dach'] + '!')}{text_html(auf, 170)}</div></section>""")
-    s.append('<section class="reihe">')
-    for i, (r, a) in enumerate(reihe):
-        s.append(f"""<article style="--k:{farbe(r)}">{bild(a, r)}<div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>
-{hl(schlagzeile(a), ['rot', 'schwarz', 'gelb'][i % 3], 13, 'h3')}{text_html(a, 55, lead=False)}
-<div class="seitehinweis">Mehr {e(r['titel'])} auf Seite {seite_von.get(r['id'], '')}</div></article>""")
-    s.append("</section>")
-    ws, _, _ = werkstatt_heute()
-    wbox = (f'<div class="wbox"><div class="klein">HEUTE IN DER KI-WERKSTATT · SEITE {seite_von.get("werkstatt", 2)}</div>'
-            f'<div class="H">{e(ws["titel"])}</div><p>{e(ws["ziel"])} {e(ws["level"])}, {e(ws["dauer"])} – mit fertigem Prompt.</p></div>'
-            if ws else "<div></div>")
+        g = schlagzeile(auf)
+        s.append(f'<div class="tb-dach C">{neu_tag(auf)}{e(dachzeile(auf, auf_r))}</div>'
+                 f'<h1 class="G" style="font-size:{riesen_groesse(g):.0f}pt">{e(g)}</h1>')
+
+    # Hauptzone: Kurzmeldungen | Aufmacher | Serie + Gewinner/Verlierer + Wetter
+    s.append('<div class="tb-haupt"><aside class="tb-links">')
+    for r, a in kurz:
+        s.append(f'<p class="kn"><b>{e(dachzeile(a, r))}</b> – <span class="kt">{e(schlagzeile(a))}.</span> '
+                 f'{e(" ".join(artikel_absaetze(a, 11)))} <i>S. {seite(r)}</i></p>')
+    s.append(f'<div class="zitat"><div class="zq">“</div><div class="S">{e(SPRUECHE[heute.toordinal() % len(SPRUECHE)])}</div>'
+             f'<div class="zk C">SPRUCH DES TAGES</div></div>')
+    if tipp:
+        s.append(f'<div class="kitipp"><div class="kk C">KI-TIPP</div><b>{e(tipp[0])}</b><p>{e(kuerzen(tipp[1], 110))}</p></div>')
+    s.append("</aside>")
+    if auf:
+        s.append(f"""<section class="tb-mitte">{bild(auf, auf_r)}<div class="vs S">{e(vorspann(auf) or kuerzen(auf['teaser'], 140))}</div>
+<div class="txt2">{''.join(f'<p>{e(p)}</p>' for p in artikel_absaetze(auf, 170))}
+<div class="quelle">Quelle: {e(auf.get('quelle') or '')} · mehr auf Seite {seite(auf_r)}</div></div></section>""")
+    s.append('<aside class="tb-rechts">')
+    for r, a in rechts:
+        s.append(f"""<div class="serie"><span class="rotlabel C">{e(r['dach'])}</span><h3 class="S">{e(schlagzeile(a))}</h3>
+<figure style="height:34mm">{bild(a, r)[8:-9]}</figure><div class="txt">{''.join(f'<p>{e(p)}</p>' for p in artikel_absaetze(a, 45))}</div>
+<div class="sh C">Seite {seite(r)}</div></div>""")
+    if gewinner or verlierer:
+        s.append('<div class="gv">')
+        for titel, liste, kl in (("GEWINNER", gewinner, "gw"), ("VERLIERER", verlierer, "vl")):
+            if liste:
+                r, a = liste[0]
+                th = f'<div class="gvb" style="background-image:url(\'{a.get("bild_druck") or a["bild"]}\')"></div>' if hat_foto(a) else ""
+                s.append(f'<div class="{kl}"><div class="gk C">{titel}</div>{th}<p><b>{e(schlagzeile(a))}</b></p></div>')
+            else:
+                s.append("<div></div>")
+        s.append("</div>")
+    if WETTER:
+        tage = ["Heute", "Morgen", "Übermorgen"]
+        zeilen = "".join(f'<div class="wt"><span>{tage[i] if i < 3 else w["datum"].strftime("%a")}</span>{wetter_symbol(w["code"], "8mm")}'
+                         f'<b>{w["max"]}°</b><span class="mn">{w["min"]}°</span><span class="rg">{w["regen"]} %</span></div>'
+                         for i, w in enumerate(WETTER[:3]))
+        h0 = WETTER[0]
+        s.append(f"""<div class="wetter"><div class="wk C">WETTER {e(WOHNORT['name'].split()[0].upper())}</div>{zeilen}
+<div class="solarz C">Heute {e(WETTER_TEXT.get(h0['code'], ''))}, {h0['sonne_h']:.1f} Std. Sonne.<br><b>Dein 800-W-Balkonkraftwerk: ca. {h0['solar_kwh']:.1f} kWh</b>
+(≈ {h0['solar_kwh'] * 0.35:.2f} €)</div></div>""")
+    s.append("</aside></div>")
+
+    for r, a in banner:
+        s.append(f'<div class="tb-banner"><span class="bd C">{e(r["dach"])}</span><span class="G">{e(schlagzeile(a))}</span>'
+                 f'<span class="bs C">Seite {seite(r)}</span></div>')
 
     def seiten_name(ids):
         if ids == ["werkstatt"]:
             return "KI-Werkstatt"
         if ids == ["solar", "balkon"]:
-            return "Solar & Balkonkraftwerk: Sparen, Angebote, Region"
+            return "Solar & Angebote"
         return " · ".join(r_nach_id[i][0]["titel"] for i in ids if i in r_nach_id)
 
-    inhalt = "".join(f'<div><span>{e(seiten_name(ids))}</span><i>{n}</i></div>' for n, ids in enumerate(PDF_SEITEN, start=2))
-    s.append(f'<footer class="tfuss">{wbox}<div class="inhalt"><b>HEUTE IN IHRER ZEITUNG</b>{inhalt}</div></footer></div>')
+    s.append('<div class="tb-inhalt C"><b>HEUTE:</b> ' + " &nbsp;|&nbsp; ".join(
+        f'<b>{n}</b> {e(seiten_name(ids))}' for n, ids in enumerate(PDF_SEITEN, start=2)) + "</div></div>")
 
     # ── Innenseiten ──
     for seitennr, ids in enumerate(PDF_SEITEN, start=2):
@@ -1501,7 +1706,7 @@ def druck_bauen(ausgabe, demo=False) -> str:
                 continue
             r, liste = r_nach_id[rid]
             liste = [a for a in liste if id(a) not in benutzt] or liste
-            k = farbe(r)
+            k = farbe(r) if r["id"] == "gs" else "#d0021b"
             label = f'<div class="label"><b>{e(r["titel"])}</b><span></span></div>' if art != "voll" else ""
             s.append(f'<section class="block {art}" style="--k:{k}">{label}')
             if not liste:
@@ -1517,7 +1722,7 @@ def druck_bauen(ausgabe, demo=False) -> str:
                 for j, a in enumerate(rest[:4]):
                     mit = bool(a.get("bild_druck") or a["bild"].startswith("data:"))
                     s.append(f"""<article class="{'' if mit else 'ohne'}">{bild(a, r) if mit else ''}<div><div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>
-{hl(schlagzeile(a), 'gelb' if j == 1 else 'plain', 12.5, 'h3')}{text_html(a, 60 if mit else 85, lead=False)}</div></article>""")
+{hl(schlagzeile(a), 'plain', 12.5, 'h3')}{text_html(a, 60 if mit else 85, lead=False)}</div></article>""")
                 s.append("</div>")
             elif art == "halb":
                 s.append(f"""<article class="haupt"><div class="dach">{neu_tag(top)}{e(dachzeile(top, r))}</div>
@@ -1776,6 +1981,11 @@ def main():
     ap.add_argument("--demo", action="store_true", help="Platzhalter statt echter Feeds")
     args = ap.parse_args()
 
+    global WETTER
+    try:
+        WETTER = wetter_demo() if args.demo else wetter_holen()
+    except Exception as ex:
+        print(f"  Wetter nicht verfügbar: {type(ex).__name__}")
     if args.demo:
         ausgabe, fehler = demo_sammeln()
     else:

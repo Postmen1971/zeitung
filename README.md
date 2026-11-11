@@ -33,7 +33,7 @@ Ohne Schlüssel funktioniert alles weiter. Dann stehen statt der Artikel die Anr
 
 ### Region
 
-Die Solar-Meldungen „aus deiner Nähe“ kommen aus den Orten in `REGION` (oben in `zeitung.py`).
+Die Solar-Meldungen „aus deiner Nähe“ kommen aus den Orten in `REGION`, Wetter und Solar-Ertrag aus `WOHNORT` (beides oben in `zeitung.py`).
 
 ## Lokal starten
 
