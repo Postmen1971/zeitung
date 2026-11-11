@@ -38,6 +38,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -429,7 +430,14 @@ def zeitung_sammeln():
 
     def hole(rf):
         r, f = rf
-        return r["id"], f, feed_lesen(laden(f["url"])[0], f["url"])
+        try:
+            daten = laden(f["url"])[0]
+        except urllib.error.HTTPError as ex:      # kurzer Aussetzer (z. B. 429/503): einmal wiederholen
+            if ex.code not in (429, 500, 502, 503):
+                raise
+            time.sleep(5)
+            daten = laden(f["url"])[0]
+        return r["id"], f, feed_lesen(daten, f["url"])
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
         for fut, (r, f) in zip([pool.submit(hole, rf) for rf in auftraege], auftraege):
@@ -1991,6 +1999,11 @@ def main():
         ausgabe, fehler = demo_sammeln()
     else:
         ausgabe, fehler = zeitung_sammeln()
+        alle_feeds = sum(len(r["feeds"]) for r in RESSORTS)
+        if len(fehler) > alle_feeds * 0.4:
+            print(f"✖ {len(fehler)} von {alle_feeds} Quellen nicht erreichbar (z. B. vorübergehende Sperre) – "
+                  "Ausgabe wird NICHT veröffentlicht, die letzte vollständige bleibt online.", *fehler[:5], sep="\n   ")
+            return 1
         anreichern(ausgabe)
         artikel_schreiben(ausgabe)
 
