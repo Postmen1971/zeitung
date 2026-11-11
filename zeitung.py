@@ -871,6 +871,11 @@ def main():
     (ordner / "index.html").write_text(seite, "utf-8")   # immer die neueste Ausgabe
 
     print(f"✔ {sum(len(l) for _, l in ausgabe)} Meldungen -> {datei}")
+    for r, liste in ausgabe:   # kurze Inhaltsübersicht
+        fotos = sum(1 for a in liste if a["bild"])
+        print(f"\n■ {r['titel']} ({len(liste)} Meldungen, {fotos} mit Foto)")
+        for a in liste[:3]:
+            print(f"   {'NEU ' if a.get('neu') else ''}{a['titel']}  [{a.get('quelle', '')}]")
     if fehler:
         print(f"⚠ {len(fehler)} Feed(s) nicht erreichbar:", *fehler, sep="\n   ")
     if args.oeffnen:
