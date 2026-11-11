@@ -132,6 +132,15 @@ RESSORTS = [
                F(gnews("Zukunftstechnologie")), F(gnews("Kernfusion"))]},
 ]
 
+# Schöne Quellennamen (nach Internetadresse des Feeds)
+QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "haberturk": "Habertürk",
+           "sabah": "Sabah", "sportschau": "Sportschau", "kicker": "kicker", "boxingnews24": "Boxing News 24",
+           "badlefthook": "Bad Left Hook", "the-decoder": "The Decoder", "t3n": "t3n", "heise": "heise online",
+           "tagesschau": "tagesschau", "dw.com": "Deutsche Welle", "medicalxpress": "Medical Xpress",
+           "spektrum": "Spektrum", "scinexx": "scinexx", "deutschlandfunk": "Deutschlandfunk",
+           "golem": "Golem", "newatlas": "New Atlas", "ingenieur.de": "ingenieur.de",
+           "trendsderzukunft": "Trends der Zukunft", "raumfahrer": "Raumfahrer.net", "futurezone": "Futurezone"}
+
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
 PDF_SEITEN = [["gs"], ["fussball", "boxen"], ["welt"], ["ki", "forschung"], ["technik", "visionen"]]
 
@@ -257,6 +266,9 @@ def feed_lesen(daten: bytes, feed_url: str):
         quelle = text_von(item, "source") or feed_titel
         if "news.google.com" in feed_url and " - " in titel:   # "Schlagzeile - Quelle"
             titel, quelle = titel.rsplit(" - ", 1)
+        else:
+            quelle = next((n for k, n in QUELLEN.items() if k in feed_url), "") or \
+                re.split(r"\s+[-–|:]\s+", quelle.strip(" -–|"))[0]
         teaser = saeubern(roh)
         if teaser.lower().startswith(titel.lower()[:40]) or len(teaser) < 25:
             teaser = ""          # Google News wiederholt nur den Titel
