@@ -1,0 +1,10 @@
+name: Feedtest
+on:
+  push:
+    branches: [feedtest]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/feedtest.py
