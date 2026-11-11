@@ -9,12 +9,12 @@ Deine persönliche Tageszeitung im Boulevard-Look. Ein Python-Skript holt morgen
 |---|---|
 | 1 | Titelseite: Aufmacher mit großem Foto, drei Top-Meldungen, Spruch des Tages, Inhaltsverzeichnis |
 | 2 | Galatasaray |
-| 3 | Fußball & Boxen |
-| 4 | Die Welt heute |
-| 5 | KI & Forschung/Gentherapie |
-| 6 | Technik & Erfindungen, Visionen |
-
-**Rubriken:** Galatasaray · Fußball · Boxen · Neues von der KI · Die Welt heute · Forschung & Gentherapie · Technik & Erfindungen · Visionen
+| 3 | Bundesliga |
+| 4 | Europas Top-Klubs & Champions League · Nationalmannschaften (DFB-Team, A Milli Takım) · Boxen |
+| 5 | Die Welt heute |
+| 6 | Ideen & Neues für Claude · Neues von der KI |
+| 7 | Smart Home & Tuya · Beamer, Fernseher & Heimkino |
+| 8 | Forschung & Gentherapie · Technik & Erfindungen · Visionen |
 
 ## Lokal starten
 

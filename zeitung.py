@@ -51,7 +51,7 @@ from pathlib import Path
 ZEITUNG_NAME = "MORGEN-KNALLER"
 UNTERTITEL = "Deine Zeitung. Nur deine Themen."
 MAX_PRO_RESSORT = 8          # so viele Meldungen pro Rubrik werden gesammelt
-WEB_PRO_RESSORT = 6          # ... davon auf der Webseite gezeigt
+WEB_PRO_RESSORT = 7          # ... davon auf der Webseite gezeigt
 MAX_ALTER_STUNDEN = 36       # ältere Meldungen fliegen raus
 TIMEOUT_SEKUNDEN = 15
 FOTOS_SUCHEN = True          # fehlende Fotos von der Artikelseite holen (og:image)
@@ -61,10 +61,13 @@ STATUS_DATEI = BASIS / "gelesen.json"   # merkt sich, was schon da war (für "NE
 # Lieblings-Stichwörter: erhöhen die Wichtigkeit (Wert = Bonuspunkte)
 FAVORITEN = {
     "galatasaray": 6, "cimbom": 6, "derby": 3, "fenerbahçe": 2, "champions league": 3,
+    "bayern": 2, "real madrid": 2, "barcelona": 2, "nationalmannschaft": 2, "milli takım": 3,
     "durchbruch": 4, "weltrekord": 3, "weltmeister": 3, "k.o.": 3, "titel": 2,
     "gentherapie": 4, "crispr": 4, "heilung": 3, "zulassung": 2,
-    "künstliche intelligenz": 2, "ki-modell": 2, "roboter": 2, "erfindung": 3,
-    "fusion": 2, "raumfahrt": 2, "mars": 2, "quanten": 2,
+    "claude": 5, "anthropic": 4, "künstliche intelligenz": 2, "ki-modell": 2,
+    "tuya": 6, "smart life": 5, "home assistant": 4, "matter": 2, "zigbee": 2,
+    "beamer": 4, "projektor": 3, "oled": 2, "fernseher": 2, "4k": 1,
+    "roboter": 2, "erfindung": 3, "fusion": 2, "raumfahrt": 2, "quanten": 2,
 }
 
 # Meldungen mit diesen Wörtern werden ausgeblendet
@@ -85,7 +88,15 @@ def F(url: str, filtern: bool = False) -> dict:
     return {"url": url, "filtern": filtern}
 
 
+CLUBS = ["real madrid", "barcelona", "barça", "atlético", "atletico", "manchester city", "man city",
+         "manchester united", "liverpool", "arsenal", "chelsea", "tottenham", "newcastle", "psg",
+         "paris saint-germain", "inter ", "inter mailand", "ac milan", "juventus", "napoli", "bayern",
+         "dortmund", "leverkusen", "benfica", "porto", "ajax", "champions league", "europa league",
+         "premier league", "la liga", "serie a", "ligue 1"]
+
+# Reihenfolge zählt: kommt eine Meldung in mehreren Rubriken vor, landet sie in der ersten.
 RESSORTS = [
+    # ── SPORT ──
     {"id": "gs", "dach": "CİMBOM", "titel": "Galatasaray", "stil": "gs",
      "stichwoerter": ["galatasaray", "cimbom", "cim bom"],
      "feeds": [F("https://www.fotomac.com.tr/rss/galatasaray.xml"),
@@ -94,24 +105,62 @@ RESSORTS = [
                F("https://www.haberturk.com/rss/spor.xml", True),
                F("https://www.sabah.com.tr/rss/spor.xml", True),
                F(gnews("Galatasaray"), True)]},
-    {"id": "fussball", "dach": "SPORT", "titel": "Fußball", "stil": "sport",
-     "stichwoerter": [],
-     "feeds": [F("https://www.sportschau.de/fussball/index~rss2.xml"),
-               F("https://newsfeed.kicker.de/news/fussball"),
-               F(gnews("Fußball Bundesliga")), F(gnews("Süper Lig futbol", "tr"))]},
-    {"id": "boxen", "dach": "SPORT", "titel": "Boxen", "stil": "sport",
+    {"id": "national", "dach": "LÄNDERSPIEL", "titel": "Nationalmannschaften", "stil": "sport",
+     "stichwoerter": ["nationalmannschaft", "nationalelf", "nationalteam", "dfb-team", "dfb-elf", "länderspiel",
+                      "milli takım", "a milli", "ay-yıldızlı", "nations league", "qualifikation", "national team",
+                      "bundestrainer", "teknik direktör", "em 2028", "euro 2028"],
+     "feeds": [F(gnews("DFB-Team Nationalmannschaft"), True), F(gnews("A Milli Takım", "tr"), True),
+               F(gnews("Länderspiel Nationalmannschaft"), True),
+               F("https://www.sportschau.de/fussball/index~rss2.xml", True)]},
+    {"id": "bundesliga", "dach": "BUNDESLIGA", "titel": "Bundesliga", "stil": "sport",
+     "stichwoerter": ["bundesliga", "bayern", "dortmund", "bvb", "leverkusen", "leipzig", "stuttgart", "vfb",
+                      "frankfurt", "eintracht", "gladbach", "wolfsburg", "freiburg", "hoffenheim", "bremen",
+                      "union berlin", "mainz", "augsburg", "heidenheim", "hamburger sv", "hsv", "köln", "st. pauli"],
+     "feeds": [F("https://www.sportschau.de/fussball/index~rss2.xml", True),
+               F("https://newsfeed.kicker.de/news/fussball", True),
+               F(gnews("Fußball Bundesliga")), F(gnews("VfB Stuttgart"))]},
+    {"id": "europa", "dach": "EUROPAS TOP-KLUBS", "titel": "Champions League & Top-Ligen", "stil": "sport",
+     "stichwoerter": CLUBS,
+     "feeds": [F("https://feeds.bbci.co.uk/sport/football/rss.xml", True),
+               F(gnews("Champions League")), F(gnews("Real Madrid Barcelona")),
+               F(gnews("Premier League", "en"), True), F(gnews("Serie A Inter Milan Juventus", "en"), True),
+               F("https://newsfeed.kicker.de/news/fussball", True)]},
+    {"id": "boxen", "dach": "BOXEN", "titel": "Boxen", "stil": "sport",
      "stichwoerter": ["box", "boxing", "kampf", "fight", "ko", "wbc", "wba", "ibf", "wbo"],
      "feeds": [F("https://www.boxingnews24.com/feed/"), F("https://www.badlefthook.com/rss/index.xml"),
                F(gnews("Boxen Kampf"))]},
-    {"id": "ki", "dach": "DIGITAL", "titel": "Neues von der KI", "stil": "digital",
-     "stichwoerter": [" ki", "ki-", "künstliche intelligenz", " ai ", "ai-", "chatgpt", "openai",
-                      "anthropic", "claude", "gemini", "llm", "sprachmodell", "machine learning"],
-     "feeds": [F("https://the-decoder.de/feed/"), F("https://t3n.de/tag/kuenstliche-intelligenz/rss.xml"),
-               F("https://www.heise.de/rss/heise-atom.xml", True), F(gnews("Künstliche Intelligenz"))]},
+    # ── NACHRICHTEN ──
     {"id": "welt", "dach": "NACHRICHTEN", "titel": "Die Welt heute", "stil": "welt",
      "stichwoerter": [],
      "feeds": [F("https://www.tagesschau.de/xml/rss2/"),
                F("https://rss.dw.com/rdf/rss-de-all")]},
+    # ── DIGITAL ──
+    {"id": "claude", "dach": "CLAUDE", "titel": "Ideen & Neues für Claude", "stil": "claude",
+     "stichwoerter": ["claude", "anthropic"],
+     "feeds": [F(gnews("Claude Anthropic")), F(gnews("Claude AI Anthropic", "en"), True),
+               F(gnews("Claude Code tips", "en"), True),
+               F("https://the-decoder.de/feed/", True), F("https://simonwillison.net/atom/everything/", True),
+               F("https://www.reddit.com/r/ClaudeAI/top/.rss?t=day")]},
+    {"id": "ki", "dach": "KI", "titel": "Neues von der KI", "stil": "digital",
+     "stichwoerter": [" ki", "ki-", "künstliche intelligenz", " ai ", "ai-", "chatgpt", "openai",
+                      "gemini", "llm", "sprachmodell", "machine learning", "nvidia"],
+     "feeds": [F("https://the-decoder.de/feed/"), F("https://t3n.de/tag/kuenstliche-intelligenz/rss.xml"),
+               F("https://www.heise.de/rss/heise-atom.xml", True), F(gnews("Künstliche Intelligenz"))]},
+    {"id": "smarthome", "dach": "SMART HOME", "titel": "Smart Home & Tuya", "stil": "smarthome",
+     "stichwoerter": ["smart home", "smarthome", "smart-home", "tuya", "smart life", "home assistant", "matter",
+                      "zigbee", "thread", "alexa", "google home", "homekit", "hue", "steckdose", "thermostat",
+                      "saugroboter", "türklingel", "überwachungskamera", "sensor"],
+     "feeds": [F(gnews("Tuya")), F(gnews("Tuya smart", "en")), F(gnews("Smart Home Neuheiten")),
+               F(gnews("Home Assistant")), F("https://www.home-assistant.io/atom.xml"),
+               F("https://stadt-bremerhaven.de/feed/", True), F("https://www.smartdroid.de/feed/", True)]},
+    {"id": "tv", "dach": "BEAMER & TV", "titel": "Beamer, Fernseher & Heimkino", "stil": "tv",
+     "stichwoerter": ["beamer", "projektor", "projector", "fernseher", " tv", "tv-", "oled", "qled", "mini-led",
+                      "micro-led", "heimkino", "soundbar", "fire tv", "google tv", "streaming-stick", "hdmi",
+                      "dolby vision", "television"],
+     "feeds": [F(gnews("Beamer")), F(gnews("Fernseher OLED neu")), F(gnews("Heimkino Projektor")),
+               F(gnews("4K projector", "en"), True), F("https://www.areadvd.de/feed/", True),
+               F("https://stadt-bremerhaven.de/feed/", True), F("https://www.flatpanelshd.com/rss.php", True)]},
+    # ── WISSEN & ZUKUNFT ──
     {"id": "forschung", "dach": "MEDIZIN", "titel": "Forschung & Gentherapie", "stil": "forschung",
      "stichwoerter": [],
      "feeds": [F(gnews("Gentherapie")), F(gnews("CRISPR")),
@@ -139,10 +188,14 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "tagesschau": "tagesschau", "dw.com": "Deutsche Welle", "medicalxpress": "Medical Xpress",
            "spektrum": "Spektrum", "scinexx": "scinexx", "deutschlandfunk": "Deutschlandfunk",
            "golem": "Golem", "newatlas": "New Atlas", "ingenieur.de": "ingenieur.de",
-           "trendsderzukunft": "Trends der Zukunft", "raumfahrer": "Raumfahrer.net", "futurezone": "Futurezone"}
+           "trendsderzukunft": "Trends der Zukunft", "raumfahrer": "Raumfahrer.net", "futurezone": "Futurezone",
+           "bbci": "BBC Sport", "simonwillison": "Simon Willison", "reddit.com/r/ClaudeAI": "r/ClaudeAI",
+           "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
+           "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD"}
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
-PDF_SEITEN = [["gs"], ["fussball", "boxen"], ["welt"], ["ki", "forschung"], ["technik", "visionen"]]
+PDF_SEITEN = [["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"],
+              ["smarthome", "tv"], ["forschung", "technik", "visionen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
     "Damlaya damlaya göl olur. – Tropfen für Tropfen wird ein See.",
@@ -457,7 +510,8 @@ def anreichern(ausgabe):
 #  DEMO-DATEN (zum Testen ohne Internet)
 # ════════════════════════════════════════════════════════════════════
 
-DEMO_FARBEN = {"gs": ("#a90432", "#fdb912"), "sport": ("#d0021b", "#5a0010"), "digital": ("#111", "#555"),
+DEMO_FARBEN = {"gs": ("#a90432", "#fdb912"), "claude": ("#c15f3c", "#f0a37f"),
+               "smarthome": ("#0b6e99", "#4fd1c5"), "tv": ("#1a1a2e", "#e94560"), "sport": ("#d0021b", "#5a0010"), "digital": ("#111", "#555"),
                "welt": ("#00305e", "#3a7bd5"), "forschung": ("#0a7d5a", "#7dd3b0"),
                "technik": ("#333", "#999"), "visionen": ("#3a0ca3", "#b5179e")}
 
@@ -587,6 +641,8 @@ a{color:inherit;text-decoration:none}
 .ressort.digital .rkopf{background:#111}.ressort.welt .rkopf{background:#00305e}
 .ressort.forschung .rkopf{background:#0a7d5a}.ressort.technik .rkopf{background:#4b4b4b}
 .ressort.visionen .rkopf{background:linear-gradient(90deg,#3a0ca3,#7209b7)}
+.ressort.claude .rkopf{background:#c15f3c}.ressort.smarthome .rkopf{background:linear-gradient(90deg,#0b6e99,#14a3a3)}
+.ressort.tv .rkopf{background:linear-gradient(90deg,#1a1a2e,#e94560)}
 .top{display:flex;gap:12px;padding-bottom:10px;border-bottom:1px solid #ccc;margin-bottom:8px}
 .top .tb{flex:0 0 130px;height:96px;background:#ddd center/cover}
 .top h2{font-size:23px;line-height:1.05}
@@ -709,8 +765,8 @@ a{color:inherit;text-decoration:none}
 .ikopf .nr{font-weight:900;font-size:10pt}
 .block{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .block.voll{flex:1}
-.block.halb{flex:1}
-.block.halb + .block.halb{border-top:1mm solid #111;padding-top:3mm;margin-top:3mm}
+.block.halb,.block.drittel{flex:1}
+.block + .block{border-top:1mm solid #111;padding-top:3mm;margin-top:3mm}
 .bkopf{display:flex;align-items:baseline;gap:3mm;background:var(--k);color:#fff;padding:1.4mm 3mm;margin-bottom:2.5mm}
 .bkopf b{font-size:20pt;line-height:1}
 .bkopf span{font-family:"Roboto Condensed",Arial,sans-serif;font-weight:700;font-size:9pt;text-transform:uppercase;opacity:.9}
@@ -727,6 +783,11 @@ a{color:inherit;text-decoration:none}
 .halb .btop .foto{height:52mm}
 .halb .btop h2{font-size:18pt;margin:.6mm 0 1.6mm}
 .halb .btop .bteaser{font-size:9pt;line-height:1.38}
+.drittel .btop{display:grid;grid-template-columns:1fr 1.25fr;gap:4mm;margin-bottom:2mm}
+.drittel .btop .foto{height:36mm}
+.drittel .btop .bteaser{font-size:8.6pt;line-height:1.33}
+.drittel .bkopf{margin-bottom:2mm}.drittel .bkopf b{font-size:16pt}
+.drittel .spalten{column-count:2}
 .spalten{flex:1;min-height:0;column-gap:5mm;column-rule:.25mm solid #bbb;column-fill:balance}
 .voll .spalten{column-count:3}.halb .spalten{column-count:3}
 .spalten article{break-inside:avoid;margin-bottom:3mm;padding-bottom:2.2mm;border-bottom:.25mm solid #ddd}
@@ -737,7 +798,7 @@ a{color:inherit;text-decoration:none}
 .impressum{font-family:"Roboto Condensed",Arial,sans-serif;font-size:6.8pt;color:#777;border-top:.3mm solid #999;padding-top:1mm;margin-top:2mm}
 """
 
-KOPF_FARBE = {"gs": "#a90432", "sport": "#d0021b", "digital": "#111", "welt": "#00305e",
+KOPF_FARBE = {"claude": "#c15f3c", "smarthome": "#0b6e99", "tv": "#1a1a2e", "gs": "#a90432", "sport": "#d0021b", "digital": "#111", "welt": "#00305e",
               "forschung": "#0a7d5a", "technik": "#4b4b4b", "visionen": "#5a189a"}
 
 
@@ -837,7 +898,7 @@ def druck_bauen(ausgabe, demo=False) -> str:
 
     # ── Rubrikseiten ──
     for seitennr, ids in enumerate(PDF_SEITEN, start=2):
-        art = "voll" if len(ids) == 1 else "halb"
+        art = {1: "voll", 2: "halb"}.get(len(ids), "drittel")
         s.append(f"""<div class="seite"><header class="ikopf C"><span class="H">{e(ZEITUNG_NAME)}</span>
 <span>{e(datum_heute())}</span><span class="nr">SEITE {seitennr}</span></header>""")
         for rid in ids:
@@ -852,21 +913,21 @@ def druck_bauen(ausgabe, demo=False) -> str:
                 s.append('<p class="leerbox">Heute keine Meldungen in dieser Rubrik.</p></section>')
                 continue
             top = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
-            rest = [a for a in liste if a is not top][: (7 if art == "voll" else 3)]
+            rest = [a for a in liste if a is not top][: {"voll": 7, "halb": 3, "drittel": 2}[art]]
             if art == "voll":
                 s.append(f"""<article class="btop">{foto(top, r, extra=f'''<div class="ueber"><div class="dach">{neu_tag(top)}{e(r["titel"])}</div>
 <h2 class="H" style="{groesse(top['titel'], 24)}"><a href="{e(top['link'])}">{e(top['titel'])}</a></h2></div>''')}
 <p class="bteaser C">{e(kuerzen(top['teaser'], 300))}</p>{meta(top)}</article>""")
-            else:
+            else:   # halb / drittel
                 s.append(f"""<article class="btop">{foto(top, r)}<div><div class="dach">{neu_tag(top)}{e(r["titel"])}</div>
-<h2 class="H" style="{groesse(top['titel'], 18)}"><a href="{e(top['link'])}">{e(top['titel'])}</a></h2>
-<p class="bteaser">{e(kuerzen(top['teaser'], 260))}</p>{meta(top)}</div></article>""")
+<h2 class="H" style="{groesse(top['titel'], 18 if art == 'halb' else 14)}"><a href="{e(top['link'])}">{e(top['titel'])}</a></h2>
+<p class="bteaser">{e(kuerzen(top['teaser'], 260 if art == 'halb' else 170))}</p>{meta(top)}</div></article>""")
             s.append('<div class="spalten">')
             for i, a in enumerate(rest):
-                bild = foto(a, r) if (a.get("bild_druck") or a["bild"].startswith("data:")) and (art == "voll" or i == 0) else ""
+                bild = foto(a, r) if (a.get("bild_druck") or a["bild"].startswith("data:")) and (art == "voll" or (art == "halb" and i == 0)) else ""
                 s.append(f"""<article><div class="dach">{neu_tag(a)}{e(a.get('quelle') or r['titel'])}</div>{bild}
 <h4 class="H" style="{groesse(a['titel'], 12)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h4>
-<p>{e(kuerzen(a['teaser'], 210 if art == 'voll' else 150))}</p>{meta(a)}</article>""")
+<p>{e(kuerzen(a['teaser'], {"voll": 210, "halb": 150, "drittel": 110}[art]))}</p>{meta(a)}</article>""")
             s.append("</div></section>")
         if seitennr == len(PDF_SEITEN) + 1:
             s.append(f'<div class="impressum">{e(ZEITUNG_NAME)} wird automatisch aus RSS-Feeds erstellt '
