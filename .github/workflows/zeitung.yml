@@ -37,7 +37,7 @@ jobs:
       - name: Zeitung bauen
         env:
           TZ: Europe/Berlin
-        run: python zeitung.py --ausgabe _site
+        run: python zeitung.py --ausgabe _site --pdf
 
       - uses: actions/upload-pages-artifact@v3
         with:
