@@ -37,6 +37,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.parse
 import urllib.request
 import webbrowser
@@ -382,19 +383,30 @@ def anreichern(ausgabe):
         return
     offen = [a for _, liste in ausgabe for a in liste
              if (not a["bild"] or not a["teaser"]) and a["link"].startswith("http")]
-    statistik = {"google": 0, "google_ok": 0}
-
-    def hole(a):
-        if "news.google.com" in a["link"]:
-            statistik["google"] += 1
+    # 1) Google-News-Weiterleitungen nacheinander auflösen (Google bremst parallele Anfragen)
+    google = [a for a in offen if "news.google.com" in a["link"]]
+    ok, leer, erster_fehler = 0, 0, ""
+    for i, a in enumerate(google):
+        for versuch in (1, 2):
             try:
                 echt = google_link_aufloesen(a["link"])
-            except Exception:
-                echt = ""
-            if not echt:
-                return a, "", ""
-            statistik["google_ok"] += 1
-            a["link"] = echt          # Schlagzeile führt jetzt direkt zum Artikel
+                if echt:
+                    a["link"] = echt      # Schlagzeile führt jetzt direkt zum Artikel
+                    ok += 1
+                else:
+                    leer += 1
+                break
+            except Exception as ex:
+                erster_fehler = erster_fehler or f"{type(ex).__name__}: {ex}"[:160]
+                time.sleep(4 * versuch)
+        time.sleep(0.8)
+    if google:
+        print(f"  Google-News-Links aufgelöst: {ok}/{len(google)}, ohne Ergebnis: {leer}" + (f" (erster Fehler: {erster_fehler})" if erster_fehler else ""))
+
+    # 2) Artikelseiten parallel nach Foto & Anreißer fragen
+    def hole(a):
+        if "news.google.com" in a["link"]:
+            return a, "", ""
         daten, _, ziel = laden(a["link"], 400_000)
         if "news.google.com" in urllib.parse.urlparse(ziel).netloc:
             return a, "", ""          # Google-News-Weiterleitung ohne echte Artikelseite
@@ -413,8 +425,6 @@ def anreichern(ausgabe):
                 a["bild"] = bild
             if text and not a["teaser"] and not text.lower().startswith(a["titel"].lower()[:40]):
                 a["teaser"] = text
-    if statistik["google"]:
-        print(f"  Google-News-Links aufgelöst: {statistik['google_ok']}/{statistik['google']}")
 
 
 # ════════════════════════════════════════════════════════════════════
