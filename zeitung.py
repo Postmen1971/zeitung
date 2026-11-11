@@ -98,7 +98,7 @@ RESSORTS = [
      "stichwoerter": [],
      "feeds": [F("https://www.sportschau.de/fussball/index~rss2.xml"),
                F("https://newsfeed.kicker.de/news/fussball"),
-               F(gnews("Bundesliga")), F(gnews("Süper Lig", "tr"))]},
+               F(gnews("Fußball Bundesliga")), F(gnews("Süper Lig futbol", "tr"))]},
     {"id": "boxen", "dach": "SPORT", "titel": "Boxen", "stil": "sport",
      "stichwoerter": ["box", "boxing", "kampf", "fight", "ko", "wbc", "wba", "ibf", "wbo"],
      "feeds": [F("https://www.boxingnews24.com/feed/"), F("https://www.badlefthook.com/rss/index.xml"),
@@ -750,6 +750,16 @@ def bild_einbetten(ausgabe):
         typ = typ.split(";")[0].strip()
         if not typ.startswith("image/") or len(daten) >= 4_000_000:
             raise ValueError("kein Bild")
+        try:   # mit Pillow (optional) verkleinern -> PDF bleibt handlich
+            import io
+            from PIL import Image
+            bild = Image.open(io.BytesIO(daten)).convert("RGB")
+            bild.thumbnail((1000, 1000))
+            puffer = io.BytesIO()
+            bild.save(puffer, "JPEG", quality=72, optimize=True)
+            daten, typ = puffer.getvalue(), "image/jpeg"
+        except Exception:
+            pass
         return a, f"data:{typ};base64," + base64.b64encode(daten).decode()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as pool:

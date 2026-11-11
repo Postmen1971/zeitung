@@ -29,7 +29,7 @@ python3 zeitung.py --ausgabe ordner # in einen bestimmten Ordner schreiben
 
 Das Ergebnis liegt in `ausgaben/`. In `index.html` und `zeitung.pdf` steht immer die neueste Ausgabe, daneben liegen die Ausgaben mit Datum.
 
-Für das PDF braucht das Skript Chrome, Chromium oder Edge. Wird der Browser nicht gefunden, gib den Pfad über die Umgebungsvariable `CHROME` an.
+Für das PDF braucht das Skript Chrome, Chromium oder Edge. Ist `pillow` installiert (`pip install pillow`), werden die Fotos verkleinert und das PDF bleibt klein. Wird der Browser nicht gefunden, gib den Pfad über die Umgebungsvariable `CHROME` an.
 
 ## Jeden Morgen automatisch
 

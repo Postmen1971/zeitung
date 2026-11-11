@@ -34,6 +34,9 @@ jobs:
           key: gelesen-${{ github.run_id }}
           restore-keys: gelesen-
 
+      - name: Pillow für kleinere Fotos im PDF
+        run: pip install --quiet pillow
+
       - name: Zeitung bauen
         env:
           TZ: Europe/Berlin
