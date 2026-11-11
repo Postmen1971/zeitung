@@ -67,7 +67,7 @@ FAVORITEN = {
 }
 
 # Meldungen mit diesen Wörtern werden ausgeblendet
-SPERRLISTE = ["horoskop", "gewinnspiel", "anzeige", "sponsored", "rabattcode"]
+SPERRLISTE = ["horoskop", "gewinnspiel", "anzeige", "sponsored", "rabattcode", "live hören"]
 
 
 def gnews(suche: str, sprache: str = "de") -> str:
@@ -87,8 +87,7 @@ def F(url: str, filtern: bool = False) -> dict:
 RESSORTS = [
     {"id": "gs", "dach": "CİMBOM", "titel": "Galatasaray", "stil": "gs",
      "stichwoerter": ["galatasaray", "cimbom", "cim bom"],
-     "feeds": [F(gnews("Galatasaray"), True), F(gnews("Galatasaray", "tr"), True),
-               F(gnews("Galatasaray", "en"), True)]},
+     "feeds": [F(gnews("Galatasaray"), True), F(gnews("Galatasaray", "tr"), True)]},
     {"id": "fussball", "dach": "SPORT", "titel": "Fußball", "stil": "sport",
      "stichwoerter": [],
      "feeds": [F("https://newsfeed.kicker.de/news/fussball"), F(gnews("Bundesliga")),
@@ -353,14 +352,49 @@ def meta_wert(seite: str, *namen) -> str:
     return ""
 
 
+def google_link_aufloesen(link: str) -> str:
+    """Google-News-Weiterleitung -> echte Artikel-Adresse (sonst leerer String)."""
+    m = re.search(r"/articles/([^/?#]+)", link)
+    if not m:
+        return ""
+    art_id = m.group(1)
+    seite = laden(f"https://news.google.com/rss/articles/{art_id}", 600_000)[0].decode("utf-8", "replace")
+    sg = re.search(r'data-n-a-sg="([^"]+)"', seite)
+    ts = re.search(r'data-n-a-ts="([^"]+)"', seite)
+    if not (sg and ts):
+        return ""
+    anfrage = ["Fbv4je", '["garturlreq",[["X","X",["X","X"],null,null,1,1,"US:en",null,1,null,null,null,'
+               'null,null,0,1],"X","X",1,[1,1,1],1,1,null,0,0,null,0],"%s",%s,"%s"]' % (art_id, ts.group(1), sg.group(1))]
+    daten = ("f.req=" + urllib.parse.quote(json.dumps([[anfrage]]))).encode()
+    req = urllib.request.Request("https://news.google.com/_/DotsSplashUi/data/batchexecute", data=daten,
+                                 headers={"User-Agent": UA,
+                                          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"})
+    with urllib.request.urlopen(req, timeout=TIMEOUT_SEKUNDEN) as r:
+        antwort = r.read().decode("utf-8", "replace")
+    teil = json.loads(antwort.split("\n\n", 1)[1])[:-2]
+    url = json.loads(teil[0][2])[1]
+    return url if isinstance(url, str) and url.startswith("http") else ""
+
+
 def anreichern(ausgabe):
     """Holt für Meldungen ohne Foto/Text das Vorschaubild (og:image) und die Kurzbeschreibung."""
     if not FOTOS_SUCHEN:
         return
     offen = [a for _, liste in ausgabe for a in liste
              if (not a["bild"] or not a["teaser"]) and a["link"].startswith("http")]
+    statistik = {"google": 0, "google_ok": 0}
 
     def hole(a):
+        if "news.google.com" in a["link"]:
+            statistik["google"] += 1
+            try:
+                echt = google_link_aufloesen(a["link"])
+            except Exception:
+                echt = ""
+            if not echt:
+                return a, "", ""
+            statistik["google_ok"] += 1
+            a["link"] = echt          # Schlagzeile führt jetzt direkt zum Artikel
         daten, _, ziel = laden(a["link"], 400_000)
         if "news.google.com" in urllib.parse.urlparse(ziel).netloc:
             return a, "", ""          # Google-News-Weiterleitung ohne echte Artikelseite
@@ -369,7 +403,7 @@ def anreichern(ausgabe):
         text = meta_wert(seite, "og:description", "description", "twitter:description")
         return a, urllib.parse.urljoin(ziel, bild) if bild else "", saeubern(text)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
         for fut in concurrent.futures.as_completed([pool.submit(hole, a) for a in offen]):
             try:
                 a, bild, text = fut.result()
@@ -379,6 +413,8 @@ def anreichern(ausgabe):
                 a["bild"] = bild
             if text and not a["teaser"] and not text.lower().startswith(a["titel"].lower()[:40]):
                 a["teaser"] = text
+    if statistik["google"]:
+        print(f"  Google-News-Links aufgelöst: {statistik['google_ok']}/{statistik['google']}")
 
 
 # ════════════════════════════════════════════════════════════════════
