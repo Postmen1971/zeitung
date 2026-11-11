@@ -506,3 +506,35 @@ def ersparnis(wp: float, ausrichtung: str, eigenverbrauch: float = 0.6, preis: f
 
 def solar_heute(tag_nr: int):
     return SOLAR_TIPPS[tag_nr % len(SOLAR_TIPPS)]
+
+
+# ──────────────────────────────────────────────────────────────────────
+#  RECHENBEISPIELE MIT SPEICHER – für Ebersbach an der Fils / Göppingen
+#  Annahmen (Stand Nov. 2026, aus Ratgebern/Angeboten gerundet):
+#   • Eigenverbrauch ohne Speicher ca. 30–40 %, mit 2 kWh Speicher ca. 60–80 %
+#   • Komplettsets mit Speicher ab ca. 800 €, mit 2.000 Wp + Speicher ab ca. 900–1.800 €
+#   • Strompreis 0,35 €/kWh, ca. 10 % Verlust beim Umweg über den Akku
+#   • Speicher-Lebensdauer ca. 8–15 Jahre (Module 25+ Jahre)
+# ──────────────────────────────────────────────────────────────────────
+STROMPREIS = 0.35
+HAUSHALT_KWH = 3000          # Jahresverbrauch des Haushalts (Annahme)
+SPEICHER_BEISPIELE = [
+    # Name, Modul-Wp, Montage, Speicher kWh, Eigenverbrauch, Kaufpreis €
+    ("900 Wp, senkrecht Süd – ohne Speicher", 900, "Süd, senkrecht am Geländer", 0, 0.35, 350),
+    ("900 Wp, senkrecht Süd + 2 kWh Speicher", 900, "Süd, senkrecht am Geländer", 2, 0.75, 850),
+    ("2.000 Wp, Ost/West schräg + 2 kWh Speicher", 2000, "Ost oder West, schräg", 2, 0.50, 1100),
+    ("2.000 Wp, Süd schräg + 5 kWh Speicher", 2000, "Süd, schräg (ca. 30°)", 5, 0.65, 1800),
+]
+
+
+def ersparnis_speicher(wp, ausrichtung, speicher_kwh, eigenverbrauch, preis_eur, strompreis=STROMPREIS):
+    """Jahresertrag, selbst genutzte kWh, Ersparnis €/Jahr und Amortisation in Jahren (grobe Schätzung)."""
+    kwh = wp / 1000 * ERTRAG_PRO_KWP * AUSRICHTUNGEN.get(ausrichtung, 0.8)
+    # 800-W-Wechselrichter: ohne Speicher wird Mittagsspitze abgeschnitten, mit Speicher kaum
+    kwh = min(kwh, 1040 if not speicher_kwh else 1800)
+    direkt = 0.35
+    selbst = kwh * (direkt + max(eigenverbrauch - direkt, 0) * 0.9)     # 10 % Akku-Verlust auf den gespeicherten Teil
+    selbst = min(selbst, HAUSHALT_KWH * 0.6)                            # mehr kann ein Haushalt kaum selbst nutzen
+    euro = selbst * strompreis
+    return {"kwh": round(kwh), "selbst": round(selbst), "euro": round(euro),
+            "jahre": round(preis_eur / euro, 1) if euro else None, "preis": preis_eur}

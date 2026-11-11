@@ -15,17 +15,21 @@ Deine persönliche Tageszeitung im Boulevard-Look. Ein Python-Skript holt morgen
 | 6 | Die Welt heute |
 | 7 | Neues rund um Claude · Neues von der KI |
 | 8 | Smart Home & Tuya · Smart-Home-Ideen aus der Community · Beamer & TV |
-| 9 | **Solar:** Spar-Tabelle, Solar-Tipp, Balkonkraftwerk-Angebote, Meldungen aus der Region |
+| 9 | **Solar:** Rechenbeispiele mit und ohne Speicher für Ebersbach/Göppingen, Solar-Tipp, Angebote, Meldungen aus der Region |
 | 10 | Forschung & Gentherapie · Technik & Erfindungen · Visionen |
 
-### Artikel schreibt Claude
+### Artikel schreibt Claude – alles auf Deutsch
 
-Aus den wichtigsten Meldungen jeder Rubrik schreibt Claude eigene, kurze Artikel auf Deutsch. Türkische und englische Meldungen werden dabei übersetzt. Die Originaltexte werden nur gelesen und nie abgedruckt. Dafür brauchst du einen API-Schlüssel:
+Claude schreibt aus jeder Meldung einen eigenen deutschen Artikel. Englische und türkische Meldungen werden dabei übersetzt, auf der Webseite genauso wie im PDF. Die Originaltexte werden nur gelesen und nie abgedruckt. Dafür brauchst du **einen** der zwei Wege, jeweils als Secret unter **Settings → Secrets and variables → Actions → New repository secret**:
 
-1. Auf **platform.claude.com** anmelden, unter *API Keys* einen Schlüssel anlegen und Guthaben aufladen. Ein monatliches Ausgabenlimit lässt sich dort einstellen.
-2. Im Repo unter **Settings → Secrets and variables → Actions → New repository secret** den Namen `ANTHROPIC_API_KEY` und den Schlüssel eintragen.
+| Weg | Secret-Name | Kosten |
+|---|---|---|
+| **Über dein Claude-Abo** (Pro/Max …) | `CLAUDE_CODE_OAUTH_TOKEN` | läuft über dein Abo-Kontingent |
+| Über die API | `ANTHROPIC_API_KEY` | Abrechnung pro Nutzung auf platform.claude.com |
 
-Ohne Schlüssel funktioniert alles weiter. Dann stehen statt der Artikel die Anreißer der Quellen in der Zeitung. Bereits geschriebene Artikel werden zwischengespeichert und nicht doppelt bezahlt.
+So bekommst du das Abo-Token: Auf deinem PC Claude Code installieren, dann `claude setup-token` ausführen. Im Browser bestätigen, den angezeigten Token (beginnt mit `sk-ant-oat01-`) kopieren und als Secret `CLAUDE_CODE_OAUTH_TOKEN` eintragen. Das Token gilt etwa ein Jahr.
+
+Ohne Secret funktioniert alles weiter, aber dann bleiben fremdsprachige Meldungen im Original. Fertige Artikel werden zwischengespeichert und nicht doppelt erzeugt.
 
 ### Blättern, öffnen, herunterladen
 

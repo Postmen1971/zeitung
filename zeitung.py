@@ -570,12 +570,14 @@ def anreichern(ausgabe):
 # ════════════════════════════════════════════════════════════════════
 #  ARTIKEL – Claude schreibt aus jeder Meldung einen eigenen Zeitungsartikel
 # ════════════════════════════════════════════════════════════════════
-# Braucht einen API-Schlüssel von https://platform.claude.com (Umgebungsvariable
-# ANTHROPIC_API_KEY, bei GitHub als "Secret"). Ohne Schlüssel druckt die Zeitung
-# die Anreißer der Quellen. Die Originaltexte werden nur gelesen, nie abgedruckt.
+# Zwei Wege (bei GitHub jeweils als "Secret" hinterlegen):
+#  1. ANTHROPIC_API_KEY       – API-Schlüssel von https://platform.claude.com (Abrechnung pro Nutzung)
+#  2. CLAUDE_CODE_OAUTH_TOKEN – läuft über dein Claude-Abo (Pro/Max …); Token lokal mit
+#                               "claude setup-token" erzeugen. Nutzt Claude Code (claude -p).
+# Ohne beides druckt die Zeitung die Original-Anreißer. Originaltexte werden nur gelesen, nie abgedruckt.
 
 KI_MODELL = os.environ.get("KI_MODELL", "claude-haiku-5-5")
-ARTIKEL_PRO_RESSORT = 6            # so viele Meldungen pro Rubrik bekommen einen Artikel
+ARTIKEL_PRO_RESSORT = MAX_PRO_RESSORT   # alle Meldungen bekommen einen deutschen Artikel
 ARTIKEL_CACHE = BASIS / "artikel_cache.json"
 
 ARTIKEL_ANWEISUNG = """Du bist Redakteur einer deutschen Boulevardzeitung. Schreibe aus der folgenden Meldung einen
@@ -621,6 +623,13 @@ def cache_laden() -> dict:
 
 
 def claude_fragen(prompt: str, schluessel: str) -> str:
+    if schluessel == "OAUTH":          # über das Claude-Abo mit Claude Code
+        erg = subprocess.run(["claude", "-p", "Erledige die Aufgabe aus der Eingabe genau wie beschrieben.",
+                              "--model", os.environ.get("KI_MODELL_CODE", "haiku")],
+                             input=prompt, capture_output=True, text=True, timeout=240)
+        if erg.returncode != 0:
+            raise RuntimeError((erg.stderr or erg.stdout)[:200])
+        return erg.stdout
     daten = json.dumps({"model": KI_MODELL, "max_tokens": 900,
                         "messages": [{"role": "user", "content": prompt}]}).encode()
     req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=daten, headers={
@@ -633,14 +642,18 @@ def claude_fragen(prompt: str, schluessel: str) -> str:
 def artikel_schreiben(ausgabe):
     """Ergänzt a['ki'] = {dachzeile, schlagzeile, vorspann, text} für die wichtigsten Meldungen."""
     schluessel = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not schluessel and os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip() and shutil.which("claude"):
+        schluessel = "OAUTH"
     if not schluessel:
-        print("  Artikel: kein ANTHROPIC_API_KEY – die Zeitung nutzt die Anreißer der Quellen.")
+        print("  Artikel: weder ANTHROPIC_API_KEY noch CLAUDE_CODE_OAUTH_TOKEN – keine Übersetzung, "
+              "die Zeitung nutzt die Original-Anreißer.")
         return
+    print("  Artikel: schreibe mit " + ("Claude Code (Abo)" if schluessel == "OAUTH" else f"API ({KI_MODELL})"))
     cache = cache_laden()
     jobs = []
     for r, liste in ausgabe:
         for i, a in enumerate(liste[:ARTIKEL_PRO_RESSORT]):
-            woerter = 170 if i == 0 else 90
+            woerter = 170 if i == 0 else 90 if i < 3 else 60
             jobs.append((r, a, woerter))
 
     fehler, neu = [], 0
@@ -1002,6 +1015,9 @@ ol.schritte li::before{content:counter(s);flex:0 0 26px;height:26px;border-radiu
 .ergebnis b{font-family:"Space Grotesk",Inter,sans-serif;font-size:20px}
 .ergebnis .gruen{background:color-mix(in srgb,#16a34a 15%,transparent)}.ergebnis .gruen b{color:#16a34a}
 @media(max-width:600px){.rechner .felder,.ergebnis{grid-template-columns:1fr 1fr}}
+.bsp{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+.bsp th{text-align:left;font-size:12px;color:var(--tx3);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--rand)}
+.bsp td{padding:8px;border-bottom:1px solid var(--rand)}.bsp .gr{color:#16a34a;font-weight:700}
 /* Rubriken */
 .sec{margin-bottom:40px}
 .shead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
@@ -1053,12 +1069,19 @@ def prompt_box(text: str, titel: str = "Prompt für Claude Code") -> str:
             f'<button class="kopieren" type="button">Kopieren</button></div><pre>{e(text)}</pre></div>')
 
 
+def anreisser(a, n: int) -> str:
+    """Deutscher Vorspann/Text von Claude, sonst der Original-Anreißer."""
+    ki = a.get("ki") or {}
+    text = ki.get("vorspann") or (ki.get("text") or "").split("\n")[0] or a["teaser"]
+    return kuerzen(text, n)
+
+
 def karte(a, r, gross=False) -> str:
     bild = f'<div class="img" style="background-image:url(\'{e(a["bild"])}\')"></div>' if a["bild"] else ""
     neu = '<span class="neu">NEU</span>' if a.get("neu") else ""
     return (f'<a class="card{" gross" if gross and a["bild"] else ""}" href="{e(a["link"])}" target="_blank" rel="noopener">{bild}'
             f'<div class="cb"><div class="ct"><span>{e(a.get("quelle") or r["titel"])}</span>{neu}</div>'
-            f'<h3>{e(a["titel"])}</h3><p>{e(kuerzen(a["teaser"], 260 if gross else 170))}</p>'
+            f'<h3>{e(schlagzeile(a))}</h3><p>{e(anreisser(a, 260 if gross else 170))}</p>'
             f'<div class="zeit">{e(rel_zeit(a.get("datum")))}</div></div></a>')
 
 
@@ -1099,9 +1122,11 @@ def solar_html(r, liste) -> str:
 <div class="felder">
 <label>Modulleistung <b><span id="wpw">900</span> Wp</b><input id="wp" type="range" min="300" max="2000" step="50" value="900"></label>
 <label>Montage<select id="au">{opts}</select></label>
-<label>Eigenverbrauch <b><span id="evw">60</span> %</b><input id="ev" type="range" min="20" max="100" step="5" value="60"></label>
+<label>Speicher<select id="sp"><option value="0" data-ev="35">ohne Speicher</option><option value="1" data-ev="55">1 kWh</option>
+<option value="2" data-ev="70" selected>2 kWh</option><option value="5" data-ev="80">5 kWh</option></select></label>
+<label>Eigenverbrauch <b><span id="evw">70</span> %</b><input id="ev" type="range" min="20" max="100" step="5" value="70"></label>
 <label>Strompreis (€/kWh)<input id="pr" type="number" min="0.1" max="1" step="0.01" value="0.35"></label>
-<label>Kaufpreis (€)<input id="kp" type="number" min="0" step="10" value="450"></label></div>
+<label>Kaufpreis (€)<input id="kp" type="number" min="0" step="10" value="850"></label></div>
 <div class="ergebnis"><div><small>Ertrag / Jahr</small><b id="r1">–</b></div><div><small>selbst genutzt</small><b id="r2">–</b></div>
 <div class="gruen"><small>Ersparnis / Jahr</small><b id="r3">–</b></div><div><small>hat sich bezahlt nach</small><b id="r4">–</b></div></div>
 <p class="werkzeug">Grobe Schätzung für den Raum Göppingen (ca. {basis} kWh pro kWp bei optimaler Lage, max. 800-W-Wechselrichter).
@@ -1111,9 +1136,22 @@ Genauer für deine Adresse: <a href="https://re.jrc.ec.europa.eu/pvg_tools/de/" 
 keine Anmeldung beim Netzbetreiber, aber Eintrag im <b>Marktstammdatenregister</b> innerhalb eines Monats. Ein Speicher wird dort gesondert angemeldet.</p></article></div></div>
 <script>(function(){{const B={basis},$=i=>document.getElementById(i);function rechne(){{const wp=+$('wp').value,f=+$('au').value,ev=+$('ev').value/100,
 pr=+$('pr').value||0,kp=+$('kp').value||0;$('wpw').textContent=wp;$('evw').textContent=Math.round(ev*100);
-let kwh=Math.min(wp/1000*B*f,1040);const selbst=kwh*ev,eur=selbst*pr;$('r1').textContent=Math.round(kwh)+' kWh';
+const sp=+$('sp').value;let kwh=Math.min(wp/1000*B*f,sp?1800:1040);
+let selbst=kwh*(0.35+Math.max(ev-0.35,0)*0.9);selbst=Math.min(selbst,1800);const eur=selbst*pr;$('r1').textContent=Math.round(kwh)+' kWh';
 $('r2').textContent=Math.round(selbst)+' kWh';$('r3').textContent=Math.round(eur)+' €';$('r4').textContent=eur>0&&kp>0?(kp/eur).toFixed(1).replace('.',',')+' Jahren':'–';}}
-['wp','au','ev','pr','kp'].forEach(i=>$(i).addEventListener('input',rechne));rechne();}})();</script>"""]
+['wp','au','ev','pr','kp'].forEach(i=>$(i).addEventListener('input',rechne));
+$('sp').addEventListener('input',()=>{{$('ev').value=$('sp').selectedOptions[0].dataset.ev;rechne();}});rechne();}})();</script>"""]
+    if werkstatt and hasattr(werkstatt, "ersparnis_speicher"):
+        zeilen = ""
+        for name, wp, ausr, sp, ev, preis in werkstatt.SPEICHER_BEISPIELE:
+            x = werkstatt.ersparnis_speicher(wp, ausr, sp, ev, preis)
+            zeilen += (f"<tr><td>{e(name)}</td><td>{x['preis']:,} €</td><td>{x['kwh']:,} kWh</td><td>{x['selbst']:,} kWh</td>"
+                       f"<td class='gr'>{x['euro']} €</td><td><b>{str(x['jahre']).replace('.', ',')} Jahre</b></td></tr>").replace(",", ".")
+        teile.append(f"""<article class="wcard" style="margin-bottom:16px;overflow-x:auto"><span class="eyebrow" style="--c:#d97706">🔋 Rechenbeispiele mit Speicher</span>
+<h3>Für {e(WOHNORT['name'])} / Göppingen</h3><table class="bsp"><tr><th>Anlage</th><th>Preis ca.</th><th>Ertrag/Jahr</th><th>selbst genutzt</th>
+<th>Ersparnis/Jahr</th><th>lohnt sich nach</th></tr>{zeilen}</table>
+<p class="werkzeug">Annahmen: ca. 1.000 kWh pro kWp bei optimaler Lage, 0,35 €/kWh, Haushalt ca. 3.000 kWh/Jahr, Eigenverbrauch ohne Speicher
+ca. 35 %, mit 2 kWh Speicher 60–80 %, 10 % Akku-Verlust, typische Set-Preise Nov. 2026. Akkus halten ca. 8–15 Jahre.</p></article>""")
     if liste:
         erste = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
         teile.append('<div class="grid">' + karte(erste, r, gross=True) + "".join(karte(a, r) for a in liste if a is not erste) + "</div>")
@@ -1154,13 +1192,13 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
             f' style="background:linear-gradient(135deg,{farbe(auf_r)},#0f172a)"'
         s.append(f"""<section class="hero"><a class="herocard" href="{e(auf['link'])}" target="_blank" rel="noopener"{bild}>
 <div class="herotext"><span class="pill" style="--c:{farbe(auf_r)}">{ICONS.get(auf_r['id'], '')} {e(auf_r['titel'])}</span>
-<h1>{e(auf['titel'])}</h1><p>{e(kuerzen(auf['teaser'], 240))}</p><div class="zeit">{e(auf.get('quelle', ''))} · {e(rel_zeit(auf.get('datum')))}</div></div></a>
+<h1>{e(schlagzeile(auf))}</h1><p>{e(anreisser(auf, 240))}</p><div class="zeit">{e(auf.get('quelle', ''))} · {e(rel_zeit(auf.get('datum')))}</div></div></a>
 <div class="toplist"><h2>Top-Meldungen</h2>""")
         for r, a in top:
             th = f'<div class="th" style="background-image:url(\'{e(a["bild"])}\')"></div>' if a["bild"] else \
                 f'<div class="th" style="background:linear-gradient(135deg,{farbe(r)},#0f172a)"></div>'
             s.append(f'<a class="mini" href="{e(a["link"])}" target="_blank" rel="noopener" style="--c:{farbe(r)}">{th}'
-                     f'<div><span class="kat">{ICONS.get(r["id"], "")} {e(r["titel"])}</span><b>{e(a["titel"])}</b></div></a>')
+                     f'<div><span class="kat">{ICONS.get(r["id"], "")} {e(r["titel"])}</span><b>{e(schlagzeile(a))}</b></div></a>')
         s.append("</div></section>")
 
     if pdf_name:
@@ -1391,7 +1429,9 @@ figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);
 /* Solar-Seite */
 .sgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:5mm;margin-top:2mm}
 .halbspalte .txt{font-size:8.2pt}
-.tab{width:100%;border-collapse:collapse;font:7.8pt "Roboto Condensed",Arial,sans-serif}
+/* Solar-Tabelle */
+.tab .rot{color:#d0021b}
+.tab{width:100%;border-collapse:collapse;font:7.2pt "Roboto Condensed",Arial,sans-serif}
 .tab th{text-align:left;background:#111;color:#fff;padding:.8mm 1.2mm;font-weight:700}
 .tab td{padding:.9mm 1.2mm;border-bottom:.2mm solid #ccc}
 .tab tr:nth-child(odd) td{background:#fffbe0}
@@ -1462,7 +1502,64 @@ body{font-family:"PT Serif",Georgia,"Times New Roman",serif;font-size:8pt;line-h
 .tb-banner .bd{color:#ffd400;font-weight:900;font-size:7.5pt;text-transform:uppercase}
 .tb-banner .bs{background:#ffd400;color:#111;font-weight:900;font-size:8pt;padding:.5mm 2mm;white-space:nowrap}
 .tb-inhalt{font-size:6.6pt;margin-top:1.2mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tb-inhalt b{color:#d0021b}
+/* ===== Boulevard kräftiger ===== */
+.dachbox{display:inline-block;align-self:flex-start;background:#d0021b;color:#fff;font-weight:900;font-size:8pt;text-transform:uppercase;
+ padding:.5mm 2mm;margin-bottom:1.2mm;letter-spacing:.2px}
+.G{margin-bottom:2mm}
+.stoerer{width:27mm;height:27mm;font-size:13pt;background:#ffd400;color:#d0021b;border:.8mm solid #d0021b;top:5mm;right:5mm}
+.v-haupt{display:flex;flex-direction:column}
+.v-bild figure{height:92mm}
+.v-unter{display:grid;grid-template-columns:1fr 52mm;gap:4mm;margin-top:2.5mm;height:62mm}
+.v-text{overflow:hidden}.v-text .vs,.h-text .vs{font-size:10pt;margin-bottom:1.5mm}
+.spalten2{column-count:2;column-gap:3mm;column-rule:.2mm solid #bbb;font-size:7.5pt;line-height:1.28}
+.spalten2 p{margin-bottom:1mm}
+.kkbox{border:.6mm solid #d0021b;overflow:hidden;font-size:7.2pt;line-height:1.25}
+.kkk{background:#d0021b;color:#fff;font-size:12pt;padding:.6mm 2mm;margin-bottom:1.5mm}
+.kkbox .kn{padding:0 2mm;margin-bottom:1.3mm}
+.v-drei{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;border-top:1.4mm solid #d0021b;margin-top:3mm;padding-top:2.5mm;flex:1;min-height:0}
+.v-drei article{overflow:hidden;border-right:.2mm solid #bbb;padding-right:3mm}.v-drei article:last-child{border:0}
+.v-drei figure{height:30mm;margin-bottom:1.5mm}.v-drei h3{margin:.5mm 0 1.2mm}.v-drei .txt{font-size:7.5pt}
+.h-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:3.5mm;height:62mm}
+.h-grid figure{height:62mm}.h-text{overflow:hidden}
+.zwei h3.S{margin-bottom:1mm}
+.d-grid{display:grid;grid-template-columns:66mm 1fr;gap:3.5mm;flex:1;min-height:0}
+.d-grid figure{height:100%}.d-text{overflow:hidden;font-size:7.5pt}
+.block{border-top:none}.block + .block{border-top:1.4mm solid #d0021b}
+.label b{font-size:12pt}
+.tb-dach{display:inline-block;background:#d0021b;color:#fff;padding:.5mm 2mm;align-self:flex-start}
+.tb-dach .neu{background:#fff;color:#d0021b}
+.tb-haupt{border-top:1.4mm solid #d0021b}
+.sh{background:#d0021b;color:#fff;padding:0 1.2mm}
+.tb-banner .bd{background:#d0021b;color:#fff;padding:.4mm 1.5mm}
+.tb-mitte figure{height:80mm}
 """
+
+
+# Schriften fürs PDF: werden einmal heruntergeladen (Google Fonts, freie OFL-Lizenz) und fest eingebettet
+SCHRIFTEN = {"Anton-Regular.ttf": ("Anton", "400", "ofl/anton/Anton-Regular.ttf"),
+             "PT_Serif-Regular.ttf": ("PT Serif", "400", "ofl/ptserif/PT_Serif-Web-Regular.ttf"),
+             "PT_Serif-Bold.ttf": ("PT Serif", "700", "ofl/ptserif/PT_Serif-Web-Bold.ttf"),
+             "RobotoCondensed.ttf": ("Roboto Condensed", "100 900", "ofl/robotocondensed/RobotoCondensed%5Bwght%5D.ttf")}
+
+
+def schriften_css() -> str:
+    ordner = BASIS / "fonts"
+    ordner.mkdir(exist_ok=True)
+    css = []
+    for datei, (familie, gewicht, pfad) in SCHRIFTEN.items():
+        f = ordner / datei
+        if not f.exists():
+            try:
+                daten = laden("https://raw.githubusercontent.com/google/fonts/main/" + pfad)[0]
+                if len(daten) > 10_000:
+                    f.write_bytes(daten)
+            except Exception:
+                continue
+        if f.exists():
+            css.append(f'@font-face{{font-family:"{familie}";font-weight:{gewicht};src:url("{f.resolve().as_uri()}") format("truetype")}}')
+    if len(css) < len(SCHRIFTEN):
+        print(f"  Schriften: {len(css)}/{len(SCHRIFTEN)} eingebettet (Rest kommt über Google Fonts)")
+    return "".join(css)
 
 
 def hl(titel: str, stil: str, basis: float, tag: str = "h2") -> str:
@@ -1540,19 +1637,21 @@ def solar_seite(seitennr, kopf, r_solar, solar_news, r_balkon, deals) -> str:
     else:
         s.append("<div></div>")
     zeilen = ""
-    if werkstatt and hasattr(werkstatt, "ersparnis"):
-        for name, wp, ausr in SOLAR_BEISPIELE:
-            kwh, selbst, euro, _ = werkstatt.ersparnis(wp, ausr)
-            zeilen += f"<tr><td>{e(name)}</td><td>{kwh}</td><td>{selbst}</td><td><b>{euro} €</b></td></tr>"
+    if werkstatt and hasattr(werkstatt, "ersparnis_speicher"):
+        for name, wp, ausr, sp, ev, preis in werkstatt.SPEICHER_BEISPIELE:
+            x = werkstatt.ersparnis_speicher(wp, ausr, sp, ev, preis)
+            zeilen += (f"<tr><td>{e(name)}</td><td>{x['preis']:,} €</td><td>{x['kwh']:,}</td><td>{x['selbst']:,}</td>"
+                       f"<td><b>{x['euro']} €</b></td><td><b class='rot'>{str(x['jahre']).replace('.', ',')} J.</b></td></tr>").replace(",", ".")
     s.append(f"""<div>{f'<div class="kasten gelb"><div class="kk">Solar-Tipp des Tages</div><div class="ki"><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div>' if tipp else ''}
-<div class="kasten"><div class="kk">So viel bringt dein Balkonkraftwerk</div><div class="ki"><table class="tab">
-<tr><th>Anlage</th><th>kWh/Jahr</th><th>selbst genutzt</th><th>Ersparnis/Jahr</th></tr>{zeilen}</table>
-<p class="fussnote">Grobe Schätzung für den Raum Göppingen: ca. 1.000 kWh pro kWp bei optimaler Lage, 60 % Eigenverbrauch,
-0,35 €/kWh. Deine Werte: kostenloser PVGIS-Rechner der EU oder der Rechner auf der Webseite.</p></div></div></div></div>""")
+<div class="kasten"><div class="kk">Rechenbeispiele für {e(WOHNORT['name'])} / Göppingen</div><div class="ki"><table class="tab">
+<tr><th>Anlage</th><th>Preis ca.</th><th>kWh/ Jahr</th><th>selbst genutzt</th><th>Ersparnis/ Jahr</th><th>lohnt nach</th></tr>{zeilen}</table>
+<p class="fussnote">Grobe Schätzung: ca. 1.000 kWh pro kWp bei optimaler Lage im Raum Göppingen, 0,35 €/kWh, Haushalt ca. 3.000 kWh/Jahr,
+Eigenverbrauch ohne Speicher ca. 35 %, mit 2 kWh Speicher 60–80 % (bei kleinen Anlagen), 10 % Akku-Verlust. Preise: typische Komplettsets
+Nov. 2026, gerundet. Akkus halten ca. 8–15 Jahre. Eigene Werte: Rechner auf der Webseite oder PVGIS-Rechner der EU.</p></div></div></div></div>""")
     s.append('<div class="label" style="--k:#eab308;margin-top:3mm"><b>Angebote des Tages</b><span></span></div><div class="deals">')
     for a in deals[:6]:
         s.append(f'<article><div class="dach">{neu_tag(a)}{e(a.get("quelle") or "")}</div>'
-                 f'<h4 class="H">{e(a["titel"])}</h4><p>{e(" ".join(artikel_absaetze(a, 22)))}</p></article>')
+                 f'<h4 class="H">{e(schlagzeile(a))}</h4><p>{e(" ".join(artikel_absaetze(a, 22)))}</p></article>')
     s.append("</div>")
     if len(solar_news) > 1:
         s.append('<div class="zwei" style="flex:1">')
@@ -1576,7 +1675,7 @@ def druck_bauen(ausgabe, demo=False) -> str:
             seite_von[i] = n
 
     s = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>
-{FONTS_DRUCK}<style>{DRUCK_CSS}</style></head><body>"""]
+<style>{schriften_css()}</style>{FONTS_DRUCK}<style>{DRUCK_CSS}</style></head><body>"""]
 
     # ── Titelseite – Aufbau wie eine echte Boulevard-Titelseite ──
     GEWINN = ["gewinnt", "sieg", "siegt", "rekord", "durchbruch", "triumph", "meister", "jubel", "rettet", "feiert",
@@ -1650,7 +1749,7 @@ def druck_bauen(ausgabe, demo=False) -> str:
         s.append(f'<div class="kitipp"><div class="kk C">KI-TIPP</div><b>{e(tipp[0])}</b><p>{e(kuerzen(tipp[1], 110))}</p></div>')
     s.append("</aside>")
     if auf:
-        s.append(f"""<section class="tb-mitte">{bild(auf, auf_r)}<div class="vs S">{e(vorspann(auf) or kuerzen(auf['teaser'], 140))}</div>
+        s.append(f"""<section class="tb-mitte">{bild(auf, auf_r, stoerer=("NEU!" if auf.get("neu") else auf_r["dach"] + "!"))}<div class="vs S">{e(vorspann(auf) or kuerzen(auf['teaser'], 140))}</div>
 <div class="txt2">{''.join(f'<p>{e(p)}</p>' for p in artikel_absaetze(auf, 170))}
 <div class="quelle">Quelle: {e(auf.get('quelle') or '')} · mehr auf Seite {seite(auf_r)}</div></div></section>""")
     s.append('<aside class="tb-rechts">')
@@ -1724,29 +1823,49 @@ def druck_bauen(ausgabe, demo=False) -> str:
             top = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
             rest = [a for a in liste if a is not top]
             stil = STILE[(seitennr + bi) % len(STILE)]
+            def riese(t, faktor, lo, hi):
+                return f"font-size:{max(lo, min(hi, faktor / max(len(t), 1))):.0f}pt"
+
+            def kurz_box(items, titel="KURZ & KNAPP"):
+                if not items:
+                    return ""
+                return ('<aside class="kkbox"><div class="kkk H">' + titel + '</div>' + "".join(
+                    f'<p class="kn"><b>{e(dachzeile(a, r))}</b> – <span class="kt">{e(schlagzeile(a))}.</span> '
+                    f'{e(" ".join(artikel_absaetze(a, 16)))}</p>' for a in items) + "</aside>")
+
+            stoerer = "NEU!" if top.get("neu") else (r["dach"] + "!")
             if art == "voll":
-                s.append(f"""<article class="haupt"><div class="dach">{neu_tag(top)}{e(dachzeile(top, r))}</div>
-{hl(schlagzeile(top), stil, 34)}<div class="hauptgrid">{bild(top, r, stoerer='NEU!' if top.get('neu') else '')}{text_html(top, 170)}</div></article>
-<div class="vier">""")
-                for j, a in enumerate(rest[:4]):
-                    mit = bool(a.get("bild_druck") or a["bild"].startswith("data:"))
-                    s.append(f"""<article class="{'' if mit else 'ohne'}">{bild(a, r) if mit else ''}<div><div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>
-{hl(schlagzeile(a), 'plain', 12.5, 'h3')}{text_html(a, 60 if mit else 85, lead=False)}</div></article>""")
+                g = schlagzeile(top)
+                s.append(f"""<article class="v-haupt"><div class="dachbox C">{e(dachzeile(top, r))}</div>
+<h2 class="G" style="{riese(g, 2300, 24, 46)}">{e(g)}</h2>
+<div class="v-bild">{bild(top, r, stoerer=stoerer)}</div>
+<div class="v-unter"><div class="v-text"><div class="vs S">{e(vorspann(top))}</div><div class="spalten2">{''.join(f'<p>{e(p)}</p>' for p in artikel_absaetze(top, 170))}
+<div class="quelle">Quelle: {e(top.get('quelle') or '')}</div></div></div>{kurz_box(rest[3:7])}</div></article><div class="v-drei">""")
+                for j, a in enumerate(rest[:3]):
+                    stil_k = "rot" if j == 1 else "plain"
+                    kopf_k = (f'<h3 class="S hl rot" style="font-size:11.5pt"><span>{e(schlagzeile(a))}</span></h3>' if stil_k == "rot"
+                              else f'<h3 class="S" style="font-size:12pt">{e(schlagzeile(a))}</h3>')
+                    s.append(f"""<article>{bild(a, r) if hat_foto(a) else ''}<div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>
+{kopf_k}<div class="txt">{''.join(f'<p>{e(p)}</p>' for p in artikel_absaetze(a, 45 if hat_foto(a) else 90))}</div></article>""")
                 s.append("</div>")
             elif art == "halb":
-                s.append(f"""<article class="haupt"><div class="dach">{neu_tag(top)}{e(dachzeile(top, r))}</div>
-{hl(schlagzeile(top), stil, 21)}<div class="hauptgrid">{bild(top, r)}{text_html(top, 95)}</div></article><div class="zwei">""")
-                for a in rest[:2]:
-                    s.append(f'<article><div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>'
-                             f'{hl(schlagzeile(a), "plain", 11, "h3")}{text_html(a, 50, lead=False)}</article>')
+                g = schlagzeile(top)
+                s.append(f"""<div class="dachbox C">{e(dachzeile(top, r))}</div><h2 class="G" style="{riese(g, 1500, 17, 30)}">{e(g)}</h2>
+<div class="h-grid">{bild(top, r, stoerer=stoerer if top.get('neu') else '')}<div class="h-text"><div class="vs S">{e(vorspann(top))}</div>
+<div class="spalten2">{''.join(f'<p>{e(p)}</p>' for p in artikel_absaetze(top, 95))}</div></div></div><div class="zwei">""")
+                for j, a in enumerate(rest[:2]):
+                    kopf_k = (f'<h3 class="S hl rot" style="font-size:10.5pt"><span>{e(schlagzeile(a))}</span></h3>' if j == 0
+                              else f'<h3 class="S" style="font-size:11pt">{e(schlagzeile(a))}</h3>')
+                    s.append(f'<article><div class="dach">{neu_tag(a)}{e(dachzeile(a, r))}</div>{kopf_k}'
+                             f'<div class="txt">{"".join(f"<p>{e(p)}</p>" for p in artikel_absaetze(a, 45))}</div></article>')
                 s.append("</div>")
             else:
+                g = schlagzeile(top)
                 neben = rest[0] if rest else None
-                nb = (f'<div class="nebenbei"><b>{e(schlagzeile(neben))}.</b> {e(" ".join(artikel_absaetze(neben, 28)))}</div>'
+                nb = (f'<div class="nebenbei"><b>{e(schlagzeile(neben))}.</b> {e(" ".join(artikel_absaetze(neben, 26)))}</div>'
                       if neben else "")
-                s.append(f"""<article class="haupt" style="display:flex;flex-direction:column;flex:1;min-height:0">
-<div class="dach">{neu_tag(top)}{e(dachzeile(top, r))}</div>{hl(schlagzeile(top), stil, 15)}
-<div class="hauptgrid">{bild(top, r)}<div style="overflow:hidden">{text_html(top, 70)}{nb}</div></div></article>""")
+                s.append(f"""<div class="dachbox C">{e(dachzeile(top, r))}</div><h2 class="G" style="{riese(g, 1100, 13, 22)}">{e(g)}</h2>
+<div class="d-grid">{bild(top, r, stoerer=stoerer if top.get('neu') else '')}<div class="d-text"><div class="spalten2">{''.join(f'<p>{e(p)}</p>' for p in artikel_absaetze(top, 75))}</div>{nb}</div></div>""")
             s.append("</section>")
         if seitennr == len(PDF_SEITEN) + 1:
             s.append(f'<div class="impressum">{e(ZEITUNG_NAME)} wird automatisch aus RSS-Feeds erstellt '
