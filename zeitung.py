@@ -88,35 +88,48 @@ def F(url: str, filtern: bool = False) -> dict:
 RESSORTS = [
     {"id": "gs", "dach": "CİMBOM", "titel": "Galatasaray", "stil": "gs",
      "stichwoerter": ["galatasaray", "cimbom", "cim bom"],
-     "feeds": [F(gnews("Galatasaray"), True), F(gnews("Galatasaray", "tr"), True)]},
+     "feeds": [F("https://www.fotomac.com.tr/rss/galatasaray.xml"),
+               F("https://www.aspor.com.tr/rss/galatasaray.xml"),
+               F("https://www.hurriyet.com.tr/rss/spor", True),
+               F("https://www.haberturk.com/rss/spor.xml", True),
+               F("https://www.sabah.com.tr/rss/spor.xml", True),
+               F(gnews("Galatasaray"), True)]},
     {"id": "fussball", "dach": "SPORT", "titel": "Fußball", "stil": "sport",
      "stichwoerter": [],
-     "feeds": [F("https://newsfeed.kicker.de/news/fussball"), F(gnews("Bundesliga")),
-               F(gnews("Champions League")), F(gnews("Süper Lig", "tr"))]},
+     "feeds": [F("https://www.sportschau.de/fussball/index~rss2.xml"),
+               F("https://newsfeed.kicker.de/news/fussball"),
+               F(gnews("Bundesliga")), F(gnews("Süper Lig", "tr"))]},
     {"id": "boxen", "dach": "SPORT", "titel": "Boxen", "stil": "sport",
      "stichwoerter": ["box", "boxing", "kampf", "fight", "ko", "wbc", "wba", "ibf", "wbo"],
-     "feeds": [F(gnews("Boxen Kampf")), F(gnews("boxing fight", "en"))]},
+     "feeds": [F("https://www.boxingnews24.com/feed/"), F("https://www.badlefthook.com/rss/index.xml"),
+               F(gnews("Boxen Kampf"))]},
     {"id": "ki", "dach": "DIGITAL", "titel": "Neues von der KI", "stil": "digital",
      "stichwoerter": [" ki", "ki-", "künstliche intelligenz", " ai ", "ai-", "chatgpt", "openai",
                       "anthropic", "claude", "gemini", "llm", "sprachmodell", "machine learning"],
-     "feeds": [F(gnews("Künstliche Intelligenz")), F(gnews("artificial intelligence", "en")),
-               F("https://www.heise.de/rss/heise-atom.xml", True)]},
+     "feeds": [F("https://the-decoder.de/feed/"), F("https://t3n.de/tag/kuenstliche-intelligenz/rss.xml"),
+               F("https://www.heise.de/rss/heise-atom.xml", True), F(gnews("Künstliche Intelligenz"))]},
     {"id": "welt", "dach": "NACHRICHTEN", "titel": "Die Welt heute", "stil": "welt",
      "stichwoerter": [],
      "feeds": [F("https://www.tagesschau.de/xml/rss2/"),
                F("https://rss.dw.com/rdf/rss-de-all")]},
     {"id": "forschung", "dach": "MEDIZIN", "titel": "Forschung & Gentherapie", "stil": "forschung",
      "stichwoerter": [],
-     "feeds": [F(gnews("Gentherapie")), F(gnews("gene therapy", "en")), F(gnews("CRISPR")),
-               F("https://www.sciencedaily.com/rss/health_medicine/gene_therapy.xml")]},
+     "feeds": [F(gnews("Gentherapie")), F(gnews("CRISPR")),
+               F("https://medicalxpress.com/rss-feed/genetics-news/"),
+               F("https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406"),
+               F("https://www.scinexx.de/feed/"),
+               F("https://www.deutschlandfunk.de/forschung-aktuell-100.rss")]},
     {"id": "technik", "dach": "TECHNIK", "titel": "Technik & Erfindungen", "stil": "technik",
      "stichwoerter": [],
-     "feeds": [F("https://rss.golem.de/rss.php?feed=RSS2.0"), F(gnews("Erfindung")),
-               F(gnews("neue Technologie Durchbruch"))]},
+     "feeds": [F("https://rss.golem.de/rss.php?feed=RSS2.0"), F("https://t3n.de/rss.xml"),
+               F("https://newatlas.com/index.rss"), F("https://www.ingenieur.de/feed/"),
+               F(gnews("Erfindung"))]},
     {"id": "visionen", "dach": "ZUKUNFT", "titel": "Visionen – morgen ist heute", "stil": "visionen",
-     "stichwoerter": [],
-     "feeds": [F(gnews("Zukunftstechnologie")), F(gnews("Raumfahrt")),
-               F(gnews("Kernfusion")), F(gnews("future technology breakthrough", "en"))]},
+     "stichwoerter": ["zukunft", "raumfahrt", "weltraum", "mars", "mond", "rakete", "fusion", "roboter",
+                      "quanten", "vision", "durchbruch", "2030", "2040", "2050", "energie"],
+     "feeds": [F("https://www.trendsderzukunft.de/feed/"), F("https://www.raumfahrer.net/feed/"),
+               F("https://www.futurezone.de/feed/", True),
+               F(gnews("Zukunftstechnologie")), F(gnews("Kernfusion"))]},
 ]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
@@ -143,6 +156,7 @@ UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chr
 
 
 def laden(url: str, max_bytes: int = 0):
+    url = urllib.parse.quote(url, safe=":/?&=%#+,;@~!$'()*[]")   # Umlaute in Adressen
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*",
                                                "Accept-Language": "de,en;q=0.8,tr;q=0.6"})
     with urllib.request.urlopen(req, timeout=TIMEOUT_SEKUNDEN) as r:
@@ -359,7 +373,7 @@ def google_link_aufloesen(link: str) -> str:
     if not m:
         return ""
     art_id = m.group(1)
-    seite = laden(f"https://news.google.com/rss/articles/{art_id}", 600_000)[0].decode("utf-8", "replace")
+    seite = laden(f"https://news.google.com/rss/articles/{art_id}")[0].decode("utf-8", "replace")
     sg = re.search(r'data-n-a-sg="([^"]+)"', seite)
     ts = re.search(r'data-n-a-ts="([^"]+)"', seite)
     if not (sg and ts):
