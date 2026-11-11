@@ -1,0 +1,19 @@
+name: Vorschau (temporär)
+on:
+  push:
+    branches: [vorschau]
+permissions:
+  contents: write
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --quiet pillow
+      - env:
+          TZ: Europe/Berlin
+        run: python3 zeitung.py --pdf --ausgabe vorschau_out
+      - run: |
+          git config user.name "vorschau-bot"; git config user.email "bot@users.noreply.github.com"
+          git add -f vorschau_out/zeitung.pdf vorschau_out/index.html
+          git commit -m "Vorschau-Ausgabe" && git push
