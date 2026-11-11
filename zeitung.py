@@ -71,7 +71,7 @@ FAVORITEN = {
 }
 
 # Meldungen mit diesen Wörtern werden ausgeblendet
-SPERRLISTE = ["horoskop", "gewinnspiel", "anzeige", "sponsored", "rabattcode", "live hören"]
+SPERRLISTE = ["horoskop", "gewinnspiel", "anzeige", "sponsored", "rabattcode", "live hören", "quoten", "tipp, prognose", "wettbasis"]
 
 
 def gnews(suche: str, sprache: str = "de") -> str:
@@ -147,10 +147,10 @@ RESSORTS = [
      "feeds": [F("https://the-decoder.de/feed/"), F("https://t3n.de/tag/kuenstliche-intelligenz/rss.xml"),
                F("https://www.heise.de/rss/heise-atom.xml", True), F(gnews("Künstliche Intelligenz"))]},
     {"id": "smarthome", "dach": "SMART HOME", "titel": "Smart Home & Tuya", "stil": "smarthome",
-     "stichwoerter": ["smart home", "smarthome", "smart-home", "tuya", "smart life", "home assistant", "matter",
-                      "zigbee", "thread", "alexa", "google home", "homekit", "hue", "steckdose", "thermostat",
-                      "saugroboter", "türklingel", "überwachungskamera", "sensor"],
-     "feeds": [F(gnews("Tuya")), F(gnews("Tuya smart", "en")), F(gnews("Smart Home Neuheiten")),
+     "stichwoerter": ["smart home", "smarthome", "smart-home", "tuya", "smart life", "home assistant",
+                      "zigbee", "homekit", "philips hue", "matter-", "saugroboter", "smarte steckdose",
+                      "heizkörperthermostat", "smart-thermostat", "video-türklingel"],
+     "feeds": [F(gnews("Tuya")), F(gnews("Tuya smart", "en")), F(gnews("Smart Home Neuheiten")), F(gnews("Smart Life App")),
                F(gnews("Home Assistant")), F("https://www.home-assistant.io/atom.xml"),
                F("https://stadt-bremerhaven.de/feed/", True), F("https://www.smartdroid.de/feed/", True)]},
     {"id": "tv", "dach": "BEAMER & TV", "titel": "Beamer, Fernseher & Heimkino", "stil": "tv",
@@ -159,7 +159,7 @@ RESSORTS = [
                       "dolby vision", "television"],
      "feeds": [F(gnews("Beamer")), F(gnews("Fernseher OLED neu")), F(gnews("Heimkino Projektor")),
                F(gnews("4K projector", "en"), True), F("https://www.areadvd.de/feed/", True),
-               F("https://stadt-bremerhaven.de/feed/", True), F("https://www.flatpanelshd.com/rss.php", True)]},
+               F("https://stadt-bremerhaven.de/feed/", True)]},
     # ── WISSEN & ZUKUNFT ──
     {"id": "forschung", "dach": "MEDIZIN", "titel": "Forschung & Gentherapie", "stil": "forschung",
      "stichwoerter": [],
