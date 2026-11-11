@@ -7,14 +7,19 @@ Deine persönliche Tageszeitung im Boulevard-Look. Ein Python-Skript holt morgen
 
 | Seite | Inhalt |
 |---|---|
-| 1 | Titelseite: Aufmacher mit großem Foto, drei Top-Meldungen, Spruch des Tages, Inhaltsverzeichnis |
-| 2 | Galatasaray |
-| 3 | Bundesliga |
-| 4 | Europas Top-Klubs & Champions League · Nationalmannschaften (DFB-Team, A Milli Takım) · Boxen |
-| 5 | Die Welt heute |
-| 6 | Ideen & Neues für Claude · Neues von der KI |
-| 7 | Smart Home & Tuya · Beamer, Fernseher & Heimkino |
-| 8 | Forschung & Gentherapie · Technik & Erfindungen · Visionen |
+| 1 | Titelseite: Aufmacher, drei Top-Meldungen, Werkstatt-Hinweis, Inhaltsverzeichnis |
+| 2 | **KI-Werkstatt:** Workshop des Tages (Schritte + fertiger Prompt für Claude Code), Automatisierung des Tages, Profi-Tipp, neue Anleitungen aus dem Netz |
+| 3 | Galatasaray |
+| 4 | Bundesliga |
+| 5 | Europas Top-Klubs · Nationalmannschaften · Boxen |
+| 6 | Die Welt heute |
+| 7 | Neues rund um Claude · Neues von der KI |
+| 8 | Smart Home & Tuya · Balkonkraftwerk-Angebote · Beamer & TV |
+| 9 | Forschung & Gentherapie · Technik & Erfindungen · Visionen |
+
+Die Webseite hat ein modernes Karten-Design mit hellem und dunklem Modus (je nach Handy-Einstellung). In der KI-Werkstatt lassen sich die Prompts per Knopf kopieren.
+
+Die Workshops, Automatisierungs-Ideen und Profi-Tipps stehen in `werkstatt.py`. Sie wechseln täglich, eigene Einträge kannst du dort einfach ergänzen.
 
 ## Lokal starten
 

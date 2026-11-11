@@ -64,8 +64,10 @@ FAVORITEN = {
     "bayern": 2, "real madrid": 2, "barcelona": 2, "nationalmannschaft": 2, "milli takım": 3,
     "durchbruch": 4, "weltrekord": 3, "weltmeister": 3, "k.o.": 3, "titel": 2,
     "gentherapie": 4, "crispr": 4, "heilung": 3, "zulassung": 2,
+    "claude code": 5, "tutorial": 2, "anleitung": 2, "automatisier": 3,
     "claude": 5, "anthropic": 4, "künstliche intelligenz": 2, "ki-modell": 2,
     "tuya": 6, "smart life": 5, "home assistant": 4, "matter": 2, "zigbee": 2,
+    "balkonkraftwerk": 4, "angebot": 2, "deal": 2, "rabatt": 2, "tiefstpreis": 3, "bestpreis": 3,
     "beamer": 4, "projektor": 3, "oled": 2, "fernseher": 2, "4k": 1,
     "roboter": 2, "erfindung": 3, "fusion": 2, "raumfahrt": 2, "quanten": 2,
 }
@@ -135,6 +137,14 @@ RESSORTS = [
      "feeds": [F("https://www.tagesschau.de/xml/rss2/"),
                F("https://rss.dw.com/rdf/rss-de-all")]},
     # ── DIGITAL ──
+    {"id": "werkstatt", "dach": "WERKSTATT", "titel": "KI-Werkstatt", "stil": "werkstatt",
+     "stichwoerter": ["claude", "anthropic", "tutorial", "anleitung", "guide", "how to", "how i", "workflow",
+                      "automat", "prompt", "tipps", "tips", "mcp", "agent", "skill", "hook"],
+     "feeds": [F("https://dev.to/feed/tag/claudecode"), F("https://dev.to/feed/tag/claude", True),
+               F("https://www.reddit.com/r/ClaudeCode/top/.rss?t=day"),
+               F("https://github.com/anthropics/claude-code/releases.atom"),
+               F(gnews("Claude Code Anleitung")), F(gnews("Claude Code tutorial", "en"), True),
+               F(gnews("KI Automatisierung Anleitung")), F(gnews("Claude Code Tipps"))]},
     {"id": "claude", "dach": "CLAUDE", "titel": "Ideen & Neues für Claude", "stil": "claude",
      "stichwoerter": ["claude", "anthropic"],
      "feeds": [F(gnews("Claude Anthropic")), F(gnews("Claude AI Anthropic", "en"), True),
@@ -153,6 +163,14 @@ RESSORTS = [
      "feeds": [F(gnews("Tuya")), F(gnews("Tuya smart", "en")), F(gnews("Smart Home Neuheiten")), F(gnews("Smart Life App")),
                F(gnews("Home Assistant")), F("https://www.home-assistant.io/atom.xml"),
                F("https://stadt-bremerhaven.de/feed/", True), F("https://www.smartdroid.de/feed/", True)]},
+    {"id": "balkon", "dach": "SOLAR", "titel": "Balkonkraftwerk-Angebote", "stil": "balkon",
+     "stichwoerter": ["balkonkraftwerk", "balkon-kraftwerk", "steckersolar", "stecker-solar", "mini-pv",
+                      "mini-solar", "solarmodul", "solaranlage für den balkon", "balkonsolar", "pv-speicher",
+                      "anker solix", "ecoflow", "zendure", "growatt", "hoymiles", "deye", "wechselrichter"],
+     "feeds": [F(gnews("Balkonkraftwerk Angebot")), F(gnews("Balkonkraftwerk Deal Preis")),
+               F(gnews("Balkonkraftwerk mit Speicher Angebot")), F(gnews("Balkonkraftwerk Test")),
+               F("https://www.mydealz.de/rss/gruppe/balkonkraftwerk", True),
+               F("https://www.mydealz.de/rss/hot", True)]},
     {"id": "tv", "dach": "BEAMER & TV", "titel": "Beamer, Fernseher & Heimkino", "stil": "tv",
      "stichwoerter": ["beamer", "projektor", "projector", "fernseher", " tv", "tv-", "oled", "qled", "mini-led",
                       "micro-led", "heimkino", "soundbar", "fire tv", "google tv", "streaming-stick", "hdmi",
@@ -191,11 +209,16 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "trendsderzukunft": "Trends der Zukunft", "raumfahrer": "Raumfahrer.net", "futurezone": "Futurezone",
            "bbci": "BBC Sport", "simonwillison": "Simon Willison", "reddit.com/r/ClaudeAI": "r/ClaudeAI",
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
-           "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD"}
+           "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
+           "reddit.com/r/ClaudeCode": "r/ClaudeCode", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+
+# Reihenfolge der Rubriken auf der Webseite
+WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "gs", "bundesliga", "europa", "national", "boxen", "welt",
+                   "smarthome", "balkon", "tv", "forschung", "technik", "visionen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
-PDF_SEITEN = [["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"],
-              ["smarthome", "tv"], ["forschung", "technik", "visionen"]]
+PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"],
+              ["smarthome", "balkon", "tv"], ["forschung", "technik", "visionen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
     "Damlaya damlaya göl olur. – Tropfen für Tropfen wird ein See.",
@@ -510,7 +533,7 @@ def anreichern(ausgabe):
 #  DEMO-DATEN (zum Testen ohne Internet)
 # ════════════════════════════════════════════════════════════════════
 
-DEMO_FARBEN = {"gs": ("#a90432", "#fdb912"), "claude": ("#c15f3c", "#f0a37f"),
+DEMO_FARBEN = {"werkstatt": ("#8b5cf6", "#ec4899"), "balkon": ("#eab308", "#f97316"), "gs": ("#a90432", "#fdb912"), "claude": ("#c15f3c", "#f0a37f"),
                "smarthome": ("#0b6e99", "#4fd1c5"), "tv": ("#1a1a2e", "#e94560"), "sport": ("#d0021b", "#5a0010"), "digital": ("#111", "#555"),
                "welt": ("#00305e", "#3a7bd5"), "forschung": ("#0a7d5a", "#7dd3b0"),
                "technik": ("#333", "#999"), "visionen": ("#3a0ca3", "#b5179e")}
@@ -554,8 +577,8 @@ WOCHENTAGE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samsta
 MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August",
           "September", "Oktober", "November", "Dezember"]
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
-         '<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@400;700;900'
-         '&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">')
+         '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700'
+         '&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">')
 
 
 def e(s) -> str:
@@ -594,212 +617,367 @@ def aufmacher_finden(ausgabe):
 
 
 # ════════════════════════════════════════════════════════════════════
-#  WEBSEITE IM BOULEVARD-LOOK
+#  KI-WERKSTATT (Inhalte aus werkstatt.py)
+# ════════════════════════════════════════════════════════════════════
+
+try:
+    import werkstatt
+except ImportError:          # Zeitung läuft auch ohne Werkstatt-Datei
+    werkstatt = None
+
+
+def werkstatt_heute():
+    if not werkstatt:
+        return None, None, None
+    return werkstatt.heute(dt.date.today().toordinal())
+
+
+def rel_zeit(d) -> str:
+    if not d:
+        return ""
+    minuten = int((dt.datetime.now(dt.timezone.utc) - d).total_seconds() // 60)
+    if minuten < 60:
+        return f"vor {max(minuten, 1)} Min."
+    if minuten < 24 * 60:
+        return f"vor {minuten // 60} Std."
+    return d.astimezone().strftime("%d.%m., %H:%M")
+
+
+# ════════════════════════════════════════════════════════════════════
+#  WEBSEITE – moderner Look (hell/dunkel automatisch)
 # ════════════════════════════════════════════════════════════════════
 
 CSS = """
+:root{--bg:#f4f5f8;--fl:#ffffff;--fl2:#eef0f5;--tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;--rand:rgba(15,23,42,.08);
+ --schatten:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);--akzent:#8b5cf6;--r:18px}
+@media(prefers-color-scheme:dark){:root{--bg:#0b0d12;--fl:#151821;--fl2:#1c2030;--tx:#f1f5f9;--tx2:#a5b0c2;--tx3:#64748b;
+ --rand:rgba(255,255,255,.07);--schatten:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.25)}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#e9e6df;font-family:"Roboto Condensed",Helvetica,Arial,sans-serif;color:#111}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
-.H{font-family:Anton,Impact,"Arial Black",sans-serif;font-weight:400;text-transform:uppercase}
-.blatt{max-width:1100px;margin:0 auto;background:#fff;box-shadow:0 0 30px rgba(0,0,0,.15)}
-.kopf{display:flex;align-items:stretch;border-bottom:6px solid #111}
-.logo{background:#d0021b;color:#fff;padding:14px 22px;font-size:clamp(34px,7vw,68px);line-height:.9;
- letter-spacing:-.5px;transform:skewX(-4deg);margin-left:6px}
-.kopfinfo{flex:1;padding:10px 16px;display:flex;flex-direction:column;justify-content:center;font-size:13px}
-.kopfinfo b{font-size:15px}.kopfinfo .unter{color:#d0021b;font-weight:900;text-transform:uppercase;letter-spacing:.5px}
-.pdflink{display:inline-block;margin-top:5px;background:#111;color:#fff;font-weight:900;padding:4px 10px;align-self:flex-start}
-.pdflink:hover{background:#d0021b}
-.ticker{background:#111;color:#fff;overflow:hidden;white-space:nowrap;font-weight:700;font-size:14px;padding:7px 0}
-.ticker span{display:inline-block;padding-left:100%;animation:lauf 90s linear infinite}
-.ticker i{color:#ffd400;font-style:normal;margin:0 10px}
-@keyframes lauf{to{transform:translateX(-100%)}}
-.inhalt{padding:18px}
-.aufmacher{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;border-bottom:4px solid #111;padding-bottom:18px;margin-bottom:18px}
-.aufmacher .bildbox{min-height:260px;background:#111 center/cover no-repeat;position:relative}
-.aufmacher .bildbox.leer{background:repeating-linear-gradient(-45deg,#d0021b 0 22px,#b00016 22px 44px)}
-.stoerer{position:absolute;top:14px;left:-8px;background:#ffd400;color:#111;font-size:22px;
- padding:6px 14px;transform:rotate(-4deg);box-shadow:3px 3px 0 #111}
-.aufmacher h1{font-size:clamp(32px,5vw,58px);line-height:1;margin:6px 0 10px}
-.aufmacher h1 a:hover{color:#d0021b}
-.dach{color:#d0021b;font-weight:900;text-transform:uppercase;font-size:13px;letter-spacing:.5px}
-.teaser{font-family:"PT Serif",Georgia,serif;font-size:15px;line-height:1.45}
-.meta{font-size:11.5px;color:#666;margin-top:6px}
-.neu{background:#d0021b;color:#fff;font-weight:900;font-size:10.5px;padding:1px 5px;margin-right:5px;vertical-align:2px}
-.spruch{background:#ffd400;padding:12px 16px;font-weight:900;margin-bottom:18px;border-left:10px solid #111;font-size:16px}
-.spruch small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
-.raster{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
-.ressort{border-top:3px solid #111}
-.ressort.breit{grid-column:1/-1}
-.rkopf{display:flex;align-items:baseline;gap:10px;background:#d0021b;color:#fff;padding:6px 10px;margin:0 0 10px}
-.rkopf b{font-size:24px;letter-spacing:.5px}
-.rkopf span{font-size:12px;font-weight:700;opacity:.85;text-transform:uppercase}
-.ressort.gs .rkopf{background:linear-gradient(90deg,#a90432 0 50%,#fdb912 50%);}
-.ressort.gs .rkopf b{color:#fff;text-shadow:2px 2px 0 #a90432}
-.ressort.gs .rkopf span{color:#a90432;margin-left:auto;opacity:1;background:#fff;padding:1px 6px}
-.ressort.gs{border-top-color:#fdb912}
-.ressort.digital .rkopf{background:#111}.ressort.welt .rkopf{background:#00305e}
-.ressort.forschung .rkopf{background:#0a7d5a}.ressort.technik .rkopf{background:#4b4b4b}
-.ressort.visionen .rkopf{background:linear-gradient(90deg,#3a0ca3,#7209b7)}
-.ressort.claude .rkopf{background:#c15f3c}.ressort.smarthome .rkopf{background:linear-gradient(90deg,#0b6e99,#14a3a3)}
-.ressort.tv .rkopf{background:linear-gradient(90deg,#1a1a2e,#e94560)}
-.top{display:flex;gap:12px;padding-bottom:10px;border-bottom:1px solid #ccc;margin-bottom:8px}
-.top .tb{flex:0 0 130px;height:96px;background:#ddd center/cover}
-.top h2{font-size:23px;line-height:1.05}
-.top h2 a:hover,.liste a:hover{color:#d0021b}
-.liste li{list-style:none;padding:7px 0;border-bottom:1px dotted #bbb;font-weight:700;font-size:15.5px;line-height:1.25}
-.liste li::before{content:"■ ";color:#d0021b}
-.ressort.gs .liste li::before{color:#fdb912}
-.leer{color:#888;font-style:italic;font-size:14px;padding:6px 0}
-.fuss{border-top:6px solid #111;margin-top:24px;padding:12px 18px;font-size:12px;color:#555;background:#f4f2ed}
-.fuss details{margin-top:6px}
-@media(max-width:720px){.aufmacher,.raster{grid-template-columns:1fr}.aufmacher .bildbox{min-height:190px}
- .kopf{flex-direction:column}.logo{margin:8px}.top .tb{flex-basis:96px;height:74px}}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+h1,h2,h3,.brand{font-family:"Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:-.02em}
+/* Kopf */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);
+ -webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--rand)}
+.topin{display:flex;align-items:center;gap:16px;height:60px}
+.brand{font-size:22px;font-weight:700;display:flex;gap:2px;align-items:baseline}
+.brand .b2{font-weight:400;background:linear-gradient(90deg,#8b5cf6,#ec4899,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.topmeta{color:var(--tx2);font-size:13px;display:flex;gap:8px;align-items:center;flex:1}
+.topmeta .dot{width:4px;height:4px;border-radius:50%;background:var(--tx3)}
+.btn{background:var(--tx);color:var(--bg);font-weight:600;font-size:13px;padding:8px 14px;border-radius:999px;white-space:nowrap}
+.btn:hover{opacity:.85}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-top:2px;padding-bottom:12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:0 0 auto;font-size:13px;font-weight:500;padding:6px 12px;border-radius:999px;background:var(--fl);border:1px solid var(--rand);color:var(--tx2)}
+.chips a:hover{color:var(--tx);border-color:var(--c,var(--akzent))}
+main{padding:24px 0 40px}
+/* Aufmacher */
+.hero{display:grid;grid-template-columns:1.65fr 1fr;gap:20px;margin-bottom:36px}
+.herocard{position:relative;min-height:440px;border-radius:24px;overflow:hidden;background:#1e293b center/cover;display:flex;align-items:flex-end;box-shadow:var(--schatten)}
+.herocard::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.82) 100%)}
+.herotext{position:relative;padding:28px;color:#fff}
+.herotext h1{font-size:clamp(26px,3.4vw,40px);line-height:1.1;margin:12px 0 10px}
+.herotext p{color:rgba(255,255,255,.85);max-width:680px;font-size:15px}
+.herotext .zeit{color:rgba(255,255,255,.7);font-size:12.5px;margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--c,var(--akzent));color:#fff}
+.neu{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--c,var(--akzent)) 15%,transparent);color:var(--c,var(--akzent))}
+.toplist{background:var(--fl);border-radius:24px;padding:18px;box-shadow:var(--schatten);border:1px solid var(--rand);display:flex;flex-direction:column;gap:4px}
+.toplist h2{font-size:15px;color:var(--tx2);font-weight:600;margin:2px 4px 8px}
+.mini{display:flex;gap:12px;padding:8px;border-radius:14px;align-items:center}
+.mini:hover{background:var(--fl2)}
+.mini .th{flex:0 0 76px;height:58px;border-radius:12px;background:var(--fl2) center/cover}
+.mini b{display:block;font-size:14px;line-height:1.3;font-weight:600}
+.mini .kat{font-size:11.5px;font-weight:600;color:var(--c)}
+/* Werkstatt */
+.werkstatt{margin-bottom:40px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--c,var(--akzent))}
+.whead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+.whead h2{font-size:28px;line-height:1.15;margin-top:4px}
+.wgrid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
+.wcard{background:var(--fl);border-radius:var(--r);padding:22px;border:1px solid var(--rand);box-shadow:var(--schatten);position:relative}
+.wcard.haupt{border:1px solid transparent;background:linear-gradient(var(--fl),var(--fl)) padding-box,linear-gradient(135deg,#8b5cf6,#ec4899,#f59e0b) border-box}
+.wcard h3{font-size:21px;line-height:1.25;margin:10px 0 8px}
+.wcard p{color:var(--tx2)}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--fl2);color:var(--tx2)}
+.badge.lv{background:color-mix(in srgb,#8b5cf6 16%,transparent);color:#8b5cf6}
+ol.schritte{list-style:none;counter-reset:s;margin:16px 0;display:flex;flex-direction:column;gap:10px}
+ol.schritte li{counter-increment:s;display:flex;gap:12px;font-size:14.5px}
+ol.schritte li::before{content:counter(s);flex:0 0 26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#ec4899);
+ color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.prompt{background:#0f172a;color:#e2e8f0;border-radius:14px;overflow:hidden;margin-top:6px}
+.prompt .ph{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:12px;color:#94a3b8;border-bottom:1px solid rgba(255,255,255,.08)}
+.prompt pre{white-space:pre-wrap;font:13px/1.55 "JetBrains Mono",ui-monospace,Consolas,monospace;padding:12px 14px}
+.kopieren{font:600 12px Inter,sans-serif;border:0;border-radius:8px;padding:5px 10px;background:#8b5cf6;color:#fff;cursor:pointer}
+.kopieren.ok{background:#16a34a}
+.doku{display:inline-block;margin-top:14px;font-weight:600;font-size:13.5px;color:#8b5cf6}
+.wside{display:flex;flex-direction:column;gap:20px}
+.wcard.tipp{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:0}
+.wcard.tipp p,.wcard.tipp .eyebrow{color:rgba(255,255,255,.92)}
+.werkzeug{font-size:12.5px;color:var(--tx3);margin:8px 0 10px}
+/* Rubriken */
+.sec{margin-bottom:40px}
+.shead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sicon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;
+ background:color-mix(in srgb,var(--c) 16%,transparent)}
+.shead h2{font-size:22px}
+.shead .anz{margin-left:auto;font-size:12.5px;color:var(--tx3)}
+.shead .linie{flex:1;height:1px;background:var(--rand)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{background:var(--fl);border-radius:var(--r);overflow:hidden;border:1px solid var(--rand);box-shadow:var(--schatten);display:flex;flex-direction:column;
+ transition:transform .15s ease,box-shadow .15s ease}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(15,23,42,.14)}
+.card .img{aspect-ratio:16/9;background:var(--fl2) center/cover}
+.card .cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card .ct{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--c);font-weight:600}
+.card h3{font-size:16.5px;line-height:1.3}
+.card p{font-size:13.5px;color:var(--tx2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card .zeit{margin-top:auto;font-size:12px;color:var(--tx3)}
+.card.gross{grid-column:span 2;flex-direction:row}
+.card.gross .img{flex:0 0 55%;aspect-ratio:auto;min-height:250px}
+.card.gross h3{font-size:22px}
+.card.gross p{-webkit-line-clamp:5}
+.spruch{margin:0 0 40px;padding:18px 22px;border-radius:var(--r);background:var(--fl);border:1px solid var(--rand);font-size:16px;font-weight:500}
+.spruch small{display:block;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px}
+.leer{color:var(--tx3);font-size:14px}
+footer{color:var(--tx3);font-size:12.5px;padding:28px 0 40px;border-top:1px solid var(--rand)}
+footer details{margin-top:6px}
+@media(max-width:600px){.topmeta{display:none}.brand{flex:1;font-size:20px}.topin{height:56px}}
+@media(max-width:860px){.hero,.wgrid{grid-template-columns:1fr}.herocard{min-height:360px}.card.gross{grid-column:auto;flex-direction:column}
+ .card.gross .img{aspect-ratio:16/9;min-height:0}.topmeta span:not(:first-child){display:none}.whead h2{font-size:23px}}
 """
+
+JS = """
+document.querySelectorAll('.kopieren').forEach(b=>b.addEventListener('click',async()=>{
+ const t=b.closest('.prompt').querySelector('pre').innerText;
+ try{await navigator.clipboard.writeText(t);b.textContent='Kopiert ✓';b.classList.add('ok');}
+ catch(e){const r=document.createRange();r.selectNodeContents(b.closest('.prompt').querySelector('pre'));
+  const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Markiert – jetzt kopieren';}
+ setTimeout(()=>{b.textContent='Kopieren';b.classList.remove('ok')},2500);}));
+"""
+
+
+def farbe(r) -> str:
+    return AKZENT.get(r["id"], "#8b5cf6")
+
+
+def prompt_box(text: str, titel: str = "Prompt für Claude Code") -> str:
+    return (f'<div class="prompt"><div class="ph"><span>{e(titel)}</span>'
+            f'<button class="kopieren" type="button">Kopieren</button></div><pre>{e(text)}</pre></div>')
+
+
+def karte(a, r, gross=False) -> str:
+    bild = f'<div class="img" style="background-image:url(\'{e(a["bild"])}\')"></div>' if a["bild"] else ""
+    neu = '<span class="neu">NEU</span>' if a.get("neu") else ""
+    return (f'<a class="card{" gross" if gross and a["bild"] else ""}" href="{e(a["link"])}" target="_blank" rel="noopener">{bild}'
+            f'<div class="cb"><div class="ct"><span>{e(a.get("quelle") or r["titel"])}</span>{neu}</div>'
+            f'<h3>{e(a["titel"])}</h3><p>{e(kuerzen(a["teaser"], 260 if gross else 170))}</p>'
+            f'<div class="zeit">{e(rel_zeit(a.get("datum")))}</div></div></a>')
+
+
+def werkstatt_html(r_werk, news) -> str:
+    ws, auto, tipp = werkstatt_heute()
+    if not ws:
+        return ""
+    schritte = "".join(f"<li><span>{e(s)}</span></li>" for s in ws["schritte"])
+    teile = [f"""<section class="werkstatt" id="r-werkstatt" style="--c:#8b5cf6">
+<div class="whead"><div><span class="eyebrow">🛠️ KI-Werkstatt · Workshop des Tages</span><h2>{e(ws['titel'])}</h2></div></div>
+<div class="wgrid"><article class="wcard haupt">
+<div class="badges"><span class="badge lv">{e(ws['level'])}</span><span class="badge">⏱ {e(ws['dauer'])}</span><span class="badge">✳️ {e(ws['feature'])}</span></div>
+<h3>Das baust du heute</h3><p>{e(ws['ziel'])}</p>
+<ol class="schritte">{schritte}</ol>
+{prompt_box(ws['prompt'])}
+<a class="doku" href="{e(ws['link'])}" target="_blank" rel="noopener">Mehr dazu in der Anleitung →</a></article>
+<div class="wside"><article class="wcard" style="--c:#0891b2"><span class="eyebrow">⚡ Automatisierung des Tages</span>
+<h3>{e(auto['titel'])}</h3><p>{e(auto['idee'])}</p><div class="werkzeug">Werkzeuge: {e(auto['werkzeuge'])}</div>
+{prompt_box(auto['prompt'], 'Prompt zum Loslegen')}</article>
+<article class="wcard tipp"><span class="eyebrow">💡 Profi-Tipp</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></article></div></div>"""]
+    if news:
+        teile.append(f'<div class="shead" style="margin-top:24px;--c:#8b5cf6"><span class="sicon">📚</span><h2>Neu: Anleitungen & Ideen aus dem Netz</h2>'
+                     f'<span class="linie"></span></div><div class="grid">'
+                     + "".join(karte(a, r_werk) for a in news) + "</div>")
+    teile.append("</section>")
+    return "\n".join(teile)
 
 
 def html_bauen(ausgabe, fehler, demo=False, pdf_name="") -> str:
     heute = dt.datetime.now()
-    alle = [(r, a) for r, liste in ausgabe for a in liste[:WEB_PRO_RESSORT]]
-    aufmacher_r, aufmacher = aufmacher_finden([(r, l[:WEB_PRO_RESSORT]) for r, l in ausgabe])
-    spruch = SPRUECHE[heute.toordinal() % len(SPRUECHE)]
-    ticker = " ".join(f'<i>+++</i>{e(a["titel"])}' for _, a in
-                      sorted(alle, key=lambda x: x[1]["datum"] or dt.datetime.min.replace(tzinfo=dt.timezone.utc),
-                             reverse=True)[:14])
-    pdf = f'<a class="pdflink" href="{e(pdf_name)}">📰 ALS ZEITUNG LESEN (PDF)</a>' if pdf_name else ""
+    nach_id = {r["id"]: (r, l[:WEB_PRO_RESSORT]) for r, l in ausgabe}
+    reihenfolge = [i for i in WEB_REIHENFOLGE if i in nach_id] + [i for i in nach_id if i not in WEB_REIHENFOLGE]
+    alle = [(r, a) for r, l in nach_id.values() for a in l]
+    auf_r, auf = aufmacher_finden([(r, l) for r, l in nach_id.values() if r["id"] != "werkstatt"])
+    top4 = sorted([(r, a) for r, a in alle if a is not auf and r["id"] != "werkstatt"],
+                  key=lambda x: x[1]["punkte"] + (2 if x[1]["bild"] else 0), reverse=True)
+    gesehen, top = set(), []
+    for r, a in top4:                      # Top-Liste aus verschiedenen Rubriken
+        if r["id"] not in gesehen:
+            gesehen.add(r["id"]); top.append((r, a))
+        if len(top) == 5:
+            break
+    benutzt = {id(a) for _, a in top} | ({id(auf)} if auf else set())
 
-    teile = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>{FONTS}<style>{CSS}</style></head><body><div class="blatt">
-<header class="kopf"><div class="logo H">{e(ZEITUNG_NAME)}</div>
-<div class="kopfinfo"><span class="unter">{e(UNTERTITEL)}</span><b>{e(datum_heute())}</b>
-<span>{len(alle)} Meldungen · {sum(1 for _, a in alle if a.get("neu"))} neu seit der letzten Ausgabe{" · DEMO" if demo else ""}</span>{pdf}</div></header>
-<div class="ticker"><span>{ticker or "+++ Keine Meldungen +++"}</span></div><main class="inhalt">"""]
+    chips = "".join(f'<a href="#r-{i}" style="--c:{farbe(nach_id[i][0])}">{ICONS.get(i, "•")} {e(nach_id[i][0]["titel"])}</a>'
+                    for i in reihenfolge)
+    pdf = f'<a class="btn" href="{e(pdf_name)}">📰 PDF-Ausgabe</a>' if pdf_name else ""
+    neu = sum(1 for _, a in alle if a.get("neu"))
+    s = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
+<title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>{FONTS}<style>{CSS}</style></head><body>
+<header class="top"><div class="wrap topin"><a class="brand" href="#"><span>{e(ZEITUNG_NAME.split('-')[0])}</span><span class="b2">{e('-'.join(ZEITUNG_NAME.split('-')[1:]))}</span></a>
+<div class="topmeta"><span>{e(datum_heute())}</span><span class="dot"></span><span>{len(alle)} Meldungen</span><span class="dot"></span><span>{neu} neu{" · DEMO" if demo else ""}</span></div>{pdf}</div>
+<nav class="chips wrap">{chips}</nav></header><main class="wrap">"""]
 
-    if aufmacher:
-        bild = f' style="background-image:url(\'{e(aufmacher["bild"])}\')"' if aufmacher["bild"] else ""
-        teile.append(f"""<section class="aufmacher">
-<a class="bildbox{'' if bild else ' leer'}" href="{e(aufmacher['link'])}" target="_blank" rel="noopener"{bild}>
-<span class="stoerer H">{e(aufmacher_r['dach'])}!</span></a>
-<div><div class="dach">{neu_tag(aufmacher)}{e(aufmacher_r['titel'])}</div>
-<h1 class="H"><a href="{e(aufmacher['link'])}" target="_blank" rel="noopener">{e(aufmacher['titel'])}</a></h1>
-<p class="teaser">{e(kuerzen(aufmacher['teaser'], 320))}</p>{meta(aufmacher)}</div></section>""")
+    if auf:
+        bild = f' style="background-image:url(\'{e(auf["bild"])}\')"' if auf["bild"] else \
+            f' style="background:linear-gradient(135deg,{farbe(auf_r)},#0f172a)"'
+        s.append(f"""<section class="hero"><a class="herocard" href="{e(auf['link'])}" target="_blank" rel="noopener"{bild}>
+<div class="herotext"><span class="pill" style="--c:{farbe(auf_r)}">{ICONS.get(auf_r['id'], '')} {e(auf_r['titel'])}</span>
+<h1>{e(auf['titel'])}</h1><p>{e(kuerzen(auf['teaser'], 240))}</p><div class="zeit">{e(auf.get('quelle', ''))} · {e(rel_zeit(auf.get('datum')))}</div></div></a>
+<div class="toplist"><h2>Top-Meldungen</h2>""")
+        for r, a in top:
+            th = f'<div class="th" style="background-image:url(\'{e(a["bild"])}\')"></div>' if a["bild"] else \
+                f'<div class="th" style="background:linear-gradient(135deg,{farbe(r)},#0f172a)"></div>'
+            s.append(f'<a class="mini" href="{e(a["link"])}" target="_blank" rel="noopener" style="--c:{farbe(r)}">{th}'
+                     f'<div><span class="kat">{ICONS.get(r["id"], "")} {e(r["titel"])}</span><b>{e(a["titel"])}</b></div></a>')
+        s.append("</div></section>")
 
-    teile.append(f'<div class="spruch"><small>Spruch des Tages</small>{e(spruch)}</div><div class="raster">')
-
-    for r, liste in ausgabe:
-        liste = [a for a in liste[:WEB_PRO_RESSORT] if a is not aufmacher]
-        klasse = f"ressort {r['stil']}" + (" breit" if r["id"] in ("gs", "welt") else "")
-        teile.append(f'<section class="{klasse}"><div class="rkopf"><b class="H">{e(r["dach"])}</b><span>{e(r["titel"])}</span></div>')
-        if not liste:
-            teile.append('<p class="leer">Heute nichts Neues – oder der Feed schläft noch.</p></section>')
+    for rid in reihenfolge:
+        r, liste = nach_id[rid]
+        if rid == "werkstatt":
+            s.append(werkstatt_html(r, liste[:6]))
             continue
-        top, rest = liste[0], liste[1:]
-        tb = f'<a class="tb" href="{e(top["link"])}" target="_blank" rel="noopener" style="background-image:url(\'{e(top["bild"])}\')"></a>' if top["bild"] else ""
-        teile.append(f"""<div class="top">{tb}<div><div class="dach">{neu_tag(top)}{e(r['titel'])}</div>
-<h2 class="H"><a href="{e(top['link'])}" target="_blank" rel="noopener">{e(top['titel'])}</a></h2>
-<p class="teaser">{e(kuerzen(top['teaser'], 200))}</p>{meta(top)}</div></div><ul class="liste">""")
-        for a in rest:
-            teile.append(f'<li>{neu_tag(a)}<a href="{e(a["link"])}" target="_blank" rel="noopener">{e(a["titel"])}</a>{meta(a)}</li>')
-        teile.append("</ul></section>")
+        liste = [a for a in liste if id(a) not in benutzt] or liste
+        s.append(f'<section class="sec" id="r-{rid}" style="--c:{farbe(r)}"><div class="shead"><span class="sicon">{ICONS.get(rid, "•")}</span>'
+                 f'<h2>{e(r["titel"])}</h2><span class="linie"></span><span class="anz">{len(liste)} Meldungen</span></div>')
+        if not liste:
+            s.append('<p class="leer">Heute nichts Neues in dieser Rubrik.</p></section>')
+            continue
+        erste = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
+        rest = [a for a in liste if a is not erste]
+        s.append('<div class="grid">' + karte(erste, r, gross=True) + "".join(karte(a, r) for a in rest) + "</div></section>")
+        if rid == reihenfolge[min(3, len(reihenfolge) - 1)]:
+            s.append(f'<div class="spruch"><small>Spruch des Tages</small>{e(SPRUECHE[heute.toordinal() % len(SPRUECHE)])}</div>')
 
     fehl = ""
     if fehler:
-        fehl = "<details><summary>{} Feed(s) nicht erreichbar</summary><ul>{}</ul></details>".format(
+        fehl = "<details><summary>{} Quelle(n) heute nicht erreichbar</summary><ul>{}</ul></details>".format(
             len(fehler), "".join(f"<li>{e(x)}</li>" for x in fehler))
-    teile.append(f"""</div></main><footer class="fuss">Erstellt {heute.strftime('%d.%m.%Y, %H:%M Uhr')} aus RSS-Feeds.
-Alle Meldungen verlinken auf die Original-Quelle.{fehl}</footer></div></body></html>""")
-    return "\n".join(teile)
+    s.append(f"""</main><footer><div class="wrap">{e(ZEITUNG_NAME)} · erstellt {heute.strftime('%d.%m.%Y, %H:%M Uhr')} aus RSS-Feeds.
+Alle Meldungen führen zur Originalquelle.{fehl}</div></footer><script>{JS}</script></body></html>""")
+    return "\n".join(s)
 
 
 # ════════════════════════════════════════════════════════════════════
-#  PDF-ZEITUNG (Druck-Layout, wird mit Chrome/Edge zu PDF)
+#  PDF-ZEITUNG – modernes Magazin-Layout (wird mit Chrome/Edge zu PDF)
 # ════════════════════════════════════════════════════════════════════
 
 DRUCK_CSS = """
 @page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-body{font-family:"PT Serif",Georgia,"Times New Roman",serif;color:#111;background:#fff}
+body{font-family:Inter,"Segoe UI",Arial,sans-serif;color:#0f172a;background:#fff;font-size:9pt}
 a{color:inherit;text-decoration:none}
-.H{font-family:Anton,Impact,"Arial Narrow",sans-serif;font-weight:400;text-transform:uppercase;line-height:.98;letter-spacing:.1px}
-.C{font-family:"Roboto Condensed","Arial Narrow",Arial,sans-serif}
-.seite{width:210mm;height:297mm;padding:8mm 9mm 7mm;display:flex;flex-direction:column;overflow:hidden;
+.H{font-family:"Space Grotesk",Inter,Arial,sans-serif;font-weight:700;letter-spacing:-.02em;line-height:1.08}
+.seite{width:210mm;height:297mm;padding:10mm 11mm 8mm;display:flex;flex-direction:column;overflow:hidden;
  page-break-after:always;break-after:page;position:relative}
 .seite:last-child{page-break-after:auto;break-after:auto}
-.dach{font-family:"Roboto Condensed",Arial,sans-serif;font-weight:900;color:#d0021b;text-transform:uppercase;font-size:8.5pt;letter-spacing:.3px}
-.neu{background:#d0021b;color:#fff;padding:0 3px;margin-right:4px;font-size:7.5pt}
-.meta{font-family:"Roboto Condensed",Arial,sans-serif;font-size:7pt;color:#666;margin-top:1.2mm}
-.foto{background:#222 center/cover no-repeat;position:relative}
-.foto.leer{background:repeating-linear-gradient(-45deg,var(--a) 0 7mm,var(--b) 7mm 14mm);display:flex;align-items:center;justify-content:center}
-.foto.leer .wort{color:#fff;opacity:.9;font-size:26pt;transform:rotate(-6deg);text-shadow:1mm 1mm 0 rgba(0,0,0,.35)}
-
-/* ── Titelseite ── */
-.tkopf{display:flex;align-items:stretch;border-bottom:2.2mm solid #111;padding-bottom:2mm}
-.tlogo{background:#d0021b;color:#fff;font-size:38pt;white-space:nowrap;padding:3mm 6mm 2mm;transform:skewX(-5deg);margin-left:2mm;letter-spacing:-.5pt}
-.tinfo{flex:1;min-width:52mm;padding-left:3mm;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;text-align:right;font-size:9pt;gap:.6mm}
-.tinfo b{font-size:12pt}.tinfo .rot{color:#d0021b;font-weight:900;text-transform:uppercase}
-.tticker{background:#111;color:#fff;font-weight:700;font-size:8.5pt;padding:1.6mm 3mm;white-space:nowrap;overflow:hidden;margin:2mm 0 3mm}
-.tticker i{color:#ffd400;font-style:normal;margin:0 2mm}
-.tauf h1{margin:1mm 0 2.5mm}
-.tauf .foto{height:80mm;border-bottom:1.5mm solid #d0021b}
-.stoerer{position:absolute;top:5mm;left:-2mm;background:#ffd400;color:#111;font-size:19pt;padding:1.5mm 4mm;
- transform:rotate(-5deg);box-shadow:1mm 1mm 0 #111}
-.taufunten{display:flex;gap:5mm;margin-top:2.5mm}
-.taufunten .tteaser{flex:1;font-size:11pt;line-height:1.38;font-weight:700}
-.tdrei{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;border-top:1mm solid #111;padding-top:3mm;margin-top:3mm;flex:1;min-height:0;overflow:hidden}
-.tdrei article .foto{height:30mm;margin:1mm 0 1.5mm}
-.tdrei h3{font-size:14pt;margin:.5mm 0 1.2mm}
-.tdrei p{font-size:8.6pt;line-height:1.35}
-.tfuss{display:grid;grid-template-columns:1fr 1fr;gap:4mm;border-top:1mm solid #111;padding-top:2.5mm;margin-top:2mm}
-.spruch{background:#ffd400;padding:2.5mm 3.5mm;border-left:3mm solid #111;font-family:"Roboto Condensed",Arial,sans-serif;font-weight:900;font-size:10.5pt}
-.spruch small{display:block;font-size:7pt;letter-spacing:.6pt;text-transform:uppercase;margin-bottom:.8mm}
-.index{font-family:"Roboto Condensed",Arial,sans-serif;font-size:9pt}
-.index b{display:block;background:#111;color:#fff;padding:.6mm 2mm;margin-bottom:1mm;font-size:8pt;letter-spacing:.5pt}
-.index div{display:flex;justify-content:space-between;border-bottom:.2mm dotted #999;padding:.4mm 1mm}
-.index div i{font-style:normal;font-weight:900;color:#d0021b}
-
-/* ── Innenseiten ── */
-.ikopf{display:flex;justify-content:space-between;align-items:baseline;border-bottom:.8mm solid #111;padding-bottom:1mm;margin-bottom:3mm;font-size:8pt}
-.ikopf .H{font-size:15pt;color:#d0021b}
-.ikopf .nr{font-weight:900;font-size:10pt}
-.block{display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.block.voll{flex:1}
-.block.halb,.block.drittel{flex:1}
-.block + .block{border-top:1mm solid #111;padding-top:3mm;margin-top:3mm}
-.bkopf{display:flex;align-items:baseline;gap:3mm;background:var(--k);color:#fff;padding:1.4mm 3mm;margin-bottom:2.5mm}
-.bkopf b{font-size:20pt;line-height:1}
-.bkopf span{font-family:"Roboto Condensed",Arial,sans-serif;font-weight:700;font-size:9pt;text-transform:uppercase;opacity:.9}
-.gs .bkopf{background:linear-gradient(90deg,#a90432 0 55%,#fdb912 55%)}
-.gs .bkopf span{margin-left:auto;background:#fff;color:#a90432;padding:.3mm 2mm;opacity:1}
-.gs .dach{color:#a90432}
-.btop{position:relative;margin-bottom:3mm}
-.voll .btop .foto{height:104mm}
-.voll .btop .ueber{position:absolute;left:0;right:12mm;bottom:0;background:#111;color:#fff;padding:2.5mm 3.5mm 2mm}
-.voll .btop .ueber .dach{color:#ffd400}
-.voll .btop h2{font-size:24pt}
-.voll .btop .bteaser{font-size:10pt;line-height:1.4;font-weight:700;margin-top:2mm}
-.halb .btop{display:grid;grid-template-columns:1.1fr 1fr;gap:4mm}
-.halb .btop .foto{height:52mm}
-.halb .btop h2{font-size:18pt;margin:.6mm 0 1.6mm}
-.halb .btop .bteaser{font-size:9pt;line-height:1.38}
-.drittel .btop{display:grid;grid-template-columns:1fr 1.25fr;gap:4mm;margin-bottom:2mm}
+.dach{font-weight:700;color:var(--k,#8b5cf6);font-size:7.5pt;letter-spacing:.06em;text-transform:uppercase}
+.neu{display:inline-block;background:var(--k,#8b5cf6);color:#fff;padding:.2mm 1.6mm;border-radius:3mm;margin-right:1.5mm;font-size:6.5pt;letter-spacing:.04em}
+.meta{font-size:6.8pt;color:#94a3b8;margin-top:1.4mm}
+.foto{background:#e2e8f0 center/cover no-repeat;position:relative;border-radius:3mm;overflow:hidden}
+.foto.leer{background:linear-gradient(135deg,var(--a),var(--b));display:flex;align-items:center;justify-content:center}
+.foto.leer .wort{color:#fff;opacity:.55;font-size:20pt}
+/* Titelseite */
+.tkopf{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:3mm}
+.marke{font-size:34pt;line-height:.9}
+.marke .b2{font-weight:400;background:linear-gradient(90deg,#8b5cf6,#ec4899,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tinfo{text-align:right;font-size:8.5pt;color:#475569;line-height:1.5}
+.tinfo b{color:#0f172a;font-size:10pt}
+.balken{height:1.2mm;border-radius:1mm;background:linear-gradient(90deg,#8b5cf6,#ec4899,#f59e0b);margin-bottom:5mm}
+.tauf .foto{height:80mm;border-radius:4mm}
+.tauf .pillbox{position:absolute;left:5mm;top:5mm}
+.pill{display:inline-block;background:var(--k,#8b5cf6);color:#fff;font-weight:700;font-size:8pt;padding:1mm 3mm;border-radius:4mm}
+.tauf h1{margin:4mm 0 2mm}
+.tteaser{font-size:10pt;line-height:1.45;color:#334155}
+.tdrei{display:grid;grid-template-columns:repeat(3,1fr);gap:5mm;margin-top:5mm;padding-top:4mm;border-top:.3mm solid #e2e8f0;flex:1;min-height:0;overflow:hidden}
+.tdrei article .foto{height:27mm;margin-bottom:2mm}
+.tdrei h3{font-size:11.5pt;margin:.8mm 0 1.2mm}
+.tdrei p{font-size:8pt;line-height:1.4;color:#475569}
+.tfuss{display:grid;grid-template-columns:1.15fr 1fr;gap:5mm;margin-top:3mm}
+.wteaser{border-radius:3.5mm;padding:4mm;color:#fff;background:linear-gradient(135deg,#8b5cf6,#ec4899)}
+.wteaser .klein{font-size:7pt;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.9}
+.wteaser .H{font-size:12pt;margin:1.5mm 0}
+.wteaser p{font-size:8pt;opacity:.92}
+.index{background:#f1f5f9;border-radius:3.5mm;padding:3.5mm 4mm}
+.index b{display:block;font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin-bottom:1.5mm}
+.index div{display:flex;justify-content:space-between;gap:3mm;padding:.7mm 0;font-size:8.2pt;border-bottom:.2mm solid #e2e8f0}
+.index div:last-child{border:0}
+.index i{font-style:normal;font-weight:700;color:#8b5cf6}
+.spruchzeile{font-size:7.5pt;color:#64748b;font-style:italic;margin-top:.8mm}
+/* Innenseiten */
+.ikopf{display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;padding-bottom:2.5mm;
+ border-bottom:.3mm solid #e2e8f0;margin-bottom:5mm}
+.ikopf .H{font-size:10pt;color:#0f172a}
+.ikopf .nr{font-weight:700;color:#0f172a;background:#f1f5f9;border-radius:3mm;padding:.6mm 2.5mm}
+.block{display:flex;flex-direction:column;min-height:0;overflow:hidden;flex:1}
+.block + .block{border-top:.3mm solid #e2e8f0;padding-top:4mm;margin-top:4mm}
+.bkopf{display:flex;align-items:center;gap:2.5mm;margin-bottom:3.5mm}
+.bkopf .strich{width:1.6mm;height:7mm;border-radius:1mm;background:var(--k)}
+.bkopf b{font-size:18pt}
+.bkopf span{font-size:7.5pt;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-left:auto}
+.btop{position:relative;margin-bottom:4mm}
+.voll .btop .foto{height:100mm;border-radius:4mm}
+.voll .btop .ueber{position:absolute;left:0;right:0;bottom:0;padding:16mm 6mm 5mm;color:#fff;
+ background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.78))}
+.voll .btop .ueber .dach{color:#fff;opacity:.9}
+.voll .btop .bteaser{font-size:9.5pt;line-height:1.45;color:#334155;margin-top:3mm}
+.halb .btop,.drittel .btop{display:grid;grid-template-columns:1.05fr 1fr;gap:5mm}
+.halb .btop .foto{height:54mm}
 .drittel .btop .foto{height:36mm}
-.drittel .btop .bteaser{font-size:8.6pt;line-height:1.33}
-.drittel .bkopf{margin-bottom:2mm}.drittel .bkopf b{font-size:16pt}
+.halb .btop h2{margin:.8mm 0 2mm}.drittel .btop h2{margin:.6mm 0 1.4mm}
+.halb .btop .bteaser{font-size:8.6pt;line-height:1.42;color:#475569}
+.drittel .btop .bteaser{font-size:8pt;line-height:1.38;color:#475569}
+.drittel .bkopf{margin-bottom:2.5mm}.drittel .bkopf b{font-size:14pt}
+.spalten{flex:1;min-height:0;column-gap:6mm;column-fill:balance;column-count:3}
 .drittel .spalten{column-count:2}
-.spalten{flex:1;min-height:0;column-gap:5mm;column-rule:.25mm solid #bbb;column-fill:balance}
-.voll .spalten{column-count:3}.halb .spalten{column-count:3}
-.spalten article{break-inside:avoid;margin-bottom:3mm;padding-bottom:2.2mm;border-bottom:.25mm solid #ddd}
-.spalten article .foto{height:24mm;margin:.8mm 0 1.2mm}
-.spalten h4{font-size:11.5pt;margin:.4mm 0 1mm}
-.spalten p{font-size:8.3pt;line-height:1.33}
-.leerbox{font-family:"Roboto Condensed",Arial,sans-serif;color:#888;font-style:italic;font-size:10pt;padding:4mm 0}
-.impressum{font-family:"Roboto Condensed",Arial,sans-serif;font-size:6.8pt;color:#777;border-top:.3mm solid #999;padding-top:1mm;margin-top:2mm}
+.spalten article{break-inside:avoid;margin-bottom:3.5mm}
+.spalten article .foto{height:24mm;margin:.5mm 0 2mm}
+.spalten h4{font-size:10pt;margin:.6mm 0 1.2mm}
+.spalten p{font-size:7.8pt;line-height:1.4;color:#475569}
+.leerbox{color:#94a3b8;font-size:9pt;padding:4mm 0}
+.impressum{font-size:6.5pt;color:#94a3b8;border-top:.3mm solid #e2e8f0;padding-top:1.5mm;margin-top:3mm}
+/* Werkstatt-Seite */
+.wkopf{border-radius:5mm;padding:6mm;color:#fff;background:linear-gradient(135deg,#6d28d9,#db2777 60%,#f59e0b)}
+.wkopf .klein{font-size:7.5pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.9}
+.wkopf h1{font-size:21pt;margin:2mm 0 2mm}
+.wkopf p{font-size:9.5pt;opacity:.95;max-width:165mm}
+.badges{display:flex;gap:2mm;margin-top:3mm}
+.badge{background:rgba(255,255,255,.18);border-radius:3mm;padding:.8mm 2.5mm;font-size:7.5pt;font-weight:600}
+.wbody{display:grid;grid-template-columns:1.25fr 1fr;gap:6mm;margin-top:5mm}
+.wbody h3{font-size:12pt;margin-bottom:2.5mm}
+.schritte{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:2.4mm}
+.schritte li{counter-increment:s;display:flex;gap:2.5mm;font-size:8.6pt;line-height:1.42}
+.schritte li::before{content:counter(s);flex:0 0 5.2mm;height:5.2mm;border-radius:50%;background:#8b5cf6;color:#fff;font-weight:700;
+ font-size:7.5pt;display:flex;align-items:center;justify-content:center}
+.prompt{background:#0f172a;color:#e2e8f0;border-radius:3mm;padding:3mm 3.5mm;font:7.8pt/1.5 "JetBrains Mono",Consolas,monospace;white-space:pre-wrap}
+.prompt .pk{display:block;font:700 6.5pt Inter,Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;margin-bottom:1.5mm}
+.kasten{border-radius:3.5mm;padding:4mm;background:#f1f5f9;margin-bottom:4mm}
+.kasten .klein{font-size:7pt;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0891b2}
+.kasten h4{font-size:11pt;margin:1.2mm 0 1.5mm}
+.kasten p{font-size:8.2pt;line-height:1.42;color:#475569;margin-bottom:2mm}
+.kasten.tipp{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff}
+.kasten.tipp .klein,.kasten.tipp p{color:rgba(255,255,255,.92)}
+.wnews{margin-top:5mm;padding-top:4mm;border-top:.3mm solid #e2e8f0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 """
 
-KOPF_FARBE = {"claude": "#c15f3c", "smarthome": "#0b6e99", "tv": "#1a1a2e", "gs": "#a90432", "sport": "#d0021b", "digital": "#111", "welt": "#00305e",
-              "forschung": "#0a7d5a", "technik": "#4b4b4b", "visionen": "#5a189a"}
+AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
+          "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
+          "tv": "#db2777", "balkon": "#eab308", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "balkon": "☀️", "tv": "📽️", "forschung": "🧬",
+         "technik": "⚙️", "visionen": "🚀"}
 
 
 def bild_einbetten(ausgabe):
@@ -836,97 +1014,136 @@ def foto(a, r, klasse="foto", extra=""):
     src = a.get("bild_druck") or (a["bild"] if a["bild"].startswith("data:") else "")
     if src:
         return f'<div class="{klasse}" style="background-image:url(\'{src}\')">{extra}</div>'
-    a_farbe, b_farbe = DEMO_FARBEN.get(r["stil"], ("#d0021b", "#b00016"))
-    return (f'<div class="{klasse} leer" style="--a:{a_farbe};--b:{b_farbe}">{extra}'
-            f'<span class="wort H">{e(r["dach"])}</span></div>')
+    k = farbe(r)
+    return (f'<div class="{klasse} leer" style="--a:{k};--b:#0f172a">{extra}'
+            f'<span class="wort H">{e(r["titel"])}</span></div>')
+
+
+def hat_foto(a) -> bool:
+    return bool(a.get("bild_druck") or a["bild"].startswith("data:"))
 
 
 def groesse(titel: str, basis: float) -> str:
     n = len(titel)
-    faktor = 1.0 if n <= 45 else .85 if n <= 70 else .72 if n <= 100 else .62
+    faktor = 1.0 if n <= 45 else .86 if n <= 70 else .74 if n <= 100 else .64
     return f"font-size:{basis * faktor:.1f}pt"
+
+
+def werkstatt_seite(seitennr, kopf, r_werk, news) -> str:
+    ws, auto, tipp = werkstatt_heute()
+    if not ws:
+        return ""
+    schritte = "".join(f"<li><span>{e(x)}</span></li>" for x in ws["schritte"])
+    s = [f"""<div class="seite">{kopf}<section class="wkopf"><div class="klein">KI-Werkstatt · Workshop des Tages</div>
+<h1 class="H">{e(ws['titel'])}</h1><p>{e(ws['ziel'])}</p>
+<div class="badges"><span class="badge">{e(ws['level'])}</span><span class="badge">Dauer: {e(ws['dauer'])}</span><span class="badge">{e(ws['feature'])}</span></div></section>
+<div class="wbody"><div><h3 class="H">So geht's</h3><ol class="schritte">{schritte}</ol>
+<div class="prompt" style="margin-top:4mm"><span class="pk">Prompt für Claude Code – abtippen oder von der Webseite kopieren</span>{e(ws['prompt'])}</div></div>
+<div><div class="kasten"><div class="klein">Automatisierung des Tages</div><h4 class="H">{e(auto['titel'])}</h4>
+<p>{e(auto['idee'])}</p><p style="font-size:7.5pt;color:#64748b">Werkzeuge: {e(auto['werkzeuge'])}</p>
+<div class="prompt"><span class="pk">Prompt</span>{e(kuerzen(auto['prompt'], 260))}</div></div>
+<div class="kasten tipp"><div class="klein">Profi-Tipp</div><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div></div>"""]
+    if news:
+        s.append('<section class="wnews block" style="--k:#8b5cf6"><div class="bkopf"><span class="strich"></span>'
+                 '<b class="H" style="font-size:13pt">Neu: Anleitungen & Ideen aus dem Netz</b></div><div class="spalten">')
+        for a in news[:6]:
+            s.append(f"""<article><div class="dach">{neu_tag(a)}{e(a.get('quelle') or '')}</div>
+<h4 class="H" style="{groesse(a['titel'], 10)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h4>
+<p>{e(kuerzen(a['teaser'], 120))}</p></article>""")
+        s.append("</div></section>")
+    s.append("</div>")
+    return "\n".join(s)
 
 
 def druck_bauen(ausgabe, demo=False) -> str:
     heute = dt.datetime.now()
     r_nach_id = {r["id"]: (r, l) for r, l in ausgabe}
-    auf_r, auf = aufmacher_finden(ausgabe)
+    auf_r, auf = aufmacher_finden([(r, l) for r, l in ausgabe if r["id"] != "werkstatt"])
     benutzt = {id(auf)} if auf else set()
     spruch = SPRUECHE[heute.toordinal() % len(SPRUECHE)]
     nr = heute.timetuple().tm_yday
-    alle = [a for _, l in ausgabe for a in l]
-    ticker = "".join(f"<i>+++</i>{e(a['titel'])} " for a in
-                     sorted(alle, key=lambda x: x["datum"] or dt.datetime.min.replace(tzinfo=dt.timezone.utc),
-                            reverse=True)[:6])
+    teil1, teil2 = ZEITUNG_NAME.split("-")[0], "-".join(ZEITUNG_NAME.split("-")[1:])
 
     s = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>
 {FONTS}<style>{DRUCK_CSS}</style></head><body>"""]
 
     # ── Titelseite ──
-    s.append(f"""<div class="seite"><header class="tkopf"><div class="tlogo H">{e(ZEITUNG_NAME)}</div>
-<div class="tinfo C"><b>{e(datum_heute())}</b><span>Nr. {nr} · {heute.year} · {"DEMO-AUSGABE" if demo else "Persönliche Ausgabe"}</span>
-<span class="rot">{e(UNTERTITEL)}</span></div></header>
-<div class="tticker C">{ticker}</div>""")
+    s.append(f"""<div class="seite"><header class="tkopf"><div class="marke H">{e(teil1)}<span class="b2">{e(teil2)}</span></div>
+<div class="tinfo"><b>{e(datum_heute())}</b><br>Ausgabe Nr. {nr} · {"DEMO" if demo else e(UNTERTITEL)}
+<div class="spruchzeile">„{e(spruch)}“</div></div></header><div class="balken"></div>""")
     if auf:
-        s.append(f"""<section class="tauf"><div class="dach">{neu_tag(auf)}{e(auf_r['titel'])}</div>
-<h1 class="H" style="{groesse(auf['titel'], 40)}"><a href="{e(auf['link'])}">{e(auf['titel'])}</a></h1>
-{foto(auf, auf_r, extra=f'<span class="stoerer H">{e(auf_r["dach"])}!</span>')}
-<div class="taufunten"><p class="tteaser C">{e(kuerzen(auf['teaser'], 330))}</p></div>{meta(auf)}</section>""")
+        k = farbe(auf_r)
+        s.append(f"""<section class="tauf" style="--k:{k}">{foto(auf, auf_r, extra=f'<span class="pillbox"><span class="pill">{e(auf_r["titel"])}</span></span>')}
+<h1 class="H" style="{groesse(auf['titel'], 27)}"><a href="{e(auf['link'])}">{e(auf['titel'])}</a></h1>
+<p class="tteaser">{e(kuerzen(auf['teaser'], 300))}</p>{meta(auf)}</section>""")
 
-    # drei weitere Top-Meldungen aus verschiedenen Rubriken, bevorzugt mit Foto
     kandidaten = []
     for r, l in ausgabe:
-        if auf_r and r["id"] == auf_r["id"]:
+        if r["id"] == "werkstatt" or (auf_r and r["id"] == auf_r["id"]):
             continue
         beste = [a for a in l if a is not auf]
         if beste:
-            a = max(beste[:3], key=lambda x: x["punkte"] + (3 if x["bild"] else 0))
-            kandidaten.append((r, a))
+            kandidaten.append((r, max(beste[:3], key=lambda x: x["punkte"] + (3 if x["bild"] else 0))))
     kandidaten.sort(key=lambda x: x[1]["punkte"] + (3 if x[1]["bild"] else 0), reverse=True)
-    drei = kandidaten[:3]
     s.append('<section class="tdrei">')
-    for r, a in drei:
+    for r, a in kandidaten[:3]:
         benutzt.add(id(a))
-        s.append(f"""<article><div class="dach">{neu_tag(a)}{e(r['titel'])}</div>{foto(a, r)}
-<h3 class="H" style="{groesse(a['titel'], 15)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h3>
-<p>{e(kuerzen(a['teaser'], 170))}</p>{meta(a)}</article>""")
+        s.append(f"""<article style="--k:{farbe(r)}">{foto(a, r)}<div class="dach">{neu_tag(a)}{e(r['titel'])}</div>
+<h3 class="H" style="{groesse(a['titel'], 11.5)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h3>
+<p>{e(kuerzen(a['teaser'], 150))}</p>{meta(a)}</article>""")
     s.append("</section>")
-    index = "".join(f'<div><span>{e(" & ".join(r_nach_id[i][0]["titel"] for i in seite if i in r_nach_id))}</span><i>{n}</i></div>'
-                    for n, seite in enumerate(PDF_SEITEN, start=2))
-    s.append(f"""<footer class="tfuss"><div class="spruch"><small>Spruch des Tages</small>{e(spruch)}</div>
-<div class="index"><b>HEUTE IN IHRER ZEITUNG</b>{index}</div></footer></div>""")
 
-    # ── Rubrikseiten ──
+    def seiten_name(ids):
+        if ids == ["werkstatt"]:
+            return "KI-Werkstatt: Workshop des Tages"
+        return " · ".join(r_nach_id[i][0]["titel"] for i in ids if i in r_nach_id)
+
+    index = "".join(f'<div><span>{e(seiten_name(ids))}</span><i>{n}</i></div>' for n, ids in enumerate(PDF_SEITEN, start=2))
+    ws, _, _ = werkstatt_heute()
+    wteaser = (f'<div class="wteaser"><div class="klein">Heute in der KI-Werkstatt · Seite '
+               f'{next((n for n, ids in enumerate(PDF_SEITEN, start=2) if ids == ["werkstatt"]), 2)}</div>'
+               f'<div class="H">{e(ws["titel"])}</div><p>{e(ws["level"])} · {e(ws["dauer"])} · mit fertigem Prompt für Claude Code</p></div>'
+               if ws else '<div></div>')
+    s.append(f'<footer class="tfuss">{wteaser}<div class="index"><b>In dieser Ausgabe</b>{index}</div></footer></div>')
+
+    # ── Innenseiten ──
     for seitennr, ids in enumerate(PDF_SEITEN, start=2):
+        kopf = (f'<header class="ikopf"><span class="H">{e(teil1)}<span style="font-weight:400">{e(teil2)}</span></span>'
+                f'<span>{e(datum_heute())}</span><span class="nr">Seite {seitennr}</span></header>')
+        if ids == ["werkstatt"]:
+            r_w, news = r_nach_id.get("werkstatt", (None, []))
+            s.append(werkstatt_seite(seitennr, kopf, r_w, news))
+            continue
         art = {1: "voll", 2: "halb"}.get(len(ids), "drittel")
-        s.append(f"""<div class="seite"><header class="ikopf C"><span class="H">{e(ZEITUNG_NAME)}</span>
-<span>{e(datum_heute())}</span><span class="nr">SEITE {seitennr}</span></header>""")
+        s.append(f'<div class="seite">{kopf}')
         for rid in ids:
             if rid not in r_nach_id:
                 continue
             r, liste = r_nach_id[rid]
             liste = [a for a in liste if id(a) not in benutzt] or liste
-            farbe = KOPF_FARBE.get(r["stil"], "#d0021b")
-            s.append(f'<section class="block {art} {r["stil"]}" style="--k:{farbe}">'
-                     f'<div class="bkopf"><b class="H">{e(r["dach"])}</b><span>{e(r["titel"])}</span></div>')
+            k = farbe(r)
+            s.append(f'<section class="block {art}" style="--k:{k}"><div class="bkopf"><span class="strich"></span>'
+                     f'<b class="H">{e(r["titel"])}</b><span>{len(liste)} Meldungen</span></div>')
             if not liste:
                 s.append('<p class="leerbox">Heute keine Meldungen in dieser Rubrik.</p></section>')
                 continue
             top = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
             rest = [a for a in liste if a is not top][: {"voll": 7, "halb": 3, "drittel": 2}[art]]
             if art == "voll":
-                s.append(f"""<article class="btop">{foto(top, r, extra=f'''<div class="ueber"><div class="dach">{neu_tag(top)}{e(r["titel"])}</div>
-<h2 class="H" style="{groesse(top['titel'], 24)}"><a href="{e(top['link'])}">{e(top['titel'])}</a></h2></div>''')}
-<p class="bteaser C">{e(kuerzen(top['teaser'], 300))}</p>{meta(top)}</article>""")
-            else:   # halb / drittel
-                s.append(f"""<article class="btop">{foto(top, r)}<div><div class="dach">{neu_tag(top)}{e(r["titel"])}</div>
-<h2 class="H" style="{groesse(top['titel'], 18 if art == 'halb' else 14)}"><a href="{e(top['link'])}">{e(top['titel'])}</a></h2>
+                ueber = (f'<div class="ueber"><div class="dach">{neu_tag(top)}{e(top.get("quelle") or r["titel"])}</div>'
+                         f'<h2 class="H" style="{groesse(top["titel"], 22)}"><a href="{e(top["link"])}">{e(top["titel"])}</a></h2></div>')
+                s.append(f'<article class="btop">{foto(top, r, extra=ueber)}'
+                         f'<p class="bteaser">{e(kuerzen(top["teaser"], 300))}</p>{meta(top)}</article>')
+            else:
+                gr = 16 if art == "halb" else 12.5
+                s.append(f"""<article class="btop">{foto(top, r)}<div><div class="dach">{neu_tag(top)}{e(top.get('quelle') or r['titel'])}</div>
+<h2 class="H" style="{groesse(top['titel'], gr)}"><a href="{e(top['link'])}">{e(top['titel'])}</a></h2>
 <p class="bteaser">{e(kuerzen(top['teaser'], 260 if art == 'halb' else 170))}</p>{meta(top)}</div></article>""")
             s.append('<div class="spalten">')
             for i, a in enumerate(rest):
-                bild = foto(a, r) if (a.get("bild_druck") or a["bild"].startswith("data:")) and (art == "voll" or (art == "halb" and i == 0)) else ""
+                bild = foto(a, r) if hat_foto(a) and (art == "voll" or (art == "halb" and i == 0)) else ""
                 s.append(f"""<article><div class="dach">{neu_tag(a)}{e(a.get('quelle') or r['titel'])}</div>{bild}
-<h4 class="H" style="{groesse(a['titel'], 12)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h4>
+<h4 class="H" style="{groesse(a['titel'], 10)}"><a href="{e(a['link'])}">{e(a['titel'])}</a></h4>
 <p>{e(kuerzen(a['teaser'], {"voll": 210, "halb": 150, "drittel": 110}[art]))}</p>{meta(a)}</article>""")
             s.append("</div></section>")
         if seitennr == len(PDF_SEITEN) + 1:
