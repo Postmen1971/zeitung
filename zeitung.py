@@ -66,6 +66,7 @@ FAVORITEN = {
     "galatasaray": 6, "cimbom": 6, "derby": 3, "fenerbahçe": 2, "champions league": 3,
     "bayern": 2, "real madrid": 2, "barcelona": 2, "nationalmannschaft": 2, "milli takım": 3,
     "durchbruch": 4, "weltrekord": 3, "weltmeister": 3, "k.o.": 3, "titel": 2,
+    "usher": 8, "myo7a": 8, "diabetes": 3, "rheuma": 3, "rheumato": 3, "durchbruch bei": 3,
     "gentherapie": 4, "crispr": 4, "heilung": 3, "zulassung": 2,
     "claude code": 5, "tutorial": 2, "anleitung": 2, "automatisier": 3,
     "claude": 5, "anthropic": 4, "künstliche intelligenz": 2, "ki-modell": 2,
@@ -208,6 +209,18 @@ RESSORTS = [
                F(gnews("4K projector", "en"), True), F("https://www.areadvd.de/feed/", True),
                F("https://stadt-bremerhaven.de/feed/", True)]},
     # ── WISSEN & ZUKUNFT ──
+    {"id": "gesundheit", "dach": "GESUNDHEIT", "titel": "Gesundheit: Diabetes, Usher 1B, Rheuma", "stil": "forschung",
+     "stichwoerter": ["diabetes", "insulin", "glp-1", "semaglutid", "tirzepatid", "blutzucker", "usher", "myo7a",
+                      "retinitis", "netzhaut", "rheuma", "rheumato", "arthritis", "gelenk", "gentherapie", "gene therapy"],
+     "max_alter": 24 * 30,
+     "feeds": [F(gnews("Diabetes Typ 2 neue Therapie OR Medikament OR Studie", tage=14)),
+               F(gnews("type 2 diabetes new drug OR cure OR trial", "en", tage=14), True),
+               F(gnews("Usher-Syndrom", tage=60), True),
+               F(gnews("Usher syndrome gene therapy OR MYO7A OR \"Usher 1B\"", "en", tage=60), True),
+               F(gnews("Rheuma neue Therapie OR Medikament OR Studie", tage=14)),
+               F(gnews("rheumatoid arthritis new treatment OR trial", "en", tage=14), True),
+               F("https://medicalxpress.com/rss-feed/diabetes-news/", True),
+               F("https://www.aerzteblatt.de/rss/news.asp", True)]},
     {"id": "forschung", "dach": "MEDIZIN", "titel": "Forschung & Gentherapie", "stil": "forschung",
      "stichwoerter": [],
      "feeds": [F(gnews("Gentherapie")), F(gnews("CRISPR")),
@@ -238,17 +251,17 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "trendsderzukunft": "Trends der Zukunft", "raumfahrer": "Raumfahrer.net", "futurezone": "Futurezone",
            "bbci": "BBC Sport", "simonwillison": "Simon Willison", "reddit.com/r/ClaudeAI": "r/ClaudeAI",
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
-           "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
+           "aerzteblatt": "Ärzteblatt", "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
            "reddit.com/r/ClaudeCode": "r/ClaudeCode", "r/homeassistant": "r/homeassistant",
            "hackaday": "Hackaday", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
 
 # Reihenfolge der Rubriken auf der Webseite
 WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "gs", "bundesliga", "europa", "national", "boxen", "welt",
-                   "smarthome", "smartideen", "solar", "balkon", "tv", "forschung", "technik", "visionen"]
+                   "smarthome", "smartideen", "solar", "balkon", "tv", "gesundheit", "forschung", "technik", "visionen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
 PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"],
-              ["smarthome", "smartideen", "tv"], ["solar", "balkon"], ["forschung", "technik", "visionen"]]
+              ["smarthome", "smartideen", "tv"], ["solar", "balkon"], ["gesundheit", "forschung"], ["technik", "visionen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
     "Damlaya damlaya göl olur. – Tropfen für Tropfen wird ein See.",
@@ -1168,9 +1181,9 @@ ca. 35 %, mit 2 kWh Speicher 60–80 %, 10 % Akku-Verlust, typische Set-Preise N
 
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "smartideen": "💡", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1338,7 +1351,8 @@ MSN_JS = """
 NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["welt"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
        ("ki", "KI & Claude", ["werkstatt", "claude", "ki"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
-       ("solar", "Solar", ["solar", "balkon"]), ("wissen", "Wissen & Technik", ["forschung", "technik", "visionen"]),
+       ("solar", "Solar", ["solar", "balkon"]), ("gesundheit", "Gesundheit", ["gesundheit", "forschung"]),
+       ("wissen", "Wissen & Technik", ["technik", "visionen"]),
        ("zeitung", "📰 Zeitung", "zeitung")]
 
 
@@ -1445,6 +1459,10 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
                 teile.append(solar_html(r, []))
             if not liste:
                 continue
+            if rid == "gesundheit":
+                teile.append('<p class="ms" style="white-space:normal;margin:10px 4px">🩺 Meldungen und Studien aus der Presse, '
+                             'von Claude zusammengefasst – keine medizinische Beratung. Neue Mittel und Studien bitte immer '
+                             'mit dem Arzt besprechen.</p>')
             teile.append(f'<div class="rkopf2"><span class="sicon" style="--c:{farbe(r)}">{ICONS.get(rid, "•")}</span>'
                          f'<h2>{e(r["titel"])}</h2><span class="linie"></span></div><div class="mgrid">'
                          + "".join(mkarte(a, r, ov=(j == 0)) for j, a in enumerate(liste)) + "</div>")
@@ -2046,7 +2064,7 @@ def druck_bauen(ausgabe, demo=False) -> str:
         if seitennr == len(PDF_SEITEN) + 1:
             s.append(f'<div class="impressum">{e(ZEITUNG_NAME)} wird automatisch aus RSS-Feeds erstellt '
                      f'({heute.strftime("%d.%m.%Y, %H:%M Uhr")}). Artikel: von Claude (KI) in eigenen Worten aus den genannten Quellen zusammengefasst – '
-                     f'Angaben ohne Gewähr, Fotos gehören den Quellen. Nur für den privaten Gebrauch.</div>')
+                     f'Angaben ohne Gewähr, Fotos gehören den Quellen. Gesundheitsmeldungen ersetzen keine ärztliche Beratung. Nur für den privaten Gebrauch.</div>')
         s.append("</div>")
     s.append("</body></html>")
     return "\n".join(s)
