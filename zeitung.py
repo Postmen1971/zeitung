@@ -740,10 +740,12 @@ BALKON_KWP, BALKON_FAKTOR = 0.8, 0.75 * 0.7      # 800 Wp, Systemverluste, senkr
 
 
 def wetter_holen():
-    url = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=Europe%2FBerlin&forecast_days=3"
+    url = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=Europe%2FBerlin&forecast_days=5"
+           "&current=temperature_2m,weather_code"
            "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunshine_duration,"
            "shortwave_radiation_sum").format(**WOHNORT)
-    d = json.loads(laden(url)[0].decode())["daily"]
+    roh = json.loads(laden(url)[0].decode())
+    d, jetzt = roh["daily"], roh.get("current", {})
     tage = []
     for i in range(len(d["time"])):
         mj = d["shortwave_radiation_sum"][i] or 0
@@ -752,13 +754,17 @@ def wetter_holen():
                      "max": round(d["temperature_2m_max"][i]), "min": round(d["temperature_2m_min"][i]),
                      "regen": d["precipitation_probability_max"][i] or 0,
                      "sonne_h": round((d["sunshine_duration"][i] or 0) / 3600, 1), "solar_kwh": round(kwh, 1)})
+    if tage and jetzt:
+        tage[0]["jetzt"] = round(jetzt.get("temperature_2m", tage[0]["max"]))
+        tage[0]["jetzt_code"] = jetzt.get("weather_code", tage[0]["code"])
     return tage
 
 
 def wetter_demo():
     heute = dt.date.today()
     return [{"datum": heute + dt.timedelta(days=i), "code": c, "max": t, "min": t - 7, "regen": r, "sonne_h": h, "solar_kwh": k}
-            for i, (c, t, r, h, k) in enumerate([(1, 12, 10, 6.5, 1.9), (3, 9, 40, 1.2, 0.6), (61, 7, 80, 0.3, 0.3)])]
+            for i, (c, t, r, h, k) in enumerate([(1, 12, 10, 6.5, 1.9), (3, 9, 40, 1.2, 0.6), (61, 7, 80, 0.3, 0.3),
+                                                 (2, 10, 20, 4.0, 1.3), (80, 8, 60, 1.0, 0.5)])]
 
 
 def wetter_symbol(code: int, groesse: str = "11mm") -> str:
@@ -1159,86 +1165,6 @@ ca. 35 %, mit 2 kWh Speicher 60–80 %, 10 % Akku-Verlust, typische Set-Preise N
     return "\n".join(teile)
 
 
-def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_name="zeitung.pdf") -> str:
-    heute = dt.datetime.now()
-    nach_id = {r["id"]: (r, l[:WEB_PRO_RESSORT]) for r, l in ausgabe}
-    reihenfolge = [i for i in WEB_REIHENFOLGE if i in nach_id] + [i for i in nach_id if i not in WEB_REIHENFOLGE]
-    alle = [(r, a) for r, l in nach_id.values() for a in l]
-    auf_r, auf = aufmacher_finden([(r, l) for r, l in nach_id.values() if r["id"] != "werkstatt"])
-    top4 = sorted([(r, a) for r, a in alle if a is not auf and r["id"] != "werkstatt"],
-                  key=lambda x: x[1]["punkte"] + (2 if x[1]["bild"] else 0), reverse=True)
-    gesehen, top = set(), []
-    for r, a in top4:                      # Top-Liste aus verschiedenen Rubriken
-        if r["id"] not in gesehen:
-            gesehen.add(r["id"]); top.append((r, a))
-        if len(top) == 5:
-            break
-    benutzt = {id(a) for _, a in top} | ({id(auf)} if auf else set())
-
-    chips = "".join(f'<a href="#r-{i}" style="--c:{farbe(nach_id[i][0])}">{ICONS.get(i, "•")} {e(nach_id[i][0]["titel"])}</a>'
-                    for i in reihenfolge)
-    pdf = (f'<a class="btn" href="lesen.html">📰 Zeitung lesen</a>' if leser else
-           f'<a class="btn" href="{e(pdf_name)}">📰 PDF-Ausgabe</a>' if pdf_name else "")
-    neu = sum(1 for _, a in alle if a.get("neu"))
-    s = [f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
-<title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>{FONTS}<style>{CSS}</style></head><body>
-<header class="top"><div class="wrap topin"><a class="brand" href="#"><span>{e(ZEITUNG_NAME.split('-')[0])}</span><span class="b2">{e('-'.join(ZEITUNG_NAME.split('-')[1:]))}</span></a>
-<div class="topmeta"><span>{e(datum_heute())}</span><span class="dot"></span><span>{len(alle)} Meldungen</span><span class="dot"></span><span>{neu} neu{" · DEMO" if demo else ""}</span></div>{pdf}</div>
-<nav class="chips wrap">{chips}</nav></header><main class="wrap">"""]
-
-    if auf:
-        bild = f' style="background-image:url(\'{e(auf["bild"])}\')"' if auf["bild"] else \
-            f' style="background:linear-gradient(135deg,{farbe(auf_r)},#0f172a)"'
-        s.append(f"""<section class="hero"><a class="herocard" href="{e(auf['link'])}" target="_blank" rel="noopener"{bild}>
-<div class="herotext"><span class="pill" style="--c:{farbe(auf_r)}">{ICONS.get(auf_r['id'], '')} {e(auf_r['titel'])}</span>
-<h1>{e(schlagzeile(auf))}</h1><p>{e(anreisser(auf, 240))}</p><div class="zeit">{e(auf.get('quelle', ''))} · {e(rel_zeit(auf.get('datum')))}</div></div></a>
-<div class="toplist"><h2>Top-Meldungen</h2>""")
-        for r, a in top:
-            th = f'<div class="th" style="background-image:url(\'{e(a["bild"])}\')"></div>' if a["bild"] else \
-                f'<div class="th" style="background:linear-gradient(135deg,{farbe(r)},#0f172a)"></div>'
-            s.append(f'<a class="mini" href="{e(a["link"])}" target="_blank" rel="noopener" style="--c:{farbe(r)}">{th}'
-                     f'<div><span class="kat">{ICONS.get(r["id"], "")} {e(r["titel"])}</span><b>{e(schlagzeile(a))}</b></div></a>')
-        s.append("</div></section>")
-
-    if pdf_name:
-        cover = ('<a class="cover" href="lesen.html" style="background-image:url(\'seiten/mini-01.jpg\')"></a>' if leser else "")
-        s.append(f"""<section class="ausgabe">{cover}<div><span class="eyebrow" style="--c:#d0021b">📰 Die Zeitung von heute</span>
-<h2>{e(ZEITUNG_NAME)} vom {e(datum_heute())}</h2><p>{len(PDF_SEITEN) + 1} Seiten im Boulevard-Format mit Artikeln, Fotos und der KI-Werkstatt –
-zum Umblättern direkt hier im Browser oder als PDF.</p><div class="knoepfe">
-{'<a class="btn rot" href="lesen.html">Jetzt durchblättern</a>' if leser else ''}
-<a class="btn hell" href="{e(pdf_name)}" target="_blank" rel="noopener">PDF öffnen</a>
-<a class="btn hell" href="{e(pdf_name)}" download="{e(download_name)}">⬇ Herunterladen</a></div></div></section>""")
-
-    for rid in reihenfolge:
-        r, liste = nach_id[rid]
-        if rid == "werkstatt":
-            s.append(werkstatt_html(r, liste[:6]))
-            continue
-        if rid == "solar":
-            s.append(solar_html(r, [a for a in liste if id(a) not in benutzt] or liste))
-            continue
-        liste = [a for a in liste if id(a) not in benutzt] or liste
-        s.append(f'<section class="sec" id="r-{rid}" style="--c:{farbe(r)}"><div class="shead"><span class="sicon">{ICONS.get(rid, "•")}</span>'
-                 f'<h2>{e(r["titel"])}</h2><span class="linie"></span><span class="anz">{len(liste)} Meldungen</span></div>')
-        if not liste:
-            s.append('<p class="leer">Heute nichts Neues in dieser Rubrik.</p></section>')
-            continue
-        erste = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
-        rest = [a for a in liste if a is not erste]
-        s.append('<div class="grid">' + karte(erste, r, gross=True) + "".join(karte(a, r) for a in rest) + "</div></section>")
-        if rid == reihenfolge[min(3, len(reihenfolge) - 1)]:
-            s.append(f'<div class="spruch"><small>Spruch des Tages</small>{e(SPRUECHE[heute.toordinal() % len(SPRUECHE)])}</div>')
-
-    fehl = ""
-    if fehler:
-        fehl = "<details><summary>{} Quelle(n) heute nicht erreichbar</summary><ul>{}</ul></details>".format(
-            len(fehler), "".join(f"<li>{e(x)}</li>" for x in fehler))
-    s.append(f"""</main><footer><div class="wrap">{e(ZEITUNG_NAME)} · erstellt {heute.strftime('%d.%m.%Y, %H:%M Uhr')} aus RSS-Feeds.
-Alle Meldungen führen zur Originalquelle.{fehl}</div></footer><script>{JS}</script></body></html>""")
-    return "\n".join(s)
-
-
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
           "tv": "#db2777", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
@@ -1294,6 +1220,255 @@ def groesse(titel: str, basis: float) -> str:
     n = len(titel)
     faktor = 1.0 if n <= 45 else .86 if n <= 70 else .74 if n <= 100 else .64
     return f"font-size:{basis * faktor:.1f}pt"
+
+
+MSN_CSS = """
+body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d6 100%) fixed;min-height:100vh}
+@media(prefers-color-scheme:dark){body{background:linear-gradient(135deg,#0f172a,#1e1b4b 50%,#3b0d2a) fixed}}
+.mkopf{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--fl) 78%,transparent);backdrop-filter:blur(18px);
+ -webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--rand)}
+.mkin{max-width:1440px;margin:0 auto;padding:0 18px;display:flex;align-items:center;gap:14px;height:58px}
+.mlogo{font:700 21px "Space Grotesk",Inter,sans-serif;letter-spacing:-.02em;white-space:nowrap}
+.mlogo .b2{font-weight:400;background:linear-gradient(90deg,#8b5cf6,#ec4899,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.suche{flex:1;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:8px;background:var(--fl);border:1px solid var(--rand);
+ border-radius:999px;padding:0 14px;height:40px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.suche input{flex:1;border:0;background:transparent;font:inherit;color:var(--tx);outline:none}
+.mtabs{max-width:1440px;margin:0 auto;padding:0 18px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;height:46px;align-items:center}
+.mtabs::-webkit-scrollbar{display:none}
+.mtabs a{flex:0 0 auto;padding:7px 14px;border-radius:10px;font-weight:500;font-size:14.5px;color:var(--tx2);cursor:pointer}
+.mtabs a:hover{background:var(--fl2);color:var(--tx)}
+.mtabs a.an{background:color-mix(in srgb,#2563eb 12%,var(--fl));color:#2563eb;font-weight:600}
+.mpanel{max-width:1440px;margin:16px auto 30px;padding:18px;background:color-mix(in srgb,var(--fl) 62%,transparent);
+ backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:22px;border:1px solid var(--rand)}
+.tab{display:none}.tab.an{display:block}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));grid-auto-rows:318px;grid-auto-flow:dense;gap:14px}
+.mc{position:relative;background:var(--fl);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--rand);
+ box-shadow:0 1px 2px rgba(0,0,0,.05);transition:box-shadow .15s,transform .15s}
+.mc:hover{box-shadow:0 10px 28px rgba(15,23,42,.16);transform:translateY(-2px)}
+.mc .mi{flex:0 0 60%;background:var(--fl2) center/cover}
+.mc .mi.leer{display:flex;align-items:center;justify-content:center;font-size:54px;background:linear-gradient(135deg,var(--c),#0f172a)}
+.mc .mb{padding:10px 14px 12px;display:flex;flex-direction:column;gap:6px;min-height:0}
+.ms{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx3);white-space:nowrap;overflow:hidden}
+.ms b{color:var(--tx2);font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.av{flex:0 0 18px;height:18px;border-radius:5px;background:var(--c);color:#fff;font:700 10.5px Inter,sans-serif;display:flex;align-items:center;justify-content:center}
+.mc h3{font:600 16.5px/1.3 Inter,system-ui,sans-serif;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mc .neu{position:absolute;top:10px;left:10px;background:#2563eb;color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px}
+.mc.ov{grid-column:span 2}
+.mc.ov .mi{position:absolute;inset:0;flex:none}
+.mc.ov::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.82))}
+.mc.ov .mb{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:18px 20px}
+.mc.ov h3{color:#fff;font-size:24px;-webkit-line-clamp:3}.mc.ov .ms,.mc.ov .ms b{color:rgba(255,255,255,.85)}
+.hero{grid-column:span 2;position:relative;border-radius:14px;overflow:hidden;background:#111;margin:0;display:block;min-height:0}
+.hero .slide{position:absolute;inset:0;opacity:0;transition:opacity .6s;display:block}
+.hero .slide.an{opacity:1;z-index:1}
+.hero .slide .mi{position:absolute;inset:0;background:#333 center/cover}
+.hero .slide::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.85))}
+.hero .mb{position:absolute;left:0;right:0;bottom:22px;z-index:2;padding:0 22px;color:#fff}
+.hero h2{font:700 26px/1.2 Inter,system-ui,sans-serif;letter-spacing:-.015em;margin-top:6px;text-shadow:0 1px 8px rgba(0,0,0,.4)}
+.hero .ms,.hero .ms b{color:rgba(255,255,255,.88)}
+.hpfeil{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:34px;height:52px;border:0;background:rgba(0,0,0,.45);color:#fff;
+ font-size:20px;cursor:pointer;border-radius:6px}
+.hpfeil.l{left:8px}.hpfeil.r{right:8px}
+.punkte{position:absolute;bottom:8px;left:0;right:0;z-index:3;display:flex;justify-content:center;gap:5px}
+.punkte i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45)}.punkte i.an{background:#fff;width:18px;border-radius:4px}
+.wg{background:var(--fl);border-radius:14px;border:1px solid var(--rand);padding:14px 16px;overflow:hidden;display:flex;flex-direction:column}
+.wg h4{font:600 14px Inter,sans-serif;display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.wetterw{background:linear-gradient(160deg,#1e3a8a,#1e40af 45%,#0f172a);color:#fff;border:0}
+.wetterw h4{color:#fff}
+.wjetzt{display:flex;align-items:center;gap:10px}
+.wjetzt b{font:300 46px Inter,sans-serif}.wjetzt .wtx{font-size:13px;opacity:.9;margin-left:auto;text-align:right;max-width:130px}
+.wtage{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:auto;text-align:center;font-size:12px}
+.wtage div{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 0}
+.wtage small{display:block;opacity:.75}.wtage .mn{opacity:.7}
+.wsolar{font-size:12px;background:rgba(255,212,0,.16);border-radius:8px;padding:6px 8px;margin:8px 0}
+.topst{grid-row:span 2}
+.topst a{display:block;padding:9px 0;border-bottom:1px solid var(--rand)}
+.topst a:last-child{border:0}
+.topst a b{display:block;font-size:14px;line-height:1.3;font-weight:600}
+.topst .ms{margin-bottom:3px}
+.werkw{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:0}
+.werkw h4,.werkw p{color:#fff}.werkw .t{font:700 19px/1.2 "Space Grotesk",Inter,sans-serif;margin:4px 0 8px}
+.wbtn{margin-top:auto;align-self:flex-start;background:#fff;color:#111;font-weight:600;font-size:13px;padding:7px 13px;border-radius:999px;cursor:pointer;border:0}
+.solarw{background:linear-gradient(160deg,#f59e0b,#ea580c);color:#fff;border:0}.solarw h4{color:#fff}
+.solarw .gross{font:300 40px Inter,sans-serif}
+.zeitw{flex-direction:row;gap:14px;align-items:center}
+.zeitw .cv{flex:0 0 120px;height:170px;border-radius:6px;background:#fff center/cover;box-shadow:0 8px 20px rgba(0,0,0,.25);transform:rotate(-2deg)}
+.zeitw .btns{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.zeitw .btns a{font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;background:var(--fl2);text-align:center}
+.zeitw .btns a.rot{background:#d0021b;color:#fff}
+.rkopf2{display:flex;align-items:center;gap:10px;margin:22px 4px 12px}
+.rkopf2:first-child{margin-top:4px}
+.rkopf2 h2{font:700 21px "Space Grotesk",Inter,sans-serif}.rkopf2 .linie{flex:1;height:1px;background:var(--rand)}
+.mehr{display:block;margin:16px auto 0;font:600 14px Inter,sans-serif;padding:10px 22px;border-radius:999px;border:1px solid var(--rand);background:var(--fl);color:var(--tx);cursor:pointer}
+.versteckt{display:none!important}
+.leerhinweis{padding:30px;text-align:center;color:var(--tx3)}
+@media(max-width:640px){.mgrid{grid-template-columns:1fr;grid-auto-rows:auto}.mc{min-height:300px}.mc .mi{flex-basis:190px}
+ .hero,.mc.ov{grid-column:auto;min-height:340px}.topst{grid-row:auto}.suche{display:none}.mpanel{padding:10px;margin:10px 6px;border-radius:16px}
+ .zeitw .cv{flex-basis:96px;height:136px}}
+"""
+
+MSN_JS = """
+(function(){
+ const tabs=[...document.querySelectorAll('.mtabs a')], panels=[...document.querySelectorAll('.tab')];
+ function zeige(id){ if(!document.getElementById('t-'+id)) id='entdecken';
+  tabs.forEach(t=>t.classList.toggle('an',t.dataset.t===id)); panels.forEach(p=>p.classList.toggle('an',p.id==='t-'+id));
+  window.scrollTo({top:0}); }
+ tabs.forEach(t=>t.addEventListener('click',e=>{e.preventDefault();history.replaceState(null,'','#'+t.dataset.t);zeige(t.dataset.t);}));
+ document.querySelectorAll('[data-geh]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();history.replaceState(null,'','#'+b.dataset.geh);zeige(b.dataset.geh);}));
+ zeige((location.hash||'#entdecken').slice(1));
+ // Karussell
+ const sl=[...document.querySelectorAll('.hero .slide')], pk=[...document.querySelectorAll('.punkte i')]; let i=0, tm;
+ function geh(n){ if(!sl.length) return; i=(n+sl.length)%sl.length; sl.forEach((s,k)=>s.classList.toggle('an',k===i)); pk.forEach((p,k)=>p.classList.toggle('an',k===i)); }
+ function auto(){ clearInterval(tm); tm=setInterval(()=>geh(i+1),6500); }
+ document.querySelectorAll('.hpfeil').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();geh(i+(b.classList.contains('r')?1:-1));auto();}));
+ pk.forEach((p,k)=>p.addEventListener('click',()=>{geh(k);auto();})); geh(0); auto();
+ // Mehr laden
+ document.querySelectorAll('.mehr').forEach(b=>b.addEventListener('click',()=>{
+  b.previousElementSibling.querySelectorAll('.spaeter').forEach(x=>x.classList.remove('spaeter','versteckt')); b.remove();}));
+ // Suche
+ const q=document.getElementById('q');
+ if(q) q.addEventListener('input',()=>{ const w=q.value.trim().toLowerCase();
+  if(w){ zeige('alle'); }
+  document.querySelectorAll('#t-alle .mc').forEach(c=>c.classList.toggle('versteckt',!!w && !c.dataset.s.includes(w)));
+  if(!w) zeige('entdecken'); });
+})();
+"""
+
+NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["welt"]),
+       ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
+       ("ki", "KI & Claude", ["werkstatt", "claude", "ki"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
+       ("solar", "Solar", ["solar", "balkon"]), ("wissen", "Wissen & Technik", ["forschung", "technik", "visionen"]),
+       ("zeitung", "📰 Zeitung", "zeitung")]
+
+
+def mkarte(a, r, ov=False, spaeter=False) -> str:
+    """Kachel im MSN-Stil."""
+    k = farbe(r)
+    q = e(a.get("quelle") or r["titel"])
+    bild_html = (f'<div class="mi" style="background-image:url(\'{e(a["bild"])}\')"></div>' if a["bild"]
+                 else f'<div class="mi leer">{ICONS.get(r["id"], "📰")}</div>')
+    such = e(f'{schlagzeile(a)} {a["titel"]} {r["titel"]} {a.get("quelle", "")}'.lower())
+    kl = "mc" + (" ov" if ov and a["bild"] else "") + (" spaeter versteckt" if spaeter else "")
+    return (f'<a class="{kl}" style="--c:{k}" href="{e(a["link"])}" target="_blank" rel="noopener" data-s="{such}">{bild_html}'
+            f'{"<span class=neu>NEU</span>" if a.get("neu") else ""}<div class="mb"><div class="ms"><span class="av">{q[:1].upper()}</span>'
+            f'<b>{q}</b> · {e(rel_zeit(a.get("datum")))}</div><h3>{e(schlagzeile(a))}</h3></div></a>')
+
+
+def wetter_widget() -> str:
+    if not WETTER:
+        return ""
+    h = WETTER[0]
+    tage = "".join(f'<div><small>{"Heute" if i == 0 else WOCHENTAGE[w["datum"].weekday()][:2]}</small>{wetter_symbol(w["code"], "26px")}'
+                   f'<b>{w["max"]}°</b> <span class="mn">{w["min"]}°</span></div>' for i, w in enumerate(WETTER[:5]))
+    return (f'<div class="wg wetterw"><h4>📍 {e(WOHNORT["name"])}</h4><div class="wjetzt">{wetter_symbol(h.get("jetzt_code", h["code"]), "50px")}'
+            f'<b>{h.get("jetzt", h["max"])}°</b><span class="wtx">{e(WETTER_TEXT.get(h["code"], ""))}, Regen {h["regen"]} %, '
+            f'{h["sonne_h"]:.1f} Std. Sonne</span></div><div class="wsolar">☀️ Balkonkraftwerk heute: ca. <b>{h["solar_kwh"]:.1f} kWh</b> '
+            f'(≈ {h["solar_kwh"] * 0.35:.2f} €)</div><div class="wtage">{tage}</div></div>').replace(".", ",", 0)
+
+
+def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_name="zeitung.pdf") -> str:
+    heute = dt.datetime.now()
+    nach_id = {r["id"]: (r, l) for r, l in ausgabe}
+    alle = [(r, a) for r, l in ausgabe for a in l]
+    neu = sum(1 for _, a in alle if a.get("neu"))
+
+    # ── Entdecken: beste Meldungen aller Rubriken gemischt ──
+    def wert(x):
+        return x[1]["punkte"] + (4 if x[1]["bild"] else 0)
+    mix, rub_zahl = [], {}
+    for r, a in sorted(alle, key=wert, reverse=True):
+        if rub_zahl.get(r["id"], 0) >= 4:
+            continue
+        rub_zahl[r["id"]] = rub_zahl.get(r["id"], 0) + 1
+        mix.append((r, a))
+    hero = [x for x in mix if x[1]["bild"]][:6]
+    rest = [x for x in mix if x not in hero]
+    ws, _, _ = werkstatt_heute()
+
+    slides = "".join(
+        f'<a class="slide" href="{e(a["link"])}" target="_blank" rel="noopener"><div class="mi" style="background-image:url(\'{e(a["bild"])}\')"></div>'
+        f'<div class="mb"><div class="ms"><span class="av" style="--c:{farbe(r)}">{e((a.get("quelle") or "?")[:1].upper())}</span>'
+        f'<b>{e(a.get("quelle") or "")}</b> · {e(rel_zeit(a.get("datum")))} · {ICONS.get(r["id"], "")} {e(r["titel"])}</div>'
+        f'<h2>{e(schlagzeile(a))}</h2></div></a>' for r, a in hero)
+    punkte = "".join("<i></i>" for _ in hero)
+    hero_html = (f'<div class="hero">{slides}<button class="hpfeil l" aria-label="zurück">‹</button>'
+                 f'<button class="hpfeil r" aria-label="weiter">›</button><div class="punkte">{punkte}</div></div>') if hero else ""
+    top = "".join(f'<a href="{e(a["link"])}" target="_blank" rel="noopener"><div class="ms"><span class="av" style="--c:{farbe(r)}">'
+                  f'{e((a.get("quelle") or "?")[:1].upper())}</span><b>{e(a.get("quelle") or "")}</b> · {e(rel_zeit(a.get("datum")))}</div>'
+                  f'<b>{e(schlagzeile(a))}</b></a>'
+                  for r, a in sorted(alle, key=lambda x: x[1]["datum"] or dt.datetime.min.replace(tzinfo=dt.timezone.utc), reverse=True)[:7])
+    werk_w = (f'<div class="wg werkw"><h4>🛠️ KI-Werkstatt · heute</h4><div class="t">{e(ws["titel"])}</div>'
+              f'<p style="font-size:13px;opacity:.92">{e(ws["level"])} · {e(ws["dauer"])} · fertiger Prompt zum Kopieren</p>'
+              f'<button class="wbtn" data-geh="ki">Zum Workshop →</button></div>') if ws else ""
+    solar_w = ""
+    if WETTER:
+        woche = sum(w["solar_kwh"] for w in WETTER[:5])
+        solar_w = (f'<div class="wg solarw"><h4>🌞 Solar-Ertrag {e(WOHNORT["name"].split()[0])}</h4><div class="gross">{WETTER[0]["solar_kwh"]:.1f} kWh</div>'
+                   f'<p style="font-size:13px">heute mit 800-W-Balkonkraftwerk (Schätzung)<br>nächste 5 Tage: ca. {woche:.1f} kWh ≈ {woche * 0.35:.2f} €</p>'
+                   f'<button class="wbtn" data-geh="solar">Rechner & Angebote →</button></div>')
+    zeit_w = ""
+    if pdf_name:
+        cover = f'<a class="cv" href="lesen.html" style="background-image:url(\'seiten/mini-01.jpg\')"></a>' if leser else ""
+        zeit_w = (f'<div class="wg zeitw">{cover}<div><h4>📰 Die Zeitung von heute</h4><p style="font-size:13px;color:var(--tx2)">'
+                  f'{len(PDF_SEITEN) + 1} Seiten im Boulevard-Format</p><div class="btns">'
+                  f'{"<a class=rot href=lesen.html>Durchblättern</a>" if leser else ""}'
+                  f'<a href="{e(pdf_name)}" download="{e(download_name)}">⬇ PDF herunterladen</a></div></div></div>')
+
+    kacheln = []
+    for i, (r, a) in enumerate(rest):
+        kacheln.append(mkarte(a, r, ov=(i in (7, 18)), spaeter=i >= 26))
+    # Widgets an MSN-typische Stellen einsetzen
+    for pos, w in sorted([(1, wetter_widget()), (2, f'<div class="wg topst"><h4>🔥 Top-Storys</h4>{top}</div>'),
+                          (6, werk_w), (11, solar_w), (15, zeit_w)], reverse=True):
+        if w:
+            kacheln.insert(min(pos, len(kacheln)), w)
+    entdecken = (f'<section class="tab" id="t-entdecken"><div class="mgrid">{hero_html}{"".join(kacheln)}</div>'
+                 f'{"<button class=mehr>Mehr laden</button>" if len(rest) > 26 else ""}</section>')
+
+    # ── Rubrik-Reiter ──
+    tabs_html = []
+    for tid, name, ids in NAV[1:]:
+        if ids == "zeitung":
+            inhalt = (f'<div class="mgrid" style="grid-auto-rows:auto">{zeit_w.replace("wg zeitw", "wg zeitw")}</div>'
+                      if zeit_w else '<p class="leerhinweis">Heute keine PDF-Ausgabe.</p>')
+            tabs_html.append(f'<section class="tab" id="t-zeitung">{inhalt}</section>')
+            continue
+        teile = []
+        for rid in ids:
+            if rid not in nach_id:
+                continue
+            r, liste = nach_id[rid]
+            if rid == "werkstatt":
+                teile.append(werkstatt_html(r, []))
+            if rid == "solar":
+                teile.append(solar_html(r, []))
+            if not liste:
+                continue
+            teile.append(f'<div class="rkopf2"><span class="sicon" style="--c:{farbe(r)}">{ICONS.get(rid, "•")}</span>'
+                         f'<h2>{e(r["titel"])}</h2><span class="linie"></span></div><div class="mgrid">'
+                         + "".join(mkarte(a, r, ov=(j == 0)) for j, a in enumerate(liste)) + "</div>")
+        tabs_html.append(f'<section class="tab" id="t-{tid}">{"".join(teile)}</section>')
+    # Suche: alle Meldungen
+    tabs_html.append('<section class="tab" id="t-alle"><div class="mgrid">' + "".join(mkarte(a, r) for r, a in alle) + "</div></section>")
+
+    nav = "".join(f'<a href="#{tid}" data-t="{tid}">{e(name)}</a>' for tid, name, _ in NAV)
+    teil1, teil2 = ZEITUNG_NAME.split("-")[0], "-".join(ZEITUNG_NAME.split("-")[1:])
+    fehl = ""
+    if fehler:
+        fehl = "<details><summary>{} Quelle(n) heute nicht erreichbar</summary><ul>{}</ul></details>".format(
+            len(fehler), "".join(f"<li>{e(x)}</li>" for x in fehler))
+    return f"""<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
+<title>{e(ZEITUNG_NAME)} – {e(datum_heute())}</title>{FONTS}<style>{CSS}{MSN_CSS}</style></head><body>
+<header class="mkopf"><div class="mkin"><a class="mlogo" href="#entdecken" data-geh="entdecken">{e(teil1)}<span class="b2">{e(teil2)}</span></a>
+<label class="suche">🔎<input id="q" type="search" placeholder="Meldungen durchsuchen …" autocomplete="off"></label>
+{'<a class="btn" href="lesen.html">📰 Zeitung lesen</a>' if leser else ''}</div>
+<nav class="mtabs">{nav}</nav></header>
+<main class="mpanel"><div class="ms" style="margin:0 4px 12px">{e(datum_heute())} · {len(alle)} Meldungen · {neu} neu{" · DEMO" if demo else ""}</div>
+{entdecken}{"".join(tabs_html)}</main>
+<footer><div class="wrap">{e(ZEITUNG_NAME)} · erstellt {heute.strftime('%d.%m.%Y, %H:%M Uhr')} aus RSS-Feeds. Alle Meldungen führen zur Originalquelle.{fehl}</div></footer>
+<script>{JS}{MSN_JS}</script></body></html>"""
+
 
 
 # ════════════════════════════════════════════════════════════════════
