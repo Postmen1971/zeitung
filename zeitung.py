@@ -736,7 +736,8 @@ WETTER_TEXT = {0: "sonnig", 1: "heiter", 2: "wolkig", 3: "bedeckt", 45: "Nebel",
                55: "Niesel", 61: "Regen", 63: "Regen", 65: "starker Regen", 66: "Eisregen", 67: "Eisregen", 71: "Schnee",
                73: "Schnee", 75: "viel Schnee", 77: "Schnee", 80: "Schauer", 81: "Schauer", 82: "Starkregen",
                85: "Schneeschauer", 86: "Schneeschauer", 95: "Gewitter", 96: "Gewitter", 99: "Gewitter"}
-BALKON_KWP, BALKON_FAKTOR = 0.8, 0.75 * 0.7      # 800 Wp, Systemverluste, senkrechte Montage (grob)
+BALKON_KWP, BALKON_FAKTOR = 2.0, 0.75 * 0.7      # 2.000 Wp Module, Systemverluste, senkrechte Montage (grob)
+BALKON_NAME = "2.000-Wp-Balkonkraftwerk"
 
 
 def wetter_holen():
@@ -1362,7 +1363,7 @@ def wetter_widget() -> str:
                    f'<b>{w["max"]}°</b> <span class="mn">{w["min"]}°</span></div>' for i, w in enumerate(WETTER[:5]))
     return (f'<div class="wg wetterw"><h4>📍 {e(WOHNORT["name"])}</h4><div class="wjetzt">{wetter_symbol(h.get("jetzt_code", h["code"]), "50px")}'
             f'<b>{h.get("jetzt", h["max"])}°</b><span class="wtx">{e(WETTER_TEXT.get(h["code"], ""))}, Regen {h["regen"]} %, '
-            f'{h["sonne_h"]:.1f} Std. Sonne</span></div><div class="wsolar">☀️ Balkonkraftwerk heute: ca. <b>{h["solar_kwh"]:.1f} kWh</b> '
+            f'{h["sonne_h"]:.1f} Std. Sonne</span></div><div class="wsolar">☀️ {BALKON_NAME} heute: ca. <b>{h["solar_kwh"]:.1f} kWh</b> '
             f'(≈ {h["solar_kwh"] * 0.35:.2f} €)</div><div class="wtage">{tage}</div></div>').replace(".", ",", 0)
 
 
@@ -1404,7 +1405,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
     if WETTER:
         woche = sum(w["solar_kwh"] for w in WETTER[:5])
         solar_w = (f'<div class="wg solarw"><h4>🌞 Solar-Ertrag {e(WOHNORT["name"].split()[0])}</h4><div class="gross">{WETTER[0]["solar_kwh"]:.1f} kWh</div>'
-                   f'<p style="font-size:13px">heute mit 800-W-Balkonkraftwerk (Schätzung)<br>nächste 5 Tage: ca. {woche:.1f} kWh ≈ {woche * 0.35:.2f} €</p>'
+                   f'<p style="font-size:13px">heute mit {BALKON_NAME} (Schätzung)<br>nächste 5 Tage: ca. {woche:.1f} kWh ≈ {woche * 0.35:.2f} €</p>'
                    f'<button class="wbtn" data-geh="solar">Rechner & Angebote →</button></div>')
     zeit_w = ""
     if pdf_name:
@@ -1949,7 +1950,7 @@ def druck_bauen(ausgabe, demo=False) -> str:
                          for i, w in enumerate(WETTER[:3]))
         h0 = WETTER[0]
         s.append(f"""<div class="wetter"><div class="wk C">WETTER {e(WOHNORT['name'].split()[0].upper())}</div>{zeilen}
-<div class="solarz C">Heute {e(WETTER_TEXT.get(h0['code'], ''))}, {h0['sonne_h']:.1f} Std. Sonne.<br><b>Dein 800-W-Balkonkraftwerk: ca. {h0['solar_kwh']:.1f} kWh</b>
+<div class="solarz C">Heute {e(WETTER_TEXT.get(h0['code'], ''))}, {h0['sonne_h']:.1f} Std. Sonne.<br><b>Dein {BALKON_NAME}: ca. {h0['solar_kwh']:.1f} kWh</b>
 (≈ {h0['solar_kwh'] * 0.35:.2f} €)</div></div>""")
     s.append("</aside></div>")
 
