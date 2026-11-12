@@ -219,7 +219,6 @@ RESSORTS = [
                F(gnews("Usher syndrome gene therapy OR MYO7A OR \"Usher 1B\"", "en", tage=60), True),
                F(gnews("Rheuma neue Therapie OR Medikament OR Studie", tage=14)),
                F(gnews("rheumatoid arthritis new treatment OR trial", "en", tage=14), True),
-               F("https://medicalxpress.com/rss-feed/diabetes-news/", True),
                F("https://www.aerzteblatt.de/rss/news.asp", True)]},
     {"id": "forschung", "dach": "MEDIZIN", "titel": "Forschung & Gentherapie", "stil": "forschung",
      "stichwoerter": [],
