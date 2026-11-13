@@ -711,6 +711,52 @@ def artikel_schreiben(ausgabe):
     print(f"  Artikel: {fertig} fertig ({neu} neu geschrieben)" + (f", {len(fehler)} Fehler, z. B. {fehler[0]}" if fehler else ""))
 
 
+# ════════════════════════════════════════════════════════════════════
+#  AUTOMATISCHE ÜBERSETZUNG (kostenlos, ohne Schlüssel) – Ersatz, wenn Claude nicht verfügbar ist
+# ════════════════════════════════════════════════════════════════════
+# Nutzt den frei zugänglichen Google-Übersetzer-Dienst. Inoffiziell: kann sich ändern oder zeitweise
+# ausfallen – dann bleibt der Originaltext stehen. Abschalten: UEBERSETZEN = False
+UEBERSETZEN = True
+
+
+def google_uebersetzen(text: str):
+    """Gibt (übersetzter Text, erkannte Sprache) zurück."""
+    url = ("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=de&dt=t&q="
+           + urllib.parse.quote(text))
+    daten = json.loads(laden(url)[0].decode("utf-8"))
+    uebersetzt = "".join(teil[0] for teil in daten[0] if teil and teil[0])
+    return uebersetzt, (daten[2] if len(daten) > 2 else "")
+
+
+def maschinell_uebersetzen(ausgabe):
+    if not UEBERSETZEN:
+        return
+    offen = [a for _, liste in ausgabe for a in liste if not a.get("ki")]
+    zahl, fehler = 0, 0
+
+    def mach(a):
+        teaser = kuerzen(a["teaser"], 600)
+        text = a["titel"] + ("\n\n" + teaser if teaser else "")
+        uebersetzt, sprache = google_uebersetzen(text)
+        return a, uebersetzt, sprache
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        for fut in concurrent.futures.as_completed([pool.submit(mach, a) for a in offen]):
+            try:
+                a, uebersetzt, sprache = fut.result()
+            except Exception:
+                fehler += 1
+                continue
+            if not sprache or sprache.startswith("de") or not uebersetzt.strip():
+                continue
+            teile = [t.strip() for t in uebersetzt.split("\n\n", 1)]
+            a["ki"] = {"schlagzeile": teile[0], "text": teile[1] if len(teile) > 1 else ""}
+            a["uebersetzt_aus"] = sprache
+            zahl += 1
+    print(f"  Übersetzung (automatisch): {zahl} Meldungen ins Deutsche übersetzt"
+          + (f", {fehler} fehlgeschlagen" if fehler else ""))
+
+
 def schlagzeile(a) -> str:
     return (a.get("ki") or {}).get("schlagzeile") or a["titel"]
 
@@ -1365,7 +1411,8 @@ def mkarte(a, r, ov=False, spaeter=False) -> str:
     kl = "mc" + (" ov" if ov and a["bild"] else "") + (" spaeter versteckt" if spaeter else "")
     return (f'<a class="{kl}" style="--c:{k}" href="{e(a["link"])}" target="_blank" rel="noopener" data-s="{such}">{bild_html}'
             f'{"<span class=neu>NEU</span>" if a.get("neu") else ""}<div class="mb"><div class="ms"><span class="av">{q[:1].upper()}</span>'
-            f'<b>{q}</b> · {e(rel_zeit(a.get("datum")))}</div><h3>{e(schlagzeile(a))}</h3></div></a>')
+            f'<b>{q}</b> · {e(rel_zeit(a.get("datum")))}{" · 🌐 übersetzt" if a.get("uebersetzt_aus") else ""}</div>'
+            f'<h3>{e(schlagzeile(a))}</h3></div></a>')
 
 
 def wetter_widget() -> str:
@@ -2318,6 +2365,7 @@ def main():
             return 1
         anreichern(ausgabe)
         artikel_schreiben(ausgabe)
+        maschinell_uebersetzen(ausgabe)
 
     ordner = Path(args.ausgabe)
     ordner.mkdir(parents=True, exist_ok=True)
@@ -2353,7 +2401,7 @@ def main():
         fotos = sum(1 for a in liste if a["bild"])
         print(f"\n■ {r['titel']} ({len(liste)} Meldungen, {fotos} mit Foto)")
         for a in liste[:3]:
-            print(f"   {'NEU ' if a.get('neu') else ''}{a['titel']}  [{a.get('quelle', '')}]")
+            print(f"   {'NEU ' if a.get('neu') else ''}{schlagzeile(a)}  [{a.get('quelle', '')}]")
     if fehler:
         print(f"⚠ {len(fehler)} Feed(s) nicht erreichbar:", *fehler, sep="\n   ")
     if args.oeffnen:
