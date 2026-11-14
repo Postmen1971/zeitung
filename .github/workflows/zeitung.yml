@@ -37,6 +37,7 @@ jobs:
           path: |
             gelesen.json
             artikel_cache.json
+            uebersetzt_cache.json
             fonts
           key: gelesen-${{ github.run_id }}
           restore-keys: gelesen-

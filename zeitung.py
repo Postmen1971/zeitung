@@ -750,49 +750,75 @@ def mymemory_uebersetzen(text: str, sprache: str) -> str:
     return html.unescape(ergebnis)
 
 
+UEBERSETZ_CACHE = BASIS / "uebersetzt_cache.json"
+UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "claude", "smartideen", "balkon", "solar"]
+
+
 def maschinell_uebersetzen(ausgabe):
     if not UEBERSETZEN:
         return
+    try:
+        cache = json.loads(UEBERSETZ_CACHE.read_text("utf-8"))
+    except (OSError, ValueError):
+        cache = {}
     offen = []
-    for _, liste in ausgabe:
+    for r, liste in sorted(ausgabe, key=lambda x: UEBERSETZ_VORRANG.index(x[0]["id"]) if x[0]["id"] in UEBERSETZ_VORRANG else 99):
         for a in liste:
             if a.get("ki"):
                 continue
             sp = sprache_raten(f"{a['titel']} {a['teaser'][:300]}")
             if sp != "de":
-                offen.append((a, sp or "auto"))     # unklar: Google erkennt die Sprache selbst
-    zahl_g = zahl_m = fehler = 0
-    google_ok = True
-    for a, sp in offen:                     # nacheinander mit Pause – sonst blockt der Dienst
-        teaser = kuerzen(a["teaser"], 500)
-        titel_de = text_de = ""
-        if google_ok:
+                offen.append((a, sp or "auto"))      # unklar: Google erkennt die Sprache selbst
+    stat = {"cache": 0, "google": 0, "mymemory": 0, "fehler": 0}
+    google_ok = [True]
+
+    def uebersetze(text, sp):
+        if not text:
+            return ""
+        k = hashlib.sha1(text.encode()).hexdigest()[:20]
+        if k in cache:
+            stat["cache"] += 1
+            return cache[k]
+        ergebnis = ""
+        if google_ok[0]:
             try:
-                titel_de, erkannt = google_uebersetzen(a["titel"] + ("\n\n" + teaser if teaser else ""))
+                ergebnis, erkannt = google_uebersetzen(text)
                 if erkannt and erkannt.startswith("de"):
-                    continue
-                teile = [t.strip() for t in titel_de.split("\n\n", 1)]
-                titel_de, text_de = teile[0], (teile[1] if len(teile) > 1 else "")
-                zahl_g += 1
+                    ergebnis = text
+                stat["google"] += 1
             except Exception:
-                google_ok = False            # Google blockt: ab jetzt nur noch der Ersatzdienst
-                titel_de = ""
-        if not titel_de:
-            if sp == "auto":                         # Ersatzdienst braucht eine bekannte Ausgangssprache
-                fehler += 1
-                continue
+                google_ok[0] = False               # Google blockt: ab jetzt nur noch der Ersatzdienst
+        if not ergebnis and sp != "auto":
             try:
-                titel_de = mymemory_uebersetzen(a["titel"], sp)
-                text_de = mymemory_uebersetzen(teaser, sp) if teaser else ""
-                zahl_m += 1
+                ergebnis = mymemory_uebersetzen(text, sp)
+                stat["mymemory"] += 1
+                time.sleep(0.3)
             except Exception:
-                fehler += 1
-                continue
-        a["ki"] = {"schlagzeile": titel_de, "text": text_de}
-        a["uebersetzt_aus"] = sp
-        time.sleep(0.4)
-    print(f"  Übersetzung (automatisch): {zahl_g + zahl_m} von {len(offen)} fremdsprachigen Meldungen übersetzt "
-          f"(Google {zahl_g}, MyMemory {zahl_m})" + (f", {fehler} fehlgeschlagen" if fehler else ""))
+                ergebnis = ""
+        if ergebnis:
+            cache[k] = ergebnis
+        else:
+            stat["fehler"] += 1
+        return ergebnis
+
+    fertig = 0
+    for a, sp in offen:                              # 1. Durchgang: alle Schlagzeilen
+        titel_de = uebersetze(a["titel"], sp)
+        if titel_de and titel_de != a["titel"]:
+            a["ki"] = {"schlagzeile": titel_de, "text": ""}
+            a["uebersetzt_aus"] = sp
+            fertig += 1
+    for a, sp in offen:                              # 2. Durchgang: Anreißer (gekürzt)
+        if a.get("uebersetzt_aus") and a["teaser"]:
+            a["ki"]["text"] = uebersetze(kuerzen(a["teaser"], 260), sp)
+    if len(cache) > 3000:
+        cache = dict(list(cache.items())[-3000:])
+    try:
+        UEBERSETZ_CACHE.write_text(json.dumps(cache, ensure_ascii=False), "utf-8")
+    except OSError:
+        pass
+    print(f"  Übersetzung (automatisch): {fertig} von {len(offen)} fremdsprachigen Schlagzeilen übersetzt "
+          f"(gespeichert {stat['cache']}, Google {stat['google']}, MyMemory {stat['mymemory']}, fehlgeschlagen {stat['fehler']})")
 
 
 # ════════════════════════════════════════════════════════════════════

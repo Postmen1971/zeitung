@@ -3,3 +3,4 @@ gelesen.json
 __pycache__/
 _site/
 artikel_cache.json
+uebersetzt_cache.json
