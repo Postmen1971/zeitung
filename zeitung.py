@@ -728,33 +728,71 @@ def google_uebersetzen(text: str):
     return uebersetzt, (daten[2] if len(daten) > 2 else "")
 
 
+def sprache_raten(text: str) -> str:
+    """Grobe Spracherkennung ohne Internet: 'de', 'en', 'tr' oder ''."""
+    t = f" {text.lower()} "
+    de = sum(t.count(w) for w in (" der ", " die ", " das ", " und ", " nicht ", " mit ", " für ", " ist ", " ein ",
+                                  " eine ", " auf ", " von ", " zu ", " sich ")) + 2 * sum(t.count(c) for c in "äöüß")
+    en = sum(t.count(w) for w in (" the ", " and ", " of ", " to ", " with ", " for ", " is ", " how ", " you ",
+                                  " your ", " what ", " new ", " from ", " this "))
+    tr = sum(t.count(w) for w in (" ve ", " bir ", " için ", " ile ", " bu ", " da ", " de ")) + 2 * sum(t.count(c) for c in "şğıİ")
+    beste = max(("de", de), ("en", en), ("tr", tr), key=lambda x: x[1])
+    return beste[0] if beste[1] >= 1 else ""
+
+
+def mymemory_uebersetzen(text: str, sprache: str) -> str:
+    url = ("https://api.mymemory.translated.net/get?langpair=" + urllib.parse.quote(f"{sprache}|de")
+           + "&q=" + urllib.parse.quote(text[:480]))
+    daten = json.loads(laden(url)[0].decode("utf-8"))
+    ergebnis = (daten.get("responseData") or {}).get("translatedText") or ""
+    if not ergebnis or "MYMEMORY WARNING" in ergebnis.upper() or daten.get("responseStatus") not in (200, "200"):
+        raise RuntimeError("MyMemory: " + str(daten.get("responseDetails"))[:80])
+    return html.unescape(ergebnis)
+
+
 def maschinell_uebersetzen(ausgabe):
     if not UEBERSETZEN:
         return
-    offen = [a for _, liste in ausgabe for a in liste if not a.get("ki")]
-    zahl, fehler = 0, 0
-
-    def mach(a):
-        teaser = kuerzen(a["teaser"], 600)
-        text = a["titel"] + ("\n\n" + teaser if teaser else "")
-        uebersetzt, sprache = google_uebersetzen(text)
-        return a, uebersetzt, sprache
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-        for fut in concurrent.futures.as_completed([pool.submit(mach, a) for a in offen]):
+    offen = []
+    for _, liste in ausgabe:
+        for a in liste:
+            if a.get("ki"):
+                continue
+            sp = sprache_raten(f"{a['titel']} {a['teaser'][:300]}")
+            if sp != "de":
+                offen.append((a, sp or "auto"))     # unklar: Google erkennt die Sprache selbst
+    zahl_g = zahl_m = fehler = 0
+    google_ok = True
+    for a, sp in offen:                     # nacheinander mit Pause – sonst blockt der Dienst
+        teaser = kuerzen(a["teaser"], 500)
+        titel_de = text_de = ""
+        if google_ok:
             try:
-                a, uebersetzt, sprache = fut.result()
+                titel_de, erkannt = google_uebersetzen(a["titel"] + ("\n\n" + teaser if teaser else ""))
+                if erkannt and erkannt.startswith("de"):
+                    continue
+                teile = [t.strip() for t in titel_de.split("\n\n", 1)]
+                titel_de, text_de = teile[0], (teile[1] if len(teile) > 1 else "")
+                zahl_g += 1
+            except Exception:
+                google_ok = False            # Google blockt: ab jetzt nur noch der Ersatzdienst
+                titel_de = ""
+        if not titel_de:
+            if sp == "auto":                         # Ersatzdienst braucht eine bekannte Ausgangssprache
+                fehler += 1
+                continue
+            try:
+                titel_de = mymemory_uebersetzen(a["titel"], sp)
+                text_de = mymemory_uebersetzen(teaser, sp) if teaser else ""
+                zahl_m += 1
             except Exception:
                 fehler += 1
                 continue
-            if not sprache or sprache.startswith("de") or not uebersetzt.strip():
-                continue
-            teile = [t.strip() for t in uebersetzt.split("\n\n", 1)]
-            a["ki"] = {"schlagzeile": teile[0], "text": teile[1] if len(teile) > 1 else ""}
-            a["uebersetzt_aus"] = sprache
-            zahl += 1
-    print(f"  Übersetzung (automatisch): {zahl} Meldungen ins Deutsche übersetzt"
-          + (f", {fehler} fehlgeschlagen" if fehler else ""))
+        a["ki"] = {"schlagzeile": titel_de, "text": text_de}
+        a["uebersetzt_aus"] = sp
+        time.sleep(0.4)
+    print(f"  Übersetzung (automatisch): {zahl_g + zahl_m} von {len(offen)} fremdsprachigen Meldungen übersetzt "
+          f"(Google {zahl_g}, MyMemory {zahl_m})" + (f", {fehler} fehlgeschlagen" if fehler else ""))
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -777,6 +815,7 @@ def angebot_lesen(a):
     wps = [zahl(m) for m in re.findall(r"(\d{1,2}\.\d{3}|\d{3,4})\s?(?:Wp|W\b|Watt)", text, re.I)]
     wps = [w for w in wps if 300 <= w <= 2500]
     kwhs = [zahl(m) for m in re.findall(r"(\d{1,2}(?:[.,]\d{1,2})?)\s?kWh", text, re.I)]
+    kwhs += [zahl(m) / 1000 for m in re.findall(r"(\d{1,2}\.\d{3}|\d{3,5})\s?Wh\b", text)]
     kwhs = [k for k in kwhs if 0.5 <= k <= 20]
     if not preise or not (wps or kwhs):
         return None
