@@ -8,6 +8,8 @@ und ein anderer Profi-Tipp gezeigt. Eigene Einträge einfach unten ergänzen.
 Grundlage: offizielle Claude-Code-Dokumentation (code.claude.com/docs).
 """
 
+import math
+
 DOKU = "https://code.claude.com/docs/en/quickstart"
 
 # ──────────────────────────────────────────────────────────────────────
@@ -538,3 +540,47 @@ def ersparnis_speicher(wp, ausrichtung, speicher_kwh, eigenverbrauch, preis_eur,
     euro = selbst * strompreis
     return {"kwh": round(kwh), "selbst": round(selbst), "euro": round(euro),
             "jahre": round(preis_eur / euro, 1) if euro else None, "preis": preis_eur}
+
+
+# ──────────────────────────────────────────────────────────────────────
+#  ANLAGEN IN VERSCHIEDENEN GRÖSSEN + RECHNUNG FÜR ECHTE ANGEBOTE
+#  Preise: typische Set-Preise Nov. 2026 (gerundet) – z. B. ~400 W ab 200 €,
+#  800 W 250–500 €, mit Speicher 800–1.500 €.
+# ──────────────────────────────────────────────────────────────────────
+ANLAGEN_BEISPIELE = [
+    # Name, Modul-Wp, Speicher kWh, Preis €
+    ("1 Modul · 400 Wp", 400, 0, 200),
+    ("2 Module · 800 Wp", 800, 0, 280),
+    ("2 Module · 1.000 Wp", 1000, 0, 330),
+    ("3 Module · 1.200 Wp", 1200, 0, 450),
+    ("4 Module · 2.000 Wp", 2000, 0, 700),
+    ("1.000 Wp + 2 kWh Speicher", 1000, 2, 850),
+    ("1.600 Wp + 2,5 kWh Speicher", 1600, 2.5, 1100),
+    ("2.000 Wp + 2 kWh Speicher", 2000, 2, 950),
+    ("2.000 Wp + 4 kWh Speicher", 2000, 4, 1400),
+]
+MONTAGE = "Süd, senkrecht am Geländer"     # typische Balkon-Montage
+
+
+def ersparnis_anlage(wp, speicher_kwh, preis_eur, ausrichtung=MONTAGE, strompreis=STROMPREIS):
+    """Grobe Jahresrechnung für eine Anlage (mit oder ohne Speicher)."""
+    kwh = wp / 1000 * ERTRAG_PRO_KWP * AUSRICHTUNGEN.get(ausrichtung, 0.8)
+    if not speicher_kwh:
+        kwh = min(kwh, 1040)                                  # 800-W-Wechselrichter kappt die Mittagsspitze
+    # Direkt (ohne Akku) kann ein Haushalt tagsüber nur begrenzt verbrauchen: Sättigungskurve,
+    # kleine Anlagen ~65 %, 800 Wp ~50 %, 2.000 Wp ~30 % Eigenverbrauch
+    tag_bedarf = 350
+    direkt = tag_bedarf * (1 - math.exp(-kwh / tag_bedarf))
+    gespeichert = min(kwh - direkt, speicher_kwh * 0.9 * 230)   # ca. 230 nutzbare Ladezyklen im Jahr
+    selbst = min(direkt + gespeichert * 0.9, HAUSHALT_KWH * 0.6)
+    euro = selbst * strompreis
+    return {"kwh": round(kwh), "selbst": round(selbst), "euro": round(euro), "preis": round(preis_eur),
+            "jahre": round(preis_eur / euro, 1) if euro and preis_eur else None}
+
+
+def speicher_nachruesten(speicher_kwh, preis_eur, wp_vorhanden=1000):
+    """Was bringt ein Speicher zusätzlich zu einer vorhandenen Anlage?"""
+    ohne = ersparnis_anlage(wp_vorhanden, 0, 0)
+    mit = ersparnis_anlage(wp_vorhanden, speicher_kwh, 0)
+    mehr = mit["euro"] - ohne["euro"]
+    return {"euro": mehr, "jahre": round(preis_eur / mehr, 1) if mehr > 0 else None}

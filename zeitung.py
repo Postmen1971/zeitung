@@ -757,6 +757,63 @@ def maschinell_uebersetzen(ausgabe):
           + (f", {fehler} fehlgeschlagen" if fehler else ""))
 
 
+# ════════════════════════════════════════════════════════════════════
+#  ANGEBOTE DURCHRECHNEN – Leistung, Speicher und Preis aus der Angebots-Überschrift lesen
+# ════════════════════════════════════════════════════════════════════
+
+def zahl(t: str) -> float:
+    t = t.strip()
+    if re.search(r"\d\.\d{3}", t) and "," not in t:      # 1.299 -> 1299
+        t = t.replace(".", "")
+    return float(t.replace(".", "").replace(",", ".") if "," in t else t)
+
+
+def angebot_lesen(a):
+    """Gibt {wp, kwh, preis} zurück, soweit aus Titel/Anreißer erkennbar – sonst None."""
+    text = f"{a['titel']} {a['teaser'][:300]}"
+    preise = [zahl(m) for m in re.findall(r"(\d{1,2}\.\d{3}(?:,\d{1,2})?|\d{2,4}(?:,\d{1,2})?)\s?(?:€|Euro\b|EUR\b)", text)]
+    preise += [zahl(m) for m in re.findall(r"€\s?(\d{1,2}\.\d{3}(?:,\d{1,2})?|\d{2,4}(?:,\d{1,2})?)", text)]
+    preise = [p for p in preise if 50 <= p <= 5000]
+    wps = [zahl(m) for m in re.findall(r"(\d{1,2}\.\d{3}|\d{3,4})\s?(?:Wp|W\b|Watt)", text, re.I)]
+    wps = [w for w in wps if 300 <= w <= 2500]
+    kwhs = [zahl(m) for m in re.findall(r"(\d{1,2}(?:[.,]\d{1,2})?)\s?kWh", text, re.I)]
+    kwhs = [k for k in kwhs if 0.5 <= k <= 20]
+    if not preise or not (wps or kwhs):
+        return None
+    return {"preis": min(preise), "wp": max(wps) if wps else 0, "kwh": max(kwhs) if kwhs else 0}
+
+
+def angebote_durchrechnen(liste):
+    """Liste von (meldung, werte, rechnung) für alle auswertbaren Angebote."""
+    if not werkstatt or not hasattr(werkstatt, "ersparnis_anlage"):
+        return []
+    out = []
+    for a in liste:
+        w = angebot_lesen(a)
+        if not w:
+            continue
+        if w["wp"]:
+            x = werkstatt.ersparnis_anlage(w["wp"], w["kwh"], w["preis"])
+            art = "Komplettset"
+        else:
+            x = werkstatt.speicher_nachruesten(w["kwh"], w["preis"])
+            art = "Speicher (zu 1.000 Wp)"
+        if x.get("jahre"):
+            out.append((a, w, x, art))
+    return out
+
+
+def de_zahl(x, nachkomma=0) -> str:
+    return f"{x:,.{nachkomma}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def link(a) -> str:
+    """Fremdsprachige Meldungen öffnen direkt übersetzt (Google Übersetzer)."""
+    if a.get("uebersetzt_aus") and a["link"].startswith("http"):
+        return "https://translate.google.com/translate?sl=auto&tl=de&u=" + urllib.parse.quote(a["link"], safe="")
+    return a["link"]
+
+
 def schlagzeile(a) -> str:
     return (a.get("ki") or {}).get("schlagzeile") or a["titel"]
 
@@ -908,6 +965,11 @@ def demo_sammeln():
                        "vorspann": "Hier steht der fett gedruckte Vorspann: ein Satz, der neugierig macht und das Wichtigste verrät.",
                        "text": DEMO_TEXT},
                 "punkte": 20 - n - (0 if r["id"] == "gs" else 1)})
+        if r["id"] == "balkon":     # Beispiel-Angebote, damit die Angebots-Rechnung in der Demo sichtbar ist
+            for a, t in zip(liste, ["Beispiel: 2.000 Wp Set mit 2,24 kWh Speicher für 899 €", "Beispiel: Speicher 2,2 kWh für 249 €",
+                                    "Beispiel: 1.000 W Balkonkraftwerk Set für 329 Euro", "Beispiel: 2000Wp Set ohne Speicher für 1.199,00€"]):
+                a["titel"] = t
+                a["ki"] = None
         ausgabe.append((r, liste))
     return ausgabe, []
 
@@ -1144,7 +1206,7 @@ def anreisser(a, n: int) -> str:
 def karte(a, r, gross=False) -> str:
     bild = f'<div class="img" style="background-image:url(\'{e(a["bild"])}\')"></div>' if a["bild"] else ""
     neu = '<span class="neu">NEU</span>' if a.get("neu") else ""
-    return (f'<a class="card{" gross" if gross and a["bild"] else ""}" href="{e(a["link"])}" target="_blank" rel="noopener">{bild}'
+    return (f'<a class="card{" gross" if gross and a["bild"] else ""}" href="{e(link(a))}" target="_blank" rel="noopener">{bild}'
             f'<div class="cb"><div class="ct"><span>{e(a.get("quelle") or r["titel"])}</span>{neu}</div>'
             f'<h3>{e(schlagzeile(a))}</h3><p>{e(anreisser(a, 260 if gross else 170))}</p>'
             f'<div class="zeit">{e(rel_zeit(a.get("datum")))}</div></div></a>')
@@ -1175,7 +1237,7 @@ def werkstatt_html(r_werk, news) -> str:
     return "\n".join(teile)
 
 
-def solar_html(r, liste) -> str:
+def solar_html(r, liste, angebote=()) -> str:
     tipp = werkstatt.solar_heute(dt.date.today().toordinal()) if werkstatt and hasattr(werkstatt, "solar_heute") else None
     ausr = getattr(werkstatt, "AUSRICHTUNGEN", {"Süd, senkrecht am Geländer": 0.7}) if werkstatt else {"Süd, senkrecht am Geländer": 0.7}
     basis = getattr(werkstatt, "ERTRAG_PRO_KWP", 1000) if werkstatt else 1000
@@ -1206,17 +1268,28 @@ let selbst=kwh*(0.35+Math.max(ev-0.35,0)*0.9);selbst=Math.min(selbst,1800);const
 $('r2').textContent=Math.round(selbst)+' kWh';$('r3').textContent=Math.round(eur)+' €';$('r4').textContent=eur>0&&kp>0?(kp/eur).toFixed(1).replace('.',',')+' Jahren':'–';}}
 ['wp','au','ev','pr','kp'].forEach(i=>$(i).addEventListener('input',rechne));
 $('sp').addEventListener('input',()=>{{$('ev').value=$('sp').selectedOptions[0].dataset.ev;rechne();}});rechne();}})();</script>"""]
-    if werkstatt and hasattr(werkstatt, "ersparnis_speicher"):
+    if werkstatt and hasattr(werkstatt, "ersparnis_anlage"):
         zeilen = ""
-        for name, wp, ausr, sp, ev, preis in werkstatt.SPEICHER_BEISPIELE:
-            x = werkstatt.ersparnis_speicher(wp, ausr, sp, ev, preis)
-            zeilen += (f"<tr><td>{e(name)}</td><td>{x['preis']:,} €</td><td>{x['kwh']:,} kWh</td><td>{x['selbst']:,} kWh</td>"
-                       f"<td class='gr'>{x['euro']} €</td><td><b>{str(x['jahre']).replace('.', ',')} Jahre</b></td></tr>").replace(",", ".")
-        teile.append(f"""<article class="wcard" style="margin-bottom:16px;overflow-x:auto"><span class="eyebrow" style="--c:#d97706">🔋 Rechenbeispiele mit Speicher</span>
-<h3>Für {e(WOHNORT['name'])} / Göppingen</h3><table class="bsp"><tr><th>Anlage</th><th>Preis ca.</th><th>Ertrag/Jahr</th><th>selbst genutzt</th>
+        for name, wp, sp, preis in werkstatt.ANLAGEN_BEISPIELE:
+            x = werkstatt.ersparnis_anlage(wp, sp, preis)
+            zeilen += (f"<tr><td>{e(name)}</td><td>{de_zahl(x['preis'])} €</td><td>{de_zahl(x['kwh'])} kWh</td><td>{de_zahl(x['selbst'])} kWh</td>"
+                       f"<td class='gr'>{x['euro']} €</td><td><b>{de_zahl(x['jahre'], 1)} Jahre</b></td></tr>")
+        teile.append(f"""<article class="wcard" style="margin-bottom:16px;overflow-x:auto"><span class="eyebrow" style="--c:#d97706">🔋 Rechenbeispiele nach Größe</span>
+<h3>400 bis 2.000 Wp, mit und ohne Speicher – für {e(WOHNORT['name'])} / Göppingen</h3><table class="bsp"><tr><th>Anlage</th><th>Preis ca.</th><th>Ertrag/Jahr</th><th>selbst genutzt</th>
+<th>Ersparnis/Jahr</th><th>lohnt sich nach</th></tr>{zeilen}</table><p class="werkzeug">Annahmen: ca. 1.000 kWh pro kWp bei optimaler Lage, Montage senkrecht am Südbalkon, 0,35 €/kWh, Haushalt ca. 3.000 kWh/Jahr, 800-W-Wechselrichter, Speicher mit ca. 230 Ladezyklen/Jahr und 10 % Verlust, typische Set-Preise Nov. 2026. Akkus halten ca. 8–15 Jahre.</p></article>""")
+        gerechnet = angebote_durchrechnen(angebote)
+        if gerechnet:
+            zeilen = ""
+            for a, w, x, art in sorted(gerechnet, key=lambda t: t[2]["jahre"]):
+                lst = (f"{de_zahl(w['wp'])} Wp" if w["wp"] else "–") + (f" + {de_zahl(w['kwh'], 1)} kWh" if w["kwh"] else "")
+                zeilen += (f"<tr><td><a href='{e(link(a))}' target='_blank' rel='noopener' style='text-decoration:underline'>{e(kuerzen(schlagzeile(a), 90))}</a>"
+                           f"<br><small style='color:var(--tx3)'>{e(a.get('quelle') or '')} · {e(art)}</small></td><td>{lst}</td>"
+                           f"<td>{de_zahl(w['preis'])} €</td><td class='gr'>{x['euro']} €</td><td><b>{de_zahl(x['jahre'], 1)} Jahre</b></td></tr>")
+            teile.append(f"""<article class="wcard" style="margin-bottom:16px;overflow-x:auto"><span class="eyebrow" style="--c:#16a34a">🏷️ Aktuelle Angebote durchgerechnet</span>
+<h3>Lohnt sich das Angebot? Sortiert nach Amortisation</h3><table class="bsp"><tr><th>Angebot</th><th>Leistung</th><th>Preis</th>
 <th>Ersparnis/Jahr</th><th>lohnt sich nach</th></tr>{zeilen}</table>
-<p class="werkzeug">Annahmen: ca. 1.000 kWh pro kWp bei optimaler Lage, 0,35 €/kWh, Haushalt ca. 3.000 kWh/Jahr, Eigenverbrauch ohne Speicher
-ca. 35 %, mit 2 kWh Speicher 60–80 %, 10 % Akku-Verlust, typische Set-Preise Nov. 2026. Akkus halten ca. 8–15 Jahre.</p></article>""")
+<p class="werkzeug">Leistung, Speicher und Preis werden aus der Angebotsüberschrift gelesen – bitte vor dem Kauf prüfen (Versand, Halterung, Lieferumfang).
+Reine Speicher-Angebote sind als Nachrüstung zu einer vorhandenen 1.000-Wp-Anlage gerechnet. Gleiche Annahmen wie oben.</p></article>""")
     if liste:
         erste = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
         teile.append('<div class="grid">' + karte(erste, r, gross=True) + "".join(karte(a, r) for a in liste if a is not erste) + "</div>")
@@ -1409,7 +1482,7 @@ def mkarte(a, r, ov=False, spaeter=False) -> str:
                  else f'<div class="mi leer">{ICONS.get(r["id"], "📰")}</div>')
     such = e(f'{schlagzeile(a)} {a["titel"]} {r["titel"]} {a.get("quelle", "")}'.lower())
     kl = "mc" + (" ov" if ov and a["bild"] else "") + (" spaeter versteckt" if spaeter else "")
-    return (f'<a class="{kl}" style="--c:{k}" href="{e(a["link"])}" target="_blank" rel="noopener" data-s="{such}">{bild_html}'
+    return (f'<a class="{kl}" style="--c:{k}" href="{e(link(a))}" target="_blank" rel="noopener" data-s="{such}">{bild_html}'
             f'{"<span class=neu>NEU</span>" if a.get("neu") else ""}<div class="mb"><div class="ms"><span class="av">{q[:1].upper()}</span>'
             f'<b>{q}</b> · {e(rel_zeit(a.get("datum")))}{" · 🌐 übersetzt" if a.get("uebersetzt_aus") else ""}</div>'
             f'<h3>{e(schlagzeile(a))}</h3></div></a>')
@@ -1447,14 +1520,14 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
     ws, _, _ = werkstatt_heute()
 
     slides = "".join(
-        f'<a class="slide" href="{e(a["link"])}" target="_blank" rel="noopener"><div class="mi" style="background-image:url(\'{e(a["bild"])}\')"></div>'
+        f'<a class="slide" href="{e(link(a))}" target="_blank" rel="noopener"><div class="mi" style="background-image:url(\'{e(a["bild"])}\')"></div>'
         f'<div class="mb"><div class="ms"><span class="av" style="--c:{farbe(r)}">{e((a.get("quelle") or "?")[:1].upper())}</span>'
         f'<b>{e(a.get("quelle") or "")}</b> · {e(rel_zeit(a.get("datum")))} · {ICONS.get(r["id"], "")} {e(r["titel"])}</div>'
         f'<h2>{e(schlagzeile(a))}</h2></div></a>' for r, a in hero)
     punkte = "".join("<i></i>" for _ in hero)
     hero_html = (f'<div class="hero">{slides}<button class="hpfeil l" aria-label="zurück">‹</button>'
                  f'<button class="hpfeil r" aria-label="weiter">›</button><div class="punkte">{punkte}</div></div>') if hero else ""
-    top = "".join(f'<a href="{e(a["link"])}" target="_blank" rel="noopener"><div class="ms"><span class="av" style="--c:{farbe(r)}">'
+    top = "".join(f'<a href="{e(link(a))}" target="_blank" rel="noopener"><div class="ms"><span class="av" style="--c:{farbe(r)}">'
                   f'{e((a.get("quelle") or "?")[:1].upper())}</span><b>{e(a.get("quelle") or "")}</b> · {e(rel_zeit(a.get("datum")))}</div>'
                   f'<b>{e(schlagzeile(a))}</b></a>'
                   for r, a in sorted(alle, key=lambda x: x[1]["datum"] or dt.datetime.min.replace(tzinfo=dt.timezone.utc), reverse=True)[:7])
@@ -1502,7 +1575,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
             if rid == "werkstatt":
                 teile.append(werkstatt_html(r, []))
             if rid == "solar":
-                teile.append(solar_html(r, []))
+                teile.append(solar_html(r, [], nach_id.get("balkon", (None, []))[1]))
             if not liste:
                 continue
             if rid == "gesundheit":
@@ -1670,6 +1743,7 @@ figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);
 .sgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:5mm;margin-top:2mm}
 .halbspalte .txt{font-size:8.2pt}
 /* Solar-Tabelle */
+.angtab td{font-size:7pt}.angtab i{color:#777;font-style:normal}
 .tab .rot{color:#d0021b}
 .tab{width:100%;border-collapse:collapse;font:7.2pt "Roboto Condensed",Arial,sans-serif}
 .tab th{text-align:left;background:#111;color:#fff;padding:.8mm 1.2mm;font-weight:700}
@@ -1877,22 +1951,31 @@ def solar_seite(seitennr, kopf, r_solar, solar_news, r_balkon, deals) -> str:
     else:
         s.append("<div></div>")
     zeilen = ""
-    if werkstatt and hasattr(werkstatt, "ersparnis_speicher"):
-        for name, wp, ausr, sp, ev, preis in werkstatt.SPEICHER_BEISPIELE:
-            x = werkstatt.ersparnis_speicher(wp, ausr, sp, ev, preis)
-            zeilen += (f"<tr><td>{e(name)}</td><td>{x['preis']:,} €</td><td>{x['kwh']:,}</td><td>{x['selbst']:,}</td>"
-                       f"<td><b>{x['euro']} €</b></td><td><b class='rot'>{str(x['jahre']).replace('.', ',')} J.</b></td></tr>").replace(",", ".")
-    s.append(f"""<div>{f'<div class="kasten gelb"><div class="kk">Solar-Tipp des Tages</div><div class="ki"><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div>' if tipp else ''}
-<div class="kasten"><div class="kk">Rechenbeispiele für {e(WOHNORT['name'])} / Göppingen</div><div class="ki"><table class="tab">
+    if werkstatt and hasattr(werkstatt, "ersparnis_anlage"):
+        for name, wp, sp, preis in werkstatt.ANLAGEN_BEISPIELE:
+            x = werkstatt.ersparnis_anlage(wp, sp, preis)
+            zeilen += (f"<tr><td>{e(name)}</td><td>{de_zahl(x['preis'])} €</td><td>{de_zahl(x['kwh'])}</td><td>{de_zahl(x['selbst'])}</td>"
+                       f"<td><b>{x['euro']} €</b></td><td><b class='rot'>{de_zahl(x['jahre'], 1)} J.</b></td></tr>")
+    s.append(f"""<div><div class="kasten"><div class="kk">Rechenbeispiele {e(WOHNORT['name'].split()[0])}/Göppingen</div><div class="ki"><table class="tab">
 <tr><th>Anlage</th><th>Preis ca.</th><th>kWh/ Jahr</th><th>selbst genutzt</th><th>Ersparnis/ Jahr</th><th>lohnt nach</th></tr>{zeilen}</table>
-<p class="fussnote">Grobe Schätzung: ca. 1.000 kWh pro kWp bei optimaler Lage im Raum Göppingen, 0,35 €/kWh, Haushalt ca. 3.000 kWh/Jahr,
-Eigenverbrauch ohne Speicher ca. 35 %, mit 2 kWh Speicher 60–80 % (bei kleinen Anlagen), 10 % Akku-Verlust. Preise: typische Komplettsets
-Nov. 2026, gerundet. Akkus halten ca. 8–15 Jahre. Eigene Werte: Rechner auf der Webseite oder PVGIS-Rechner der EU.</p></div></div></div></div>""")
-    s.append('<div class="label" style="--k:#eab308;margin-top:3mm"><b>Angebote des Tages</b><span></span></div><div class="deals">')
-    for a in deals[:6]:
-        s.append(f'<article><div class="dach">{neu_tag(a)}{e(a.get("quelle") or "")}</div>'
-                 f'<h4 class="H">{e(schlagzeile(a))}</h4><p>{e(" ".join(artikel_absaetze(a, 22)))}</p></article>')
-    s.append("</div>")
+<p class="fussnote">Annahmen: ca. 1.000 kWh pro kWp bei optimaler Lage, Montage senkrecht am Südbalkon, 0,35 €/kWh, Haushalt ca. 3.000 kWh/Jahr, 800-W-Wechselrichter, Speicher mit ca. 230 Ladezyklen/Jahr und 10 % Verlust, typische Set-Preise Nov. 2026. Akkus halten ca. 8–15 Jahre. Eigene Werte: Rechner auf der Webseite.</p></div></div>
+{f'<div class="kasten gelb"><div class="kk">Solar-Tipp des Tages</div><div class="ki"><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div>' if tipp else ''}</div></div>""")
+    gerechnet = angebote_durchrechnen(deals)
+    if gerechnet:
+        s.append('<div class="label" style="--k:#16a34a;margin-top:3mm"><b>Angebote durchgerechnet</b><span></span></div><table class="tab angtab">'
+                 '<tr><th>Angebot</th><th>Leistung</th><th>Preis</th><th>Ersparnis/Jahr</th><th>lohnt nach</th></tr>')
+        for a, w, x, art in sorted(gerechnet, key=lambda t: t[2]["jahre"])[:6]:
+            lst = (f"{de_zahl(w['wp'])} Wp" if w["wp"] else "–") + (f" + {de_zahl(w['kwh'], 1)} kWh" if w["kwh"] else "")
+            s.append(f"<tr><td><a href='{e(link(a))}'>{e(kuerzen(schlagzeile(a), 80))}</a> <i>({e(art)})</i></td><td>{lst}</td>"
+                     f"<td>{de_zahl(w['preis'])} €</td><td><b>{x['euro']} €</b></td><td><b class='rot'>{de_zahl(x['jahre'], 1)} J.</b></td></tr>")
+        s.append("</table>")
+    rest = [a for a in deals if not any(a is g[0] for g in gerechnet)]
+    if rest:
+        s.append('<div class="label" style="--k:#eab308;margin-top:3mm"><b>Weitere Angebote</b><span></span></div><div class="deals">')
+        for a in rest[:3]:
+            s.append(f'<article><div class="dach">{neu_tag(a)}{e(a.get("quelle") or "")}</div>'
+                     f'<h4 class="H">{e(schlagzeile(a))}</h4><p>{e(" ".join(artikel_absaetze(a, 18)))}</p></article>')
+        s.append("</div>")
     if len(solar_news) > 1:
         s.append('<div class="zwei" style="flex:1">')
         for a in solar_news[1:3]:
@@ -2366,6 +2449,8 @@ def main():
         anreichern(ausgabe)
         artikel_schreiben(ausgabe)
         maschinell_uebersetzen(ausgabe)
+        deals = next((l for r, l in ausgabe if r["id"] == "balkon"), [])
+        print(f"  Angebote durchgerechnet: {len(angebote_durchrechnen(deals))} von {len(deals)}")
 
     ordner = Path(args.ausgabe)
     ordner.mkdir(parents=True, exist_ok=True)
