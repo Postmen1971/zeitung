@@ -1012,7 +1012,7 @@ def wetter_holen():
     url = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=Europe%2FBerlin&forecast_days=5"
            "&past_days={past}&current=temperature_2m,weather_code"
            "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunshine_duration,"
-           "shortwave_radiation_sum").format(past=heute.day - 1, **WOHNORT)
+           "shortwave_radiation_sum").format(past=max(heute.day - 1, 7), **WOHNORT)
     roh = json.loads(laden(url)[0].decode())
     d, jetzt = roh["daily"], roh.get("current", {})
     tage, monat = [], []
@@ -1020,7 +1020,7 @@ def wetter_holen():
         datum = dt.date.fromisoformat(d["time"][i])
         mj = d["shortwave_radiation_sum"][i] or 0
         kwh = round(mj / 3.6 * BALKON_KWP * BALKON_FAKTOR, 2)
-        if datum.month == heute.month and datum <= heute:
+        if datum <= heute:
             monat.append({"datum": datum, "kwh": kwh, "status": "erwartet" if datum == heute else "gemessen"})
         if datum < heute:
             continue
@@ -1035,32 +1035,72 @@ def wetter_holen():
     return tage
 
 
+HISTORIE_AB = dt.date(2024, 1, 1)
+SOLAR_LOG = {}       # "JJJJ-MM-TT" -> kWh, ab 2024
+
+
 def solar_log_merken(monat):
-    """Speichert die Tageswerte in solar_log.json (bleibt über die Läufe erhalten) und liefert den laufenden Monat."""
+    """Speichert die Tageswerte in solar_log.json, lädt fehlende Tage ab 2024 aus dem Wetterarchiv nach
+    und liefert die Tage des laufenden Monats."""
+    global SOLAR_LOG
     pfad = BASIS / "solar_log.json"
     try:
         log = json.loads(pfad.read_text("utf-8"))
     except Exception:
         log = {}
+    heute = dt.date.today()
+    # Archiv (gemessene Einstrahlung, ca. 5 Tage Verzug) für fehlende Tage nachladen – einmalig, danach nur Lücken
+    ende = heute - dt.timedelta(days=6)
+    fehlend = [HISTORIE_AB + dt.timedelta(days=i) for i in range((ende - HISTORIE_AB).days + 1)
+               if (HISTORIE_AB + dt.timedelta(days=i)).isoformat() not in log]
+    if fehlend:
+        try:
+            url = ("https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&timezone=Europe%2FBerlin"
+                   "&start_date={a}&end_date={b}&daily=shortwave_radiation_sum").format(a=fehlend[0], b=fehlend[-1], **WOHNORT)
+            d = json.loads(laden(url)[0].decode())["daily"]
+            neu = 0
+            for tag, mj in zip(d["time"], d["shortwave_radiation_sum"]):
+                if mj is not None and tag not in log:
+                    log[tag] = round(mj / 3.6 * BALKON_KWP * BALKON_FAKTOR, 2)
+                    neu += 1
+            print(f"  Solar-Archiv: {neu} Tage nachgeladen (ab {fehlend[0]})")
+        except Exception as ex:
+            print(f"  Solar-Archiv nicht erreichbar: {type(ex).__name__}")
     for t in monat:
-        log[t["datum"].isoformat()] = t["kwh"]
-    grenze = (dt.date.today() - dt.timedelta(days=400)).isoformat()
-    log = {k: v for k, v in sorted(log.items()) if k >= grenze}
+        if t["status"] == "gemessen":
+            log[t["datum"].isoformat()] = t["kwh"]
+    log = {k: v for k, v in sorted(log.items()) if k >= HISTORIE_AB.isoformat() and k < heute.isoformat()}
     try:
-        pfad.write_text(json.dumps(log, indent=0), "utf-8")
+        pfad.write_text(json.dumps(log, separators=(",", ":")), "utf-8")
     except OSError:
         pass
-    return monat
+    SOLAR_LOG = log
+    return [t for t in monat if t["datum"].month == heute.month and t["datum"].year == heute.year]
+
+
+def solar_monate():
+    """{"JJJJ-MM": [kWh je Tag]} ab 2024 aus dem Log (ohne heute)."""
+    out = {}
+    for k, v in SOLAR_LOG.items():
+        out.setdefault(k[:7], []).append(round(v, 2))
+    return out
 
 
 def vormonat_summe():
-    try:
-        log = json.loads((BASIS / "solar_log.json").read_text("utf-8"))
-    except Exception:
-        return None
     vm = (dt.date.today().replace(day=1) - dt.timedelta(days=1))
-    werte = [v for k, v in log.items() if k.startswith(vm.strftime("%Y-%m"))]
+    werte = [v for k, v in SOLAR_LOG.items() if k.startswith(vm.strftime("%Y-%m"))]
     return (MONATE[vm.month - 1], sum(werte), len(werte)) if len(werte) >= 20 else None
+
+
+def gleicher_monat_frueher():
+    """Summe des gleichen Monats in den Vorjahren ab 2024 (nur vollständige Monate)."""
+    h = dt.date.today()
+    out = []
+    for jahr in range(HISTORIE_AB.year, h.year):
+        werte = [v for k, v in SOLAR_LOG.items() if k.startswith(f"{jahr}-{h.month:02d}")]
+        if len(werte) >= 28:
+            out.append((jahr, sum(werte)))
+    return out
 
 
 def solar_bilanz():
@@ -1077,7 +1117,14 @@ def solar_bilanz():
 
 
 def solar_demo():
+    global SOLAR_LOG
+    import math as _m
     heute = dt.date.today()
+    tag, SOLAR_LOG = HISTORIE_AB, {}
+    while tag < heute:
+        saison = 4.2 + 3.4 * _m.cos((tag.timetuple().tm_yday - 172) / 365 * 2 * _m.pi)
+        SOLAR_LOG[tag.isoformat()] = round(max(0.2, saison * (0.45 + 0.55 * ((tag.toordinal() * 7919) % 100) / 100)), 2)
+        tag += dt.timedelta(days=1)
     werte = [1.9, 0.6, 0.3, 1.3, 2.4, 0.5, 0.8, 2.1, 1.7, 0.4, 0.9, 1.6, 2.2, 0.7, 0.3, 1.1, 1.8, 0.6, 1.4, 2.0, 0.9, 1.2, 1.5, 0.8, 1.9, 0.4, 1.0, 1.3, 2.1, 0.7, 1.1]
     return [{"datum": heute.replace(day=i + 1), "kwh": werte[i], "status": "erwartet" if i + 1 == heute.day else "gemessen"}
             for i in range(heute.day)]
@@ -1675,6 +1722,14 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .sbalken em{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:9px;font-style:normal;color:var(--tx2)}
 .sbalken.klein{height:46px;margin:6px 0 10px}.sbalken.klein span{background:rgba(255,255,255,.85)}.sbalken.klein span.heute{background:#fde68a}
 .sbalken.klein em{display:none}
+.rueckb{margin-top:16px}.rbnav{display:flex;gap:8px;align-items:center;margin:10px 0 12px}
+.rbnav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--rand);background:var(--fl2);font-size:22px;cursor:pointer;color:inherit}
+.rbnav button:disabled{opacity:.35}.rbnav select{flex:1;max-width:240px;height:40px;border-radius:10px;font-size:15px;padding:0 10px}
+.rueckb .ergebnis{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.rbtab{overflow-x:auto;margin-top:6px}.rbtab table{border-collapse:collapse;width:100%;font-size:12.5px;text-align:right}
+.rbtab th,.rbtab td{padding:6px 5px;border-bottom:1px solid var(--rand);white-space:nowrap}.rbtab th{text-align:center;color:var(--tx2)}
+.rbtab td[data-m]{cursor:pointer}.rbtab td[data-m]:hover,.rbtab td.an{background:#fde68a;color:#111;border-radius:6px}
+.rbtab td.leer{color:var(--tx2);text-align:center}.rbtab td.sum{font-weight:700;background:var(--fl2)}
 .monatk .ergebnis{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 .zeitw{flex-direction:row;gap:14px;align-items:center}
 .zeitw .cv{flex:0 0 120px;height:170px;border-radius:6px;background:#fff center/cover;box-shadow:0 8px 20px rgba(0,0,0,.25);transform:rotate(-2deg)}
@@ -1785,8 +1840,52 @@ def solar_monat_widget() -> str:
     bisher = (f'1.–{b["bis_tag"]}. {b["monat"][:3]}.: <b>{de_zahl(b["bisher"], 1)} kWh</b> erzeugt<br>' if b["bis_tag"] else "")
     return (f'<div class="wg solarw"><h4>🌞 Balkonkraftwerk im {e(b["monat"])}</h4><div class="gross">{de_zahl(b["summe"], 1)} kWh</div>'
             f'<p style="font-size:13px">{bisher}heute {"bis jetzt" if b["abends"] else "erwartet"}: <b>+{de_zahl(b["heute"], 1)} kWh</b><br>'
-            f'Monat bisher ≈ <b>{de_zahl(b["euro"], 2)} €</b> gespart</p>{balken_html(b, True)}'
+            f'Monat bisher ≈ <b>{de_zahl(b["euro"], 2)} €</b> gespart'
+            + "".join(f'<br>ganzer {e(b["monat"])} {j}: {de_zahl(v, 1)} kWh' for j, v in gleicher_monat_frueher()[-1:])
+            + f'</p>{balken_html(b, True)}'
             f'<button class="wbtn" data-geh="solar">Monatsbilanz & Rechner →</button></div>')
+
+
+def solar_rueckblick_html() -> str:
+    monate = solar_monate()
+    if not monate:
+        return ""
+    jahre = sorted({k[:4] for k in monate})
+    kurz = [m[:3] for m in MONATE]
+    kopf = "".join(f"<th>{m}</th>" for m in kurz)
+    zeilen = ""
+    for j in jahre:
+        zellen, summe = "", 0.0
+        for mi in range(1, 13):
+            k = f"{j}-{mi:02d}"
+            if k in monate:
+                v = sum(monate[k]); summe += v
+                zellen += f'<td data-m="{k}">{de_zahl(v)}</td>'
+            else:
+                zellen += "<td class=leer>–</td>"
+        zeilen += f"<tr><th>{j}</th>{zellen}<td class=sum>{de_zahl(summe)}<small> kWh</small><br><small>≈ {de_zahl(summe * 0.35)} €</small></td></tr>"
+    daten = json.dumps(monate, separators=(",", ":"))
+    return f"""<div class="wcard rueckb"><span class="eyebrow" style="--c:#d97706">🗓️ Rückblick seit Januar 2024 · {e(WOHNORT['name'])}</span>
+<div class="rbnav"><button id="rbz" aria-label="Monat zurück">‹</button><select id="rbs"></select><button id="rbv" aria-label="Monat vor">›</button></div>
+<div class="ergebnis"><div class="gruen"><small>Monatssumme</small><b id="rb1">–</b></div><div><small>gespart (0,35 €/kWh)</small><b id="rb2">–</b></div>
+<div><small>bester Tag</small><b id="rb3">–</b></div><div><small>Ø pro Tag</small><b id="rb4">–</b></div></div>
+<div class="sbalken" id="rbb"></div>
+<div class="rbtab"><table><tr><th></th>{kopf}<th>Jahr</th></tr>{zeilen}</table></div>
+<p class="werkzeug">Alle Werte in kWh, berechnet aus der gemessenen Sonneneinstrahlung in {e(WOHNORT['name'])} für ein {BALKON_NAME} (senkrecht am Balkon).
+Auf einen Monat in der Tabelle tippen, um ihn oben anzuzeigen. Der laufende Monat endet mit gestern.</p></div>
+<script>(function(){{const D={daten},M={json.dumps(MONATE)},K=Object.keys(D).sort(),$=i=>document.getElementById(i);
+const z=n=>n.toLocaleString('de-DE',{{maximumFractionDigits:1,minimumFractionDigits:1}});
+K.forEach(k=>{{const o=document.createElement('option');o.value=k;o.textContent=M[+k.slice(5)-1]+' '+k.slice(0,4);$('rbs').appendChild(o)}});
+let i=K.length-1;function zeig(){{const k=K[i],w=D[k],s=w.reduce((a,b)=>a+b,0),h=Math.max(...w,0.1);$('rbs').value=k;
+$('rb1').textContent=z(s)+' kWh';$('rb2').textContent=(s*0.35).toLocaleString('de-DE',{{style:'currency',currency:'EUR'}});
+const b=w.indexOf(Math.max(...w));$('rb3').textContent=(b+1)+'. · '+z(w[b])+' kWh';$('rb4').textContent=z(s/w.length)+' kWh';
+$('rbb').innerHTML=w.map((v,t)=>'<span style="height:'+Math.max(4,v/h*100)+'%" title="'+(t+1)+'.: '+z(v)+' kWh"><em>'+(t+1)+'</em></span>').join('');
+$('rbz').disabled=i==0;$('rbv').disabled=i==K.length-1;
+document.querySelectorAll('.rbtab td[data-m]').forEach(td=>td.classList.toggle('an',td.dataset.m==k))}}
+$('rbz').onclick=()=>{{if(i>0){{i--;zeig()}}}};$('rbv').onclick=()=>{{if(i<K.length-1){{i++;zeig()}}}};
+$('rbs').onchange=()=>{{i=K.indexOf($('rbs').value);zeig()}};
+document.querySelectorAll('.rbtab td[data-m]').forEach(td=>td.onclick=()=>{{i=K.indexOf(td.dataset.m);zeig();$('rbs').scrollIntoView({{block:'center',behavior:'smooth'}})}});
+zeig()}})();</script>"""
 
 
 def solar_monat_html() -> str:
@@ -1805,7 +1904,7 @@ def solar_monat_html() -> str:
 {balken_html(b)}
 <p class="werkzeug">Bester Tag: {b['bester']['datum'].day}. {e(b['monat'])} mit {de_zahl(b['bester']['kwh'], 1)} kWh. Vergangene Tage nach der tatsächlich
 gemessenen Sonneneinstrahlung in {e(WOHNORT['name'])} (Open-Meteo), heute als Vorhersage – der Abendlauf rechnet den Tag mit den echten Werten nach.
-Grobe Schätzung für 2.000 Wp senkrecht am Balkon; den genauen Wert zeigt dein Wechselrichter.</p></div></section>"""
+Grobe Schätzung für 2.000 Wp senkrecht am Balkon; den genauen Wert zeigt dein Wechselrichter.</p></div>{solar_rueckblick_html()}</section>"""
 
 
 def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_name="zeitung.pdf") -> str:
@@ -2128,6 +2227,7 @@ body{font-family:"PT Serif",Georgia,"Times New Roman",serif;font-size:8pt;line-h
 .monatd .mzahlen{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5mm;text-align:center}
 .monatd .mzahlen small{display:block;font-size:6pt;color:#555}.monatd .mzahlen b{font-size:11pt}
 .monatd .mzahlen .rotb{background:#d0021b;color:#fff}.monatd .mzahlen .rotb small{color:#fff}
+.vgl{font-size:7pt;margin:0 0 1mm}
 .dbalken{display:flex;align-items:flex-end;gap:.4mm;height:14mm;margin:1.5mm 0 3.5mm}
 .dbalken span{flex:1;background:#f5a300;position:relative}
 .dbalken span.hz{background:repeating-linear-gradient(45deg,#f5a300,#f5a300 .6mm,#ffe08a .6mm,#ffe08a 1.2mm)}
@@ -2327,7 +2427,9 @@ def monat_kasten_druck() -> str:
             f'<div><small>heute {"bis jetzt" if b["abends"] else "erwartet"}</small><b>+{de_zahl(b["heute"], 1)}</b></div>'
             f'<div class="rotb"><small>Monat gesamt</small><b>{de_zahl(b["summe"], 1)} kWh</b></div>'
             f'<div><small>gespart</small><b>{de_zahl(b["euro"], 2)} €</b></div></div><div class="dbalken">{balken}</div>'
-            f'<p class="fussnote">Vergangene Tage aus der gemessenen Sonneneinstrahlung in {e(WOHNORT["name"])}, heute Vorhersage (gestreift). '
+            + (f'<p class="vgl C">Zum Vergleich ganzer {e(b["monat"])}: ' + " · ".join(f"<b>{j}: {de_zahl(v, 1)} kWh</b>" for j, v in gleicher_monat_frueher())
+               + "</p>" if gleicher_monat_frueher() else "")
+            + f'<p class="fussnote">Vergangene Tage aus der gemessenen Sonneneinstrahlung in {e(WOHNORT["name"])}, heute Vorhersage (gestreift). '
             f'Grobe Schätzung – genau zeigt es dein Wechselrichter.</p></div></div>')
 
 
