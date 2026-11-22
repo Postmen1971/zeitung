@@ -1,39 +1,15 @@
-"""Einmalig: GraphQL-Schnittstelle des abfall.io-Widgets (AWB Göppingen) erkunden."""
-import asyncio, json, urllib.request
-from playwright.async_api import async_playwright
-
-async def main():
-    async with async_playwright() as p:
-        b = await p.chromium.launch(channel="chrome")
-        pg = await b.new_page()
-        async def antwort(r):
-            if "graphql" in r.url:
-                try:
-                    print("REQ", r.request.headers.get("x-abfallplus-api-key", ""), r.request.post_data[:1500])
-                    print("RESP", (await r.text())[:3000])
-                except Exception as e:
-                    print("ERR", e)
-        pg.on("response", lambda r: asyncio.ensure_future(antwort(r)))
-        await pg.goto("https://awb-gp.de/abfallabholung/abfuhrtermine", wait_until="networkidle")
-        await pg.wait_for_timeout(3000)
-        # Versuch: Ebersbach im Widget auswählen
-        for sel in ["input[type=text]", "input"]:
-            fs = await pg.query_selector_all(sel)
-            print("INPUTS", len(fs))
-            if fs:
-                try:
-                    await fs[0].click(); await fs[0].type("Ebersbach", delay=80)
-                    await pg.wait_for_timeout(2500)
-                    opts = await pg.query_selector_all("[role=option], li")
-                    for o in opts:
-                        t = (await o.inner_text()).strip()
-                        if "Ebersbach" in t:
-                            print("OPTION", t); await o.click(); break
-                    await pg.wait_for_timeout(4000)
-                except Exception as e:
-                    print("KLICK-ERR", e)
-                break
-        print("TEXT", (await pg.inner_text("body"))[:2500])
-        await b.close()
-
-asyncio.run(main())
+import json, urllib.request
+KEY = "7a4730955599a7e7c0ceb39c548b6abbae874dc7e6a0afc5"
+def gql(q, v=None):
+    req = urllib.request.Request("https://widgets.abfall.io/graphql", data=json.dumps({"query": q, "variables": v or {}}).encode(),
+        headers={"Content-Type": "application/json", "x-abfallplus-api-key": KEY, "User-Agent": "Mozilla/5.0",
+                 "Origin": "https://awb-gp.de", "Referer": "https://awb-gp.de/"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r: return r.read().decode()
+    except urllib.error.HTTPError as e: return "HTTP%s %s" % (e.code, e.read().decode()[:800])
+s = gql('{__schema{queryType{fields{name args{name type{name kind ofType{name kind ofType{name}}}} type{name kind ofType{name}}}}}}')
+print("SCHEMA", s[:4000])
+for t in ["City", "Appointment", "WasteType", "Street", "AppointmentFilter"]:
+    print("TYPE", t, gql('query($n:String!){__type(name:$n){fields{name type{name kind ofType{name}}} inputFields{name type{name kind ofType{name}}}}}', {"n": t})[:1500])
+print("STREETS", gql('query{city(id:"907"){id name streets{id name}}}')[:1500])
+print("STREETS2", gql('query($id:ID!){streets(cityId:$id){id name}}', {"id": "907"})[:1500])
