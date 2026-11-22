@@ -181,7 +181,6 @@ RESSORTS = [
                F("https://hnrss.org/show?points=20&count=60", True),
                F("https://dev.to/feed/tag/showdev", True),
                F("https://dev.to/feed/tag/sideprojects", True),
-               F("https://community.home-assistant.io/c/projects/9.rss", True),
                F("https://lobste.rs/t/show.rss", True)]},
     {"id": "smarthome", "dach": "SMART HOME", "titel": "Smart Home & Tuya", "stil": "smarthome",
      "stichwoerter": ["smart home", "smarthome", "smart-home", "tuya", "smart life", "home assistant",
