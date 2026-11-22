@@ -1,0 +1,11 @@
+name: Probe (einmalig)
+on: workflow_dispatch
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in "https://community.home-assistant.io/c/projects/9.rss" "https://community.home-assistant.io/c/9.rss" "https://community.home-assistant.io/c/share-your-projects/9.rss" "https://community.home-assistant.io/c/projects.rss"; do
+            echo "$u -> $(curl -s -o /tmp/x -w '%{http_code}' -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36 MorgenKnaller/1.1' "$u") $(grep -o '<title>[^<]*' /tmp/x | sed -n 2p)"
+            echo "$u (browser UA) -> $(curl -s -o /dev/null -w '%{http_code}' -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131 Safari/537.36' "$u")"
+          done
