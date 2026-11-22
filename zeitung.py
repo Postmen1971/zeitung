@@ -456,7 +456,7 @@ def youtube_feeds_ergaenzen():
     """Wandelt die YouTube-Handles der Tüftler in RSS-Feeds um (Kanal-IDs werden in youtube_ids.json gemerkt)."""
     pfad = BASIS / "youtube_ids.json"
     try:
-        ids = json.loads(pfad.read_text("utf-8"))
+        ids = {k: v for k, v in json.loads(pfad.read_text("utf-8")).items() if v}
     except Exception:
         ids = {}
     r = next((x for x in RESSORTS if x["id"] == "tueftler"), None)
@@ -465,16 +465,24 @@ def youtube_feeds_ergaenzen():
     for h in YOUTUBE_TUEFTLER:
         if h not in ids:
             try:
-                seite = laden(f"https://www.youtube.com/@{h}", 600_000)[0].decode("utf-8", "replace")
-                m = re.search(r'"(?:externalId|channelId)":"(UC[\w-]{22})"', seite) or \
-                    re.search(r'youtube\.com/channel/(UC[\w-]{22})', seite)
+                req = urllib.request.Request(f"https://www.youtube.com/@{h}?hl=de", headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131 Safari/537.36",
+                    "Accept-Language": "de-DE,de;q=0.9", "Cookie": "CONSENT=YES+cb; SOCS=CAI"})
+                with urllib.request.urlopen(req, timeout=20) as antwort:
+                    seite = antwort.read(1_500_000).decode("utf-8", "replace")
+                m = (re.search(r'feeds/videos\.xml\?channel_id=(UC[\w-]{22})', seite)
+                     or re.search(r'"(?:externalId|channelId|browseId)":"(UC[\w-]{22})"', seite)
+                     or re.search(r'youtube\.com/channel/(UC[\w-]{22})', seite))
                 ids[h] = m.group(1) if m else ""
-            except Exception:
+                if not m:
+                    print(f"  YouTube @{h}: keine Kanal-ID gefunden ({antwort.geturl()[:60]})")
+            except Exception as ex:
+                print(f"  YouTube @{h}: {type(ex).__name__} {getattr(ex, 'code', '')}")
                 continue        # später nochmal versuchen
         if ids.get(h):
             r["feeds"].append(F(f"https://www.youtube.com/feeds/videos.xml?channel_id={ids[h]}"))
     try:
-        pfad.write_text(json.dumps(ids, indent=1), "utf-8")
+        pfad.write_text(json.dumps({k: v for k, v in ids.items() if v}, indent=1), "utf-8")
     except OSError:
         pass
     print(f"  YouTube-Tüftler: {sum(1 for h in YOUTUBE_TUEFTLER if ids.get(h))} von {len(YOUTUBE_TUEFTLER)} Kanälen gefunden")
