@@ -171,6 +171,18 @@ RESSORTS = [
                F(gnews("KI Projekt selbst gebaut", tage=10)), F(gnews("Raspberry Pi KI Projekt", tage=10)),
                F(gnews("ESP32 Projekt", tage=10)), F(gnews("Bastler Tüftler Erfindung", tage=10)),
                F(gnews("AI DIY project Raspberry Pi OR ESP32", "en", tage=10), True)]},
+    {"id": "community", "dach": "SELBST GEBAUT", "titel": "Selbst gebaut: KI-Projekte aus der Community", "stil": "digital",
+     "max": 15,                # bis zu 15 Projekte pro Tag
+     "stichwoerter": [" ai ", " ai-", "(ai", " ai,", " ai:", "ai-powered", " ki ", " ki-", "llm", "gpt", "claude", "agent",
+                      "openai", "gemini", "llama", "ollama", "mcp", "whisper", "chatbot", "copilot", "neural", "machine learning",
+                      "local model", "voice assist", "assist ", "sprachmodell", "künstliche intelligenz"],
+     "max_alter": 24 * 4,      # Projekte der letzten 4 Tage
+     "feeds": [F("https://hnrss.org/show?q=AI+OR+LLM+OR+Claude+OR+GPT+OR+agent&count=60", True),
+               F("https://hnrss.org/show?points=20&count=60", True),
+               F("https://dev.to/feed/tag/showdev", True),
+               F("https://dev.to/feed/tag/sideprojects", True),
+               F("https://community.home-assistant.io/c/projects/9.rss", True),
+               F("https://lobste.rs/t/show.rss", True)]},
     {"id": "smarthome", "dach": "SMART HOME", "titel": "Smart Home & Tuya", "stil": "smarthome",
      "stichwoerter": ["smart home", "smarthome", "smart-home", "tuya", "smart life", "home assistant",
                       "zigbee", "homekit", "philips hue", "matter-", "saugroboter", "smarte steckdose",
@@ -262,17 +274,17 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
            "aerzteblatt": "Ärzteblatt", "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
            "reddit.com/r/ClaudeCode": "r/ClaudeCode", "r/homeassistant": "r/homeassistant",
-           "hackaday": "Hackaday", "makezine": "Make:", "heise.de/make": "Make (heise)", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+           "hackaday": "Hackaday", "hnrss": "Hacker News · Show HN", "community.home-assistant.io": "Home-Assistant-Forum", "lobste.rs": "Lobsters", "makezine": "Make:", "heise.de/make": "Make (heise)", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
 
 # YouTube-Kanäle von Tüftlern und KI-Bastlern (Handle ohne @). Neue Kanäle einfach hier ergänzen.
 YOUTUBE_TUEFTLER = ["AndreasSpiess", "GreatScottLab", "JeffGeerling", "DroneBotWorkshop", "WorthMaking", "TechnikTueftler"]
 
 # Reihenfolge der Rubriken auf der Webseite
-WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "tueftler", "gs", "bundesliga", "europa", "national", "boxen", "welt",
+WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "tueftler", "community", "gs", "bundesliga", "europa", "national", "boxen", "welt",
                    "smarthome", "smartideen", "solar", "balkon", "tv", "gesundheit", "forschung", "technik", "visionen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
-PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"], ["tueftler"],
+PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"], ["tueftler", "community"],
               ["smarthome", "smartideen", "tv"], ["solar", "balkon"], ["gesundheit", "forschung"], ["technik", "visionen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
@@ -405,6 +417,9 @@ def feed_lesen(daten: bytes, feed_url: str):
             quelle = next((n for k, n in QUELLEN.items() if k in feed_url), "") or \
                 re.split(r"\s+[-–|:]\s+", quelle.strip(" -–|"))[0]
         teaser = saeubern(roh)
+        if "hnrss.org" in feed_url:
+            titel = re.sub(r"^(Show|Launch) HN:\s*", "", titel)
+            teaser = re.sub(r"(Article URL|Comments URL|Points|# Comments):\s*\S+", " ", teaser).strip()
         if teaser.lower().startswith(titel.lower()[:40]) or len(teaser) < 25:
             teaser = ""          # Google News wiederholt nur den Titel
         artikel.append({"titel": titel.strip(), "link": link.strip(), "teaser": teaser,
@@ -539,7 +554,7 @@ def zeitung_sammeln():
             a["punkte"] = punkte(a, jetzt)
             auswahl.append(a)
         auswahl.sort(key=lambda x: x["punkte"], reverse=True)
-        ausgabe.append((r, auswahl[:MAX_PRO_RESSORT]))
+        ausgabe.append((r, auswahl[:r.get("max", MAX_PRO_RESSORT)]))
     status_speichern(status, jetzt)
     return ausgabe, fehler
 
@@ -804,7 +819,7 @@ def mymemory_uebersetzen(text: str, sprache: str) -> str:
 
 
 UEBERSETZ_CACHE = BASIS / "uebersetzt_cache.json"
-UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "claude", "smartideen", "balkon", "solar"]
+UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "community", "claude", "smartideen", "balkon", "solar"]
 
 
 def maschinell_uebersetzen(ausgabe):
@@ -1240,7 +1255,7 @@ def demo_sammeln():
     ausgabe = []
     for i, r in enumerate(RESSORTS):
         liste = []
-        for n in range(MAX_PRO_RESSORT):
+        for n in range(r.get("max", MAX_PRO_RESSORT)):
             liste.append({
                 "titel": f"HIER STEHT DIE GRÖSSTE {r['titel'].upper()}-SCHLAGZEILE DES TAGES" if n == 0 else
                          f"Platzhalter-Schlagzeile {n + 1}: So sieht eine Meldung aus {r['titel']} aus",
@@ -1587,9 +1602,9 @@ Reine Speicher-Angebote sind als Nachrüstung zu einer vorhandenen 1.000-Wp-Anla
 
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1776,7 +1791,7 @@ MSN_JS = """
 
 NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["welt"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
-       ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
+       ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler", "community"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
        ("solar", "Solar", ["solar", "balkon"]), ("gesundheit", "Gesundheit", ["gesundheit", "forschung"]),
        ("wissen", "Wissen & Technik", ["technik", "visionen"]),
        ("zeitung", "📰 Zeitung", "zeitung")]
@@ -2228,6 +2243,9 @@ body{font-family:"PT Serif",Georgia,"Times New Roman",serif;font-size:8pt;line-h
 .monatd .mzahlen small{display:block;font-size:6pt;color:#555}.monatd .mzahlen b{font-size:11pt}
 .monatd .mzahlen .rotb{background:#d0021b;color:#fff}.monatd .mzahlen .rotb small{color:#fff}
 .vgl{font-size:7pt;margin:0 0 1mm}
+.projliste{column-count:2;column-gap:5mm;column-rule:.2mm solid #bbb;font-size:7.2pt;line-height:1.25;padding-left:5mm;overflow:hidden;flex:1;min-height:0}
+.projliste li{break-inside:avoid;margin-bottom:1.6mm}.projliste li::marker{font-family:Anton,KnallerFett,Impact,sans-serif;color:#d0021b;font-size:9pt}
+.projliste b{font-size:8.6pt}.projliste .pq{color:#d0021b;font-weight:900;font-size:6.2pt;text-transform:uppercase}
 .dbalken{display:flex;align-items:flex-end;gap:.4mm;height:14mm;margin:1.5mm 0 3.5mm}
 .dbalken span{flex:1;background:#f5a300;position:relative}
 .dbalken span.hz{background:repeating-linear-gradient(45deg,#f5a300,#f5a300 .6mm,#ffe08a .6mm,#ffe08a 1.2mm)}
@@ -2595,6 +2613,12 @@ def druck_bauen(ausgabe, demo=False) -> str:
             s.append(f'<section class="block {art}" style="--k:{k}">{label}')
             if not liste:
                 s.append('<p class="leerbox">Heute keine Meldungen in dieser Rubrik.</p></section>')
+                continue
+            if rid == "community":
+                s.append('<ol class="projliste">' + "".join(
+                    f'<li><b class="S">{e(schlagzeile(a))}</b> <span class="pq C">{e(a.get("quelle") or "")}</span>'
+                    + (f'<br>{e(" ".join(artikel_absaetze(a, 20)))}' if artikel_absaetze(a, 20) else "") + "</li>"
+                    for a in liste[:15]) + "</ol></section>")
                 continue
             top = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
             rest = [a for a in liste if a is not top]
