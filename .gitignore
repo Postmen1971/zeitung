@@ -4,3 +4,6 @@ __pycache__/
 _site/
 artikel_cache.json
 uebersetzt_cache.json
+solar_log.json
+muell_cache.json
+youtube_ids.json

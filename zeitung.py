@@ -161,6 +161,16 @@ RESSORTS = [
                       "gemini", "llm", "sprachmodell", "machine learning", "nvidia"],
      "feeds": [F("https://the-decoder.de/feed/"), F("https://t3n.de/tag/kuenstliche-intelligenz/rss.xml"),
                F("https://www.heise.de/rss/heise-atom.xml", True), F(gnews("Künstliche Intelligenz"))]},
+    {"id": "tueftler", "dach": "TÜFTLER", "titel": "Tüftler & KI-Bastelprojekte", "stil": "digital",
+     "stichwoerter": ["ki", " ai", "ai ", "raspberry", "esp32", "arduino", "diy", "selbst gebaut", "bastel", "maker",
+                      "projekt", "project", "build", "robot", "llm", "sensor", "3d-druck", "3d print", "home assistant"],
+     "max_alter": 24 * 10,     # Bastelprojekte dürfen bis zu 10 Tage alt sein
+     "feeds": [F("https://hackaday.com/blog/feed/", True), F("https://makezine.com/feed/", True),
+               F("https://www.heise.de/make/rss/hardware-hacks-atom.xml"),
+               F("https://dev.to/feed/tag/raspberrypi"), F("https://dev.to/feed/tag/esp32"),
+               F(gnews("KI Projekt selbst gebaut", tage=10)), F(gnews("Raspberry Pi KI Projekt", tage=10)),
+               F(gnews("ESP32 Projekt", tage=10)), F(gnews("Bastler Tüftler Erfindung", tage=10)),
+               F(gnews("AI DIY project Raspberry Pi OR ESP32", "en", tage=10), True)]},
     {"id": "smarthome", "dach": "SMART HOME", "titel": "Smart Home & Tuya", "stil": "smarthome",
      "stichwoerter": ["smart home", "smarthome", "smart-home", "tuya", "smart life", "home assistant",
                       "zigbee", "homekit", "philips hue", "matter-", "saugroboter", "smarte steckdose",
@@ -252,14 +262,17 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
            "aerzteblatt": "Ärzteblatt", "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
            "reddit.com/r/ClaudeCode": "r/ClaudeCode", "r/homeassistant": "r/homeassistant",
-           "hackaday": "Hackaday", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+           "hackaday": "Hackaday", "makezine": "Make:", "heise.de/make": "Make (heise)", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+
+# YouTube-Kanäle von Tüftlern und KI-Bastlern (Handle ohne @). Neue Kanäle einfach hier ergänzen.
+YOUTUBE_TUEFTLER = ["AndreasSpiess", "GreatScottLab", "JeffGeerling", "DroneBotWorkshop", "WorthMaking", "TechnikTueftler"]
 
 # Reihenfolge der Rubriken auf der Webseite
-WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "gs", "bundesliga", "europa", "national", "boxen", "welt",
+WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "tueftler", "gs", "bundesliga", "europa", "national", "boxen", "welt",
                    "smarthome", "smartideen", "solar", "balkon", "tv", "gesundheit", "forschung", "technik", "visionen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
-PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"],
+PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"], ["tueftler"],
               ["smarthome", "smartideen", "tv"], ["solar", "balkon"], ["gesundheit", "forschung"], ["technik", "visionen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
@@ -384,6 +397,10 @@ def feed_lesen(daten: bytes, feed_url: str):
         quelle = text_von(item, "source") or feed_titel
         if "news.google.com" in feed_url and " - " in titel:   # "Schlagzeile - Quelle"
             titel, quelle = titel.rsplit(" - ", 1)
+        elif "youtube.com/feeds" in feed_url:                  # YouTube-Kanal: Kanalname als Quelle
+            quelle = f"YouTube · {feed_titel}"
+            if not roh:
+                roh = next((saeubern(x.text or "") for x in item.iter() if lokal(x.tag) == "description"), "")
         else:
             quelle = next((n for k, n in QUELLEN.items() if k in feed_url), "") or \
                 re.split(r"\s+[-–|:]\s+", quelle.strip(" -–|"))[0]
@@ -433,6 +450,34 @@ def status_speichern(status: dict, jetzt: dt.datetime):
         STATUS_DATEI.write_text(json.dumps(status), "utf-8")
     except OSError:
         pass
+
+
+def youtube_feeds_ergaenzen():
+    """Wandelt die YouTube-Handles der Tüftler in RSS-Feeds um (Kanal-IDs werden in youtube_ids.json gemerkt)."""
+    pfad = BASIS / "youtube_ids.json"
+    try:
+        ids = json.loads(pfad.read_text("utf-8"))
+    except Exception:
+        ids = {}
+    r = next((x for x in RESSORTS if x["id"] == "tueftler"), None)
+    if not r:
+        return
+    for h in YOUTUBE_TUEFTLER:
+        if h not in ids:
+            try:
+                seite = laden(f"https://www.youtube.com/@{h}", 600_000)[0].decode("utf-8", "replace")
+                m = re.search(r'"(?:externalId|channelId)":"(UC[\w-]{22})"', seite) or \
+                    re.search(r'youtube\.com/channel/(UC[\w-]{22})', seite)
+                ids[h] = m.group(1) if m else ""
+            except Exception:
+                continue        # später nochmal versuchen
+        if ids.get(h):
+            r["feeds"].append(F(f"https://www.youtube.com/feeds/videos.xml?channel_id={ids[h]}"))
+    try:
+        pfad.write_text(json.dumps(ids, indent=1), "utf-8")
+    except OSError:
+        pass
+    print(f"  YouTube-Tüftler: {sum(1 for h in YOUTUBE_TUEFTLER if ids.get(h))} von {len(YOUTUBE_TUEFTLER)} Kanälen gefunden")
 
 
 def zeitung_sammeln():
@@ -751,7 +796,7 @@ def mymemory_uebersetzen(text: str, sprache: str) -> str:
 
 
 UEBERSETZ_CACHE = BASIS / "uebersetzt_cache.json"
-UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "claude", "smartideen", "balkon", "solar"]
+UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "claude", "smartideen", "balkon", "solar"]
 
 
 def maschinell_uebersetzen(ausgabe):
@@ -920,27 +965,6 @@ BALKON_KWP, BALKON_FAKTOR = 2.0, 0.75 * 0.7      # 2.000 Wp Module, Systemverlus
 BALKON_NAME = "2.000-Wp-Balkonkraftwerk"
 
 
-def wetter_holen():
-    url = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=Europe%2FBerlin&forecast_days=5"
-           "&current=temperature_2m,weather_code"
-           "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunshine_duration,"
-           "shortwave_radiation_sum").format(**WOHNORT)
-    roh = json.loads(laden(url)[0].decode())
-    d, jetzt = roh["daily"], roh.get("current", {})
-    tage = []
-    for i in range(len(d["time"])):
-        mj = d["shortwave_radiation_sum"][i] or 0
-        kwh = mj / 3.6 * BALKON_KWP * BALKON_FAKTOR
-        tage.append({"datum": dt.date.fromisoformat(d["time"][i]), "code": d["weather_code"][i],
-                     "max": round(d["temperature_2m_max"][i]), "min": round(d["temperature_2m_min"][i]),
-                     "regen": d["precipitation_probability_max"][i] or 0,
-                     "sonne_h": round((d["sunshine_duration"][i] or 0) / 3600, 1), "solar_kwh": round(kwh, 1)})
-    if tage and jetzt:
-        tage[0]["jetzt"] = round(jetzt.get("temperature_2m", tage[0]["max"]))
-        tage[0]["jetzt_code"] = jetzt.get("weather_code", tage[0]["code"])
-    return tage
-
-
 def wetter_demo():
     heute = dt.date.today()
     return [{"datum": heute + dt.timedelta(days=i), "code": c, "max": t, "min": t - 7, "regen": r, "sonne_h": h, "solar_kwh": k}
@@ -969,6 +993,150 @@ def wetter_symbol(code: int, groesse: str = "11mm") -> str:
 
 
 WETTER = []          # wird in main() gefüllt
+SOLAR_MONAT = []     # [{"datum", "kwh", "status"}] vom 1. des Monats bis heute
+MUELL = []           # anstehende Abfuhrtermine
+
+
+def wetter_holen():
+    """Holt 5 Tage Vorhersage plus die vergangenen Tage des Monats (für die Solar-Monatsbilanz)."""
+    global SOLAR_MONAT
+    heute = dt.date.today()
+    url = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=Europe%2FBerlin&forecast_days=5"
+           "&past_days={past}&current=temperature_2m,weather_code"
+           "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunshine_duration,"
+           "shortwave_radiation_sum").format(past=heute.day - 1, **WOHNORT)
+    roh = json.loads(laden(url)[0].decode())
+    d, jetzt = roh["daily"], roh.get("current", {})
+    tage, monat = [], []
+    for i in range(len(d["time"])):
+        datum = dt.date.fromisoformat(d["time"][i])
+        mj = d["shortwave_radiation_sum"][i] or 0
+        kwh = round(mj / 3.6 * BALKON_KWP * BALKON_FAKTOR, 2)
+        if datum.month == heute.month and datum <= heute:
+            monat.append({"datum": datum, "kwh": kwh, "status": "erwartet" if datum == heute else "gemessen"})
+        if datum < heute:
+            continue
+        tage.append({"datum": datum, "code": d["weather_code"][i],
+                     "max": round(d["temperature_2m_max"][i]), "min": round(d["temperature_2m_min"][i]),
+                     "regen": d["precipitation_probability_max"][i] or 0,
+                     "sonne_h": round((d["sunshine_duration"][i] or 0) / 3600, 1), "solar_kwh": round(kwh, 1)})
+    if tage and jetzt:
+        tage[0]["jetzt"] = round(jetzt.get("temperature_2m", tage[0]["max"]))
+        tage[0]["jetzt_code"] = jetzt.get("weather_code", tage[0]["code"])
+    SOLAR_MONAT = solar_log_merken(monat)
+    return tage
+
+
+def solar_log_merken(monat):
+    """Speichert die Tageswerte in solar_log.json (bleibt über die Läufe erhalten) und liefert den laufenden Monat."""
+    pfad = BASIS / "solar_log.json"
+    try:
+        log = json.loads(pfad.read_text("utf-8"))
+    except Exception:
+        log = {}
+    for t in monat:
+        log[t["datum"].isoformat()] = t["kwh"]
+    grenze = (dt.date.today() - dt.timedelta(days=400)).isoformat()
+    log = {k: v for k, v in sorted(log.items()) if k >= grenze}
+    try:
+        pfad.write_text(json.dumps(log, indent=0), "utf-8")
+    except OSError:
+        pass
+    return monat
+
+
+def vormonat_summe():
+    try:
+        log = json.loads((BASIS / "solar_log.json").read_text("utf-8"))
+    except Exception:
+        return None
+    vm = (dt.date.today().replace(day=1) - dt.timedelta(days=1))
+    werte = [v for k, v in log.items() if k.startswith(vm.strftime("%Y-%m"))]
+    return (MONATE[vm.month - 1], sum(werte), len(werte)) if len(werte) >= 20 else None
+
+
+def solar_bilanz():
+    """Zahlen für die Monatsübersicht des Balkonkraftwerks."""
+    if not SOLAR_MONAT:
+        return None
+    heute = dt.date.today()
+    bisher = sum(t["kwh"] for t in SOLAR_MONAT if t["status"] == "gemessen")
+    erwartet = next((t["kwh"] for t in SOLAR_MONAT if t["status"] == "erwartet"), 0.0)
+    abends = dt.datetime.now().hour >= 18
+    return {"monat": MONATE[heute.month - 1], "bis_tag": heute.day - 1, "bisher": bisher, "heute": erwartet,
+            "summe": bisher + erwartet, "euro": (bisher + erwartet) * 0.35, "abends": abends,
+            "bester": max(SOLAR_MONAT, key=lambda t: t["kwh"]), "tage": SOLAR_MONAT, "vormonat": vormonat_summe()}
+
+
+def solar_demo():
+    heute = dt.date.today()
+    werte = [1.9, 0.6, 0.3, 1.3, 2.4, 0.5, 0.8, 2.1, 1.7, 0.4, 0.9, 1.6, 2.2, 0.7, 0.3, 1.1, 1.8, 0.6, 1.4, 2.0, 0.9, 1.2, 1.5, 0.8, 1.9, 0.4, 1.0, 1.3, 2.1, 0.7, 1.1]
+    return [{"datum": heute.replace(day=i + 1), "kwh": werte[i], "status": "erwartet" if i + 1 == heute.day else "gemessen"}
+            for i in range(heute.day)]
+
+
+# ── Müllabfuhr Ebersbach an der Fils (Abfallwirtschaftsbetrieb Landkreis Göppingen, Daten über abfall.io) ──
+MUELL_QUELLE = {"url": "https://widgets.abfall.io/graphql", "key": "7a4730955599a7e7c0ceb39c548b6abbae874dc7e6a0afc5",
+                "hausnummer": "4021"}   # Ebersbach, Hauptstraße (Stadtmitte) – „Alle Hausnummern“
+MUELL_ARTEN = {"18": ("Restmüll", "#d32f2f", "🗑️"), "19": ("Papier (blaue Tonne)", "#1e40af", "📦"),
+               "17": ("Gelber Sack", "#eab308", "🟡"), "20": ("Biomüll", "#8d6e63", "🍂"),
+               "59": ("Grüngut", "#2e7d32", "🌿"), "60": ("Schadstoffmobil", "#7b1fa2", "☣️")}
+
+
+def muell_holen():
+    """Holt die Abfuhrtermine; bei Ausfall werden die zuletzt gespeicherten Termine genutzt."""
+    global MUELL
+    cache = BASIS / "muell_cache.json"
+    q = ('query($id:ID!){appointments(idHouseNumber:$id){date time location note wasteType{id name}}}')
+    try:
+        req = urllib.request.Request(MUELL_QUELLE["url"], data=json.dumps({"query": q, "variables": {"id": MUELL_QUELLE["hausnummer"]}}).encode(),
+                                     headers={"Content-Type": "application/json", "x-abfallplus-api-key": MUELL_QUELLE["key"],
+                                              "User-Agent": UA, "Origin": "https://awb-gp.de", "Referer": "https://awb-gp.de/"})
+        with urllib.request.urlopen(req, timeout=25) as r:
+            termine = json.loads(r.read().decode())["data"]["appointments"]
+        if termine:
+            cache.write_text(json.dumps(termine), "utf-8")
+    except Exception as ex:
+        print(f"  Abfuhrtermine nicht abrufbar ({type(ex).__name__}) – nehme gespeicherte")
+        try:
+            termine = json.loads(cache.read_text("utf-8"))
+        except Exception:
+            termine = []
+    heute = dt.date.today()
+    MUELL = sorted(({"datum": dt.date.fromisoformat(t["date"]), "art": t["wasteType"]["id"],
+                     "zeit": t.get("time") or "", "ort": t.get("location") or ""}
+                    for t in termine if t["wasteType"]["id"] in MUELL_ARTEN and t["date"] >= heute.isoformat()),
+                   key=lambda t: (t["datum"], list(MUELL_ARTEN).index(t["art"])))
+    print(f"  Abfuhrtermine: {len(MUELL)} anstehend")
+    return MUELL
+
+
+def muell_demo():
+    global MUELL
+    h = dt.date.today()
+    MUELL = [{"datum": h + dt.timedelta(days=d), "art": a, "zeit": "", "ort": ""}
+             for d, a in [(1, "20"), (2, "17"), (5, "18"), (8, "20"), (9, "19"), (16, "17"), (19, "18"), (40, "59"), (60, "60")]]
+    return MUELL
+
+
+def muell_naechste():
+    """Nächster Termin je Abfallart (in fester Reihenfolge)."""
+    out = []
+    for art in MUELL_ARTEN:
+        t = next((x for x in MUELL if x["art"] == art), None)
+        if t:
+            out.append(t)
+    return sorted(out, key=lambda t: t["datum"])
+
+
+def wann(d: dt.date) -> str:
+    diff = (d - dt.date.today()).days
+    if diff == 0:
+        return "HEUTE"
+    if diff == 1:
+        return "MORGEN"
+    return f"{WOCHENTAGE[d.weekday()][:2]} {d.day}.{d.month}."
+
 
 
 # Links zu Solar-Angeboten in der Nähe (öffnen jeweils die aktuelle Suche)
@@ -1364,9 +1532,9 @@ Reine Speicher-Angebote sind als Nachrüstung zu einer vorhandenen 1.000-Wp-Anla
 
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1488,6 +1656,18 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .wbtn{margin-top:auto;align-self:flex-start;background:#fff;color:#111;font-weight:600;font-size:13px;padding:7px 13px;border-radius:999px;cursor:pointer;border:0}
 .solarw{background:linear-gradient(160deg,#f59e0b,#ea580c);color:#fff;border:0}.solarw h4{color:#fff}
 .solarw .gross{font:300 40px Inter,sans-serif}
+.muellw{grid-row:span 2}
+.muellw .mz{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--rand);font-size:13.5px}
+.muellw .mz i{flex:0 0 12px;height:12px;border-radius:3px}.muellw .mz span{flex:1}.muellw .mz small{display:block;color:var(--tx2);font-size:11.5px}
+.muellw .mz b{font-size:13px;white-space:nowrap}.muellw .mz.bald b{background:#d0021b;color:#fff;padding:2px 7px;border-radius:6px}
+.muellw .raus{color:#d0021b;font-weight:700}.muellw .mfuss{font-size:12px;color:var(--tx2);margin-top:8px}.muellw .mfuss a{text-decoration:underline}
+.sbalken{display:flex;align-items:flex-end;gap:2px;height:110px;margin:12px 0 18px}
+.sbalken span{flex:1;background:#f59e0b;border-radius:3px 3px 0 0;position:relative;min-width:3px}
+.sbalken span.heute{background:repeating-linear-gradient(45deg,#fbbf24,#fbbf24 4px,#fde68a 4px,#fde68a 8px);outline:1px dashed #d97706}
+.sbalken em{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:9px;font-style:normal;color:var(--tx2)}
+.sbalken.klein{height:46px;margin:6px 0 10px}.sbalken.klein span{background:rgba(255,255,255,.85)}.sbalken.klein span.heute{background:#fde68a}
+.sbalken.klein em{display:none}
+.monatk .ergebnis{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 .zeitw{flex-direction:row;gap:14px;align-items:center}
 .zeitw .cv{flex:0 0 120px;height:170px;border-radius:6px;background:#fff center/cover;box-shadow:0 8px 20px rgba(0,0,0,.25);transform:rotate(-2deg)}
 .zeitw .btns{display:flex;flex-direction:column;gap:6px;margin-top:10px}
@@ -1533,7 +1713,7 @@ MSN_JS = """
 
 NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["welt"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
-       ("ki", "KI & Claude", ["werkstatt", "claude", "ki"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
+       ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
        ("solar", "Solar", ["solar", "balkon"]), ("gesundheit", "Gesundheit", ["gesundheit", "forschung"]),
        ("wissen", "Wissen & Technik", ["technik", "visionen"]),
        ("zeitung", "📰 Zeitung", "zeitung")]
@@ -1563,6 +1743,61 @@ def wetter_widget() -> str:
             f'<b>{h.get("jetzt", h["max"])}°</b><span class="wtx">{e(WETTER_TEXT.get(h["code"], ""))}, Regen {h["regen"]} %, '
             f'{h["sonne_h"]:.1f} Std. Sonne</span></div><div class="wsolar">☀️ {BALKON_NAME} heute: ca. <b>{h["solar_kwh"]:.1f} kWh</b> '
             f'(≈ {h["solar_kwh"] * 0.35:.2f} €)</div><div class="wtage">{tage}</div></div>').replace(".", ",", 0)
+
+
+def muell_widget() -> str:
+    naechste = muell_naechste()
+    if not naechste:
+        return ""
+    zeilen = ""
+    for t in naechste:
+        name, farbe_, sym = MUELL_ARTEN[t["art"]]
+        diff = (t["datum"] - dt.date.today()).days
+        hinweis = ' <span class="raus">heute Abend rausstellen!</span>' if diff == 1 else (' <span class="raus">heute!</span>' if diff == 0 else "")
+        extra = f'<small>{e(t["zeit"])} {e(t["ort"])}</small>' if (t["zeit"] or t["ort"]) else ""
+        zeilen += (f'<div class="mz{" bald" if diff <= 1 else ""}"><i style="background:{farbe_}"></i><span>{sym} {e(name)}{hinweis}{extra}</span>'
+                   f'<b>{e(wann(t["datum"]))}</b></div>')
+    woche = [t for t in MUELL if (t["datum"] - dt.date.today()).days <= 7]
+    return (f'<div class="wg muellw"><h4>🗑️ Abfuhr {e(WOHNORT["name"].split()[0])} · Stadtmitte</h4>{zeilen}'
+            f'<p class="mfuss">Diese Woche: {len(woche)} Abholung(en) · Tonnen bis 6 Uhr bereitstellen · '
+            f'<a href="https://awb-gp.de/abfallabholung/abfuhrtermine" target="_blank" rel="noopener">alle Termine (AWB)</a></p></div>')
+
+
+def balken_html(b, klein=False) -> str:
+    hoch = max((t["kwh"] for t in b["tage"]), default=1) or 1
+    return '<div class="sbalken' + (" klein" if klein else "") + '">' + "".join(
+        f'<span class="{"heute" if t["status"] == "erwartet" else ""}" style="height:{max(4, t["kwh"] / hoch * 100):.0f}%" '
+        f'title="{t["datum"].day}.: {t["kwh"]:.1f} kWh"><em>{t["datum"].day}</em></span>' for t in b["tage"]) + "</div>"
+
+
+def solar_monat_widget() -> str:
+    b = solar_bilanz()
+    if not b:
+        return ""
+    bisher = (f'1.–{b["bis_tag"]}. {b["monat"][:3]}.: <b>{de_zahl(b["bisher"], 1)} kWh</b> erzeugt<br>' if b["bis_tag"] else "")
+    return (f'<div class="wg solarw"><h4>🌞 Balkonkraftwerk im {e(b["monat"])}</h4><div class="gross">{de_zahl(b["summe"], 1)} kWh</div>'
+            f'<p style="font-size:13px">{bisher}heute {"bis jetzt" if b["abends"] else "erwartet"}: <b>+{de_zahl(b["heute"], 1)} kWh</b><br>'
+            f'Monat bisher ≈ <b>{de_zahl(b["euro"], 2)} €</b> gespart</p>{balken_html(b, True)}'
+            f'<button class="wbtn" data-geh="solar">Monatsbilanz & Rechner →</button></div>')
+
+
+def solar_monat_html() -> str:
+    b = solar_bilanz()
+    if not b:
+        return ""
+    vm = b["vormonat"]
+    vm_txt = f'<div><small>{e(vm[0])} gesamt</small><b>{de_zahl(vm[1], 1)} kWh</b></div>' if vm else ""
+    return f"""<section class="sec" style="--c:#f59e0b"><div class="shead"><span class="sicon">📈</span>
+<h2>Monatsbilanz {e(b['monat'])} – {BALKON_NAME}</h2><span class="linie"></span></div>
+<div class="wcard monatk"><div class="ergebnis">
+<div><small>bisher (1.–{b['bis_tag']}.)</small><b>{de_zahl(b['bisher'], 1)} kWh</b></div>
+<div><small>heute {'bis jetzt' if b['abends'] else 'erwartet'}</small><b>+{de_zahl(b['heute'], 1)} kWh</b></div>
+<div class="gruen"><small>Monat gesamt</small><b>{de_zahl(b['summe'], 1)} kWh</b></div>
+<div><small>gespart (0,35 €/kWh)</small><b>{de_zahl(b['euro'], 2)} €</b></div>{vm_txt}</div>
+{balken_html(b)}
+<p class="werkzeug">Bester Tag: {b['bester']['datum'].day}. {e(b['monat'])} mit {de_zahl(b['bester']['kwh'], 1)} kWh. Vergangene Tage nach der tatsächlich
+gemessenen Sonneneinstrahlung in {e(WOHNORT['name'])} (Open-Meteo), heute als Vorhersage – der Abendlauf rechnet den Tag mit den echten Werten nach.
+Grobe Schätzung für 2.000 Wp senkrecht am Balkon; den genauen Wert zeigt dein Wechselrichter.</p></div></section>"""
 
 
 def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_name="zeitung.pdf") -> str:
@@ -1599,12 +1834,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
     werk_w = (f'<div class="wg werkw"><h4>🛠️ KI-Werkstatt · heute</h4><div class="t">{e(ws["titel"])}</div>'
               f'<p style="font-size:13px;opacity:.92">{e(ws["level"])} · {e(ws["dauer"])} · fertiger Prompt zum Kopieren</p>'
               f'<button class="wbtn" data-geh="ki">Zum Workshop →</button></div>') if ws else ""
-    solar_w = ""
-    if WETTER:
-        woche = sum(w["solar_kwh"] for w in WETTER[:5])
-        solar_w = (f'<div class="wg solarw"><h4>🌞 Solar-Ertrag {e(WOHNORT["name"].split()[0])}</h4><div class="gross">{WETTER[0]["solar_kwh"]:.1f} kWh</div>'
-                   f'<p style="font-size:13px">heute mit {BALKON_NAME} (Schätzung)<br>nächste 5 Tage: ca. {woche:.1f} kWh ≈ {woche * 0.35:.2f} €</p>'
-                   f'<button class="wbtn" data-geh="solar">Rechner & Angebote →</button></div>')
+    solar_w = solar_monat_widget()
     zeit_w = ""
     if pdf_name:
         cover = f'<a class="cv" href="lesen.html" style="background-image:url(\'seiten/mini-01.jpg\')"></a>' if leser else ""
@@ -1617,7 +1847,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
     for i, (r, a) in enumerate(rest):
         kacheln.append(mkarte(a, r, ov=(i in (7, 18)), spaeter=i >= 26))
     # Widgets an MSN-typische Stellen einsetzen
-    for pos, w in sorted([(1, wetter_widget()), (2, f'<div class="wg topst"><h4>🔥 Top-Storys</h4>{top}</div>'),
+    for pos, w in sorted([(1, wetter_widget()), (2, f'<div class="wg topst"><h4>🔥 Top-Storys</h4>{top}</div>'), (4, muell_widget()),
                           (6, werk_w), (11, solar_w), (15, zeit_w)], reverse=True):
         if w:
             kacheln.insert(min(pos, len(kacheln)), w)
@@ -1640,7 +1870,14 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
             if rid == "werkstatt":
                 teile.append(werkstatt_html(r, []))
             if rid == "solar":
+                teile.append(solar_monat_html())
                 teile.append(solar_html(r, [], nach_id.get("balkon", (None, []))[1]))
+            if rid == "tueftler" and werkstatt and hasattr(werkstatt, "tueftel_heute"):
+                t = werkstatt.tueftel_heute(dt.date.today().toordinal())
+                teile.append(f'<div class="wgrid" style="margin:10px 0"><article class="wcard tipp" style="background:linear-gradient(135deg,#0891b2,#7c3aed)">'
+                             f'<span class="eyebrow">🔧 Tüftel-Idee des Tages · {e(t[3])}</span><h3>{e(t[0])}</h3><p>{e(t[1])}</p>'
+                             f'<p style="margin-top:6px"><b>Du brauchst:</b> {e(t[2])}</p><p style="margin-top:6px;opacity:.85">Tipp: Lass dir den Code '
+                             f'von Claude schreiben – „Bau mir Schritt für Schritt: {e(t[0])}“.</p></article></div>')
             if not liste:
                 continue
             if rid == "gesundheit":
@@ -1876,6 +2113,17 @@ body{font-family:"PT Serif",Georgia,"Times New Roman",serif;font-size:8pt;line-h
 .wt{display:grid;grid-template-columns:15mm 9mm 1fr auto auto;align-items:center;gap:1mm;font-size:7pt;padding:0 1.5mm;border-bottom:.2mm solid #ddd}
 .wt b{font-size:10pt}.wt .mn{color:#666}.wt .rg{color:#1e88e5;font-size:6.5pt}
 .solarz{font-size:6.8pt;padding:1mm 1.5mm;background:#fff6c9}
+.muell{border:.4mm solid #111;border-top:0;font-size:7pt}
+.muell .mk{background:#2e7d32;color:#fff;font-weight:900;padding:.4mm 1.5mm}
+.mzd{display:grid;grid-template-columns:3mm 1fr auto;gap:1.2mm;align-items:center;padding:.3mm 1.5mm;border-bottom:.2mm solid #ddd}
+.mzd i{height:3mm;border-radius:.5mm}.mzd b{font-weight:900}.mzd.bald b{background:#d0021b;color:#fff;padding:0 1mm}
+.monatd .mzahlen{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5mm;text-align:center}
+.monatd .mzahlen small{display:block;font-size:6pt;color:#555}.monatd .mzahlen b{font-size:11pt}
+.monatd .mzahlen .rotb{background:#d0021b;color:#fff}.monatd .mzahlen .rotb small{color:#fff}
+.dbalken{display:flex;align-items:flex-end;gap:.4mm;height:14mm;margin:1.5mm 0 3.5mm}
+.dbalken span{flex:1;background:#f5a300;position:relative}
+.dbalken span.hz{background:repeating-linear-gradient(45deg,#f5a300,#f5a300 .6mm,#ffe08a .6mm,#ffe08a 1.2mm)}
+.dbalken em{position:absolute;bottom:-3mm;left:-1mm;right:-1mm;text-align:center;font-size:4.8pt;font-style:normal}
 .tb-banner{background:#111;color:#fff;display:flex;align-items:center;gap:3mm;padding:2mm 3mm;margin-top:2mm}
 .tb-banner .G{color:#fff;font-size:19pt;text-transform:uppercase;flex:1;line-height:.95}
 .tb-banner .bd{color:#ffd400;font-weight:900;font-size:7.5pt;text-transform:uppercase}
@@ -2021,7 +2269,7 @@ def solar_seite(seitennr, kopf, r_solar, solar_news, r_balkon, deals) -> str:
             x = werkstatt.ersparnis_anlage(wp, sp, preis)
             zeilen += (f"<tr><td>{e(name)}</td><td>{de_zahl(x['preis'])} €</td><td>{de_zahl(x['kwh'])}</td><td>{de_zahl(x['selbst'])}</td>"
                        f"<td><b>{x['euro']} €</b></td><td><b class='rot'>{de_zahl(x['jahre'], 1)} J.</b></td></tr>")
-    s.append(f"""<div><div class="kasten"><div class="kk">Rechenbeispiele {e(WOHNORT['name'].split()[0])}/Göppingen</div><div class="ki"><table class="tab">
+    s.append(f"""<div>{monat_kasten_druck()}<div class="kasten"><div class="kk">Rechenbeispiele {e(WOHNORT['name'].split()[0])}/Göppingen</div><div class="ki"><table class="tab">
 <tr><th>Anlage</th><th>Preis ca.</th><th>kWh/ Jahr</th><th>selbst genutzt</th><th>Ersparnis/ Jahr</th><th>lohnt nach</th></tr>{zeilen}</table>
 <p class="fussnote">Annahmen: ca. 1.000 kWh pro kWp bei optimaler Lage, Montage senkrecht am Südbalkon, 0,35 €/kWh, Haushalt ca. 3.000 kWh/Jahr, 800-W-Wechselrichter, Speicher mit ca. 230 Ladezyklen/Jahr und 10 % Verlust, typische Set-Preise Nov. 2026. Akkus halten ca. 8–15 Jahre. Eigene Werte: Rechner auf der Webseite.</p></div></div>
 {f'<div class="kasten gelb"><div class="kk">Solar-Tipp des Tages</div><div class="ki"><h4 class="H">{e(tipp[0])}</h4><p>{e(tipp[1])}</p></div></div>' if tipp else ''}</div></div>""")
@@ -2049,6 +2297,30 @@ def solar_seite(seitennr, kopf, r_solar, solar_news, r_balkon, deals) -> str:
         s.append("</div>")
     s.append("</div>")
     return "\n".join(s)
+
+
+def monat_zeile() -> str:
+    b = solar_bilanz()
+    if not b:
+        return ""
+    return (f'<br>{e(b["monat"])}: {de_zahl(b["bisher"], 1)} kWh bisher + {de_zahl(b["heute"], 1)} heute = '
+            f'<b>{de_zahl(b["summe"], 1)} kWh</b> (≈ {de_zahl(b["euro"], 2)} €)')
+
+
+def monat_kasten_druck() -> str:
+    b = solar_bilanz()
+    if not b:
+        return ""
+    hoch = max((t["kwh"] for t in b["tage"]), default=1) or 1
+    balken = "".join(f'<span class="{"hz" if t["status"] == "erwartet" else ""}" style="height:{max(4, t["kwh"] / hoch * 100):.0f}%">'
+                     f'<em>{t["datum"].day}</em></span>' for t in b["tage"])
+    return (f'<div class="kasten monatd"><div class="kk">Monatsbilanz {e(b["monat"])} · dein {BALKON_NAME}</div><div class="ki">'
+            f'<div class="mzahlen C"><div><small>bisher 1.–{b["bis_tag"]}.</small><b>{de_zahl(b["bisher"], 1)} kWh</b></div>'
+            f'<div><small>heute {"bis jetzt" if b["abends"] else "erwartet"}</small><b>+{de_zahl(b["heute"], 1)}</b></div>'
+            f'<div class="rotb"><small>Monat gesamt</small><b>{de_zahl(b["summe"], 1)} kWh</b></div>'
+            f'<div><small>gespart</small><b>{de_zahl(b["euro"], 2)} €</b></div></div><div class="dbalken">{balken}</div>'
+            f'<p class="fussnote">Vergangene Tage aus der gemessenen Sonneneinstrahlung in {e(WOHNORT["name"])}, heute Vorhersage (gestreift). '
+            f'Grobe Schätzung – genau zeigt es dein Wechselrichter.</p></div></div>')
 
 
 def druck_bauen(ausgabe, demo=False) -> str:
@@ -2159,11 +2431,17 @@ def druck_bauen(ausgabe, demo=False) -> str:
         tage = ["Heute", "Morgen", "Übermorgen"]
         zeilen = "".join(f'<div class="wt"><span>{tage[i] if i < 3 else w["datum"].strftime("%a")}</span>{wetter_symbol(w["code"], "8mm")}'
                          f'<b>{w["max"]}°</b><span class="mn">{w["min"]}°</span><span class="rg">{w["regen"]} %</span></div>'
-                         for i, w in enumerate(WETTER[:3]))
+                         for i, w in enumerate(WETTER[:2]))
         h0 = WETTER[0]
         s.append(f"""<div class="wetter"><div class="wk C">WETTER {e(WOHNORT['name'].split()[0].upper())}</div>{zeilen}
 <div class="solarz C">Heute {e(WETTER_TEXT.get(h0['code'], ''))}, {h0['sonne_h']:.1f} Std. Sonne.<br><b>Dein {BALKON_NAME}: ca. {h0['solar_kwh']:.1f} kWh</b>
-(≈ {h0['solar_kwh'] * 0.35:.2f} €)</div></div>""")
+(≈ {h0['solar_kwh'] * 0.35:.2f} €){monat_zeile()}</div></div>""")
+    naechste = muell_naechste()[:3]
+    if naechste:
+        s.append('<div class="muell C"><div class="mk">MÜLL EBERSBACH</div>' + "".join(
+            f'<div class="mzd{" bald" if (t["datum"] - dt.date.today()).days <= 1 else ""}"><i style="background:{MUELL_ARTEN[t["art"]][1]}"></i>'
+            f'<span>{e(MUELL_ARTEN[t["art"]][0].replace(" (blaue Tonne)", ""))}</span><b>{e(wann(t["datum"]))}</b></div>'
+            for t in naechste) + "</div>")
     s.append("</aside></div>")
 
     for r, a in banner:
@@ -2497,14 +2775,22 @@ def main():
     ap.add_argument("--demo", action="store_true", help="Platzhalter statt echter Feeds")
     args = ap.parse_args()
 
-    global WETTER
+    global WETTER, SOLAR_MONAT
     try:
         WETTER = wetter_demo() if args.demo else wetter_holen()
+        if args.demo:
+            SOLAR_MONAT = solar_demo()
     except Exception as ex:
         print(f"  Wetter nicht verfügbar: {type(ex).__name__}")
+    b = solar_bilanz()
+    if b:
+        print(f"  Balkonkraftwerk {b['monat']}: bisher {b['bisher']:.1f} kWh (1.–{b['bis_tag']}.), heute erwartet {b['heute']:.1f} kWh, "
+              f"Summe {b['summe']:.1f} kWh ≈ {b['euro']:.2f} €")
+    muell_demo() if args.demo else muell_holen()
     if args.demo:
         ausgabe, fehler = demo_sammeln()
     else:
+        youtube_feeds_ergaenzen()
         ausgabe, fehler = zeitung_sammeln()
         alle_feeds = sum(len(r["feeds"]) for r in RESSORTS)
         if len(fehler) > alle_feeds * 0.4:

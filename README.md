@@ -84,3 +84,16 @@ Alles steht ganz oben in `zeitung.py` unter **EINSTELLUNGEN**:
 | `FOTOS_SUCHEN` | fehlende Fotos von der Artikelseite holen |
 
 Alle Meldungen verlinken auf die Originalquelle.
+
+## Müllkalender & Solar-Monatsbilanz
+
+- **Abfuhrtermine Ebersbach an der Fils** (Restmüll, Biomüll, Gelber Sack, blaue Papiertonne, Grüngut, Schadstoffmobil) kommen
+  automatisch vom Abfallwirtschaftsbetrieb des Landkreises Göppingen. Straße ändern: `MUELL_QUELLE["hausnummer"]` in `zeitung.py`.
+- **Balkonkraftwerk-Monatsbilanz**: Ertrag vom 1. des Monats bis gestern aus der gemessenen Sonneneinstrahlung, dazu die
+  Erwartung für heute und die Monatssumme. Ein **Abendlauf (ca. 20 Uhr)** rechnet den Tag mit den echten Werten nach.
+  Die Tageswerte werden in `solar_log.json` gemerkt (auch für den Vormonat).
+
+## Tüftler & KI-Bastelprojekte
+
+Neue Rubrik mit Hackaday, Make:, heise Make, Bastel-Meldungen und YouTube-Kanälen von Tüftlern.
+Weitere Kanäle: Handle (ohne @) in `YOUTUBE_TUEFTLER` eintragen.

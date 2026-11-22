@@ -584,3 +584,43 @@ def speicher_nachruesten(speicher_kwh, preis_eur, wp_vorhanden=1000):
     mit = ersparnis_anlage(wp_vorhanden, speicher_kwh, 0)
     mehr = mit["euro"] - ohne["euro"]
     return {"euro": mehr, "jahre": round(preis_eur / mehr, 1) if mehr > 0 else None}
+
+
+# ──────────────────────────────────────────────────────────────────────
+#  TÜFTEL-IDEEN – Projekte, die man mit KI selbst bauen kann
+#  (Titel, was es macht, was man braucht, Schwierigkeit)
+# ──────────────────────────────────────────────────────────────────────
+TUEFTEL_IDEEN = [
+    ("Müll-Erinnerung aufs Handy", "Ein Skript holt die Abfuhrtermine und schickt am Vorabend eine Nachricht: „Morgen Gelber Sack!“. Claude schreibt dir das Skript.",
+     "Raspberry Pi oder GitHub Actions, Telegram-Bot", "Einsteiger"),
+    ("Sprachassistent ohne Cloud", "Ein Raspberry Pi mit Mikrofon versteht Befehle lokal (Whisper) und schaltet deine Tuya-Steckdosen über Home Assistant.",
+     "Raspberry Pi 5, USB-Mikrofon, Home Assistant", "Fortgeschritten"),
+    ("Futterhaus-Kamera mit Vogelerkennung", "Eine ESP32-Kamera fotografiert Besucher am Futterhaus, eine KI erkennt die Vogelart und schreibt ein Tagebuch.",
+     "ESP32-CAM, Bewegungssensor, kleines Python-Skript", "Mittel"),
+    ("Balkonkraftwerk-Anzeige", "Ein E-Ink-Display zeigt den Solar-Ertrag des Tages und des Monats – Werte kommen per Tuya-Steckdose mit Strommessung.",
+     "ESP32, E-Ink-Display, Smart-Steckdose mit Messfunktion", "Mittel"),
+    ("Kühlschrank-Inventar per Foto", "Foto vom Kühlschrankinhalt machen, Claude erkennt die Lebensmittel und schlägt drei Rezepte vor.",
+     "Handy, Claude-App oder kleines Skript", "Einsteiger"),
+    ("Pflanzen-Wächter", "Bodenfeuchte-Sensor misst, die KI entscheidet anhand der Wettervorhersage, ob gegossen werden muss.",
+     "ESP32, kapazitiver Feuchtesensor, Open-Meteo", "Mittel"),
+    ("Briefkasten-Melder", "Ein Tür-Sensor im Briefkasten meldet Post – mit Uhrzeit, und nur wenn sich die Klappe wirklich bewegt hat.",
+     "Zigbee- oder Tuya-Türsensor, Home Assistant", "Einsteiger"),
+    ("KI-Türklingel", "Die Klingel-Kamera schickt ein Bild, die KI beschreibt kurz, wer da ist („Paketbote mit Karton“).",
+     "Video-Türklingel mit RTSP, Home Assistant, Bildbeschreibung per API", "Fortgeschritten"),
+    ("Strompreis-Ampel", "Eine LED-Lampe leuchtet grün, wenn viel Sonnenstrom da ist – dann Waschmaschine anwerfen.",
+     "Tuya-RGB-Lampe, Ertragsdaten, Automation", "Einsteiger"),
+    ("Galatasaray-Torjubel", "Bei jedem GS-Tor blinken die Lampen rot-gelb – ein Skript prüft den Liveticker.",
+     "Tuya-RGB-Lampen, kleines Python-Skript", "Einsteiger"),
+    ("Werkstatt-Helfer mit Kamera", "Teil vor die Kamera halten, die KI liest Schraubengröße oder Bauteilbezeichnung ab und sucht das Datenblatt.",
+     "Handy oder USB-Kamera, Claude", "Einsteiger"),
+    ("3D-Druck-Wächter", "Eine Kamera beobachtet den 3D-Drucker, die KI erkennt „Spaghetti“ und stoppt den Druck.",
+     "Raspberry Pi, Kamera, OctoPrint mit KI-Plugin", "Fortgeschritten"),
+    ("Vorlese-Brille für Usher-Betroffene", "Handykamera auf Text richten, die KI liest laut vor und beschreibt die Umgebung – Ideen aus der Community für mehr Selbstständigkeit.",
+     "Handy, Vorlese-App oder eigenes Skript mit Sprachausgabe", "Mittel"),
+    ("Energie-Tagebuch", "Jeden Abend schreibt die KI eine kurze Zusammenfassung: Solar-Ertrag, Verbrauch, was auffällig war.",
+     "Home Assistant, Claude-API oder Abo-Token", "Mittel"),
+]
+
+
+def tueftel_heute(tag_nr: int):
+    return TUEFTEL_IDEEN[tag_nr % len(TUEFTEL_IDEEN)]

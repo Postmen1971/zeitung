@@ -5,6 +5,8 @@ on:
     # Zwei Morgenläufe, weil GitHub geplante Läufe oft stark verspätet startet (Zeiten in UTC)
     - cron: "23 3 * * *"   # ca. 04:23 Uhr (Winterzeit) / 05:23 Uhr (Sommerzeit)
     - cron: "47 4 * * *"   # ca. 05:47 Uhr (Winterzeit) / 06:47 Uhr (Sommerzeit)
+    # Abendlauf: rechnet den Solar-Ertrag des Tages mit den gemessenen Werten nach (Monatsbilanz)
+    - cron: "13 19 * * *"  # ca. 20:13 Uhr (Winterzeit) / 21:13 Uhr (Sommerzeit)
   workflow_dispatch:        # manuell starten: Actions -> Morgen-Zeitung -> Run workflow
 
 permissions:
@@ -38,6 +40,9 @@ jobs:
             gelesen.json
             artikel_cache.json
             uebersetzt_cache.json
+            solar_log.json
+            muell_cache.json
+            youtube_ids.json
             fonts
           key: gelesen-${{ github.run_id }}
           restore-keys: gelesen-
