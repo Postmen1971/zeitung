@@ -223,7 +223,7 @@ RESSORTS = [
                F("https://www.mydealz.de/rss/gruppe/balkonkraftwerk", True),
                F("https://www.mydealz.de/rss/hot", True)]},
     {"id": "lokal", "dach": "HEIMAT", "titel": "Ebersbach & Göppingen", "stil": "welt",
-     "max": 5,                 # die 5 wichtigsten Meldungen aus der Heimat
+     "max": 5, "vielfalt": True,   # die 5 wichtigsten Meldungen aus der Heimat, jedes Thema nur einmal
      "stichwoerter": ["ebersbach", "göppingen", "goeppingen", "uhingen", "faurndau", "eislingen", "filstal", "fils",
                       "reichenbach", "plochingen", "schlierbach", "rechberghausen", "salach", "süßen", "geislingen"],
      "max_alter": 24 * 7,
@@ -510,6 +510,21 @@ def youtube_feeds_ergaenzen():
     print(f"  YouTube-Tüftler: {sum(1 for h in YOUTUBE_TUEFTLER if ids.get(h))} von {len(YOUTUBE_TUEFTLER)} Kanälen gefunden")
 
 
+def vielfalt(liste, ortsnamen):
+    """Überspringt Meldungen, die mit einer schon gewählten 2 Wörter oder 1 langes Wort (Name, Thema) teilen."""
+    weg = {w.strip() for w in ortsnamen} | {"nach", "nicht", "gegen", "beim", "über", "eine", "einen", "einem", "einer",
+                                             "dass", "werden", "wird", "sind", "frisch", "video", "highlights", "news"}
+    def woerter(a):
+        return {w for w in re.findall(r"[a-zäöüß]{4,}", a["titel"].lower()) if w not in weg}
+    out, gesehen = [], []
+    for a in liste:
+        w = woerter(a)
+        if any(len(w & g) >= 2 or any(len(x) >= 6 for x in w & g) for g in gesehen):
+            continue
+        out.append(a); gesehen.append(w)
+    return out
+
+
 def zeitung_sammeln():
     jetzt = dt.datetime.now(dt.timezone.utc)
     auftraege = [(r, f) for r in RESSORTS for f in r["feeds"]]
@@ -561,6 +576,8 @@ def zeitung_sammeln():
             a["punkte"] = punkte(a, jetzt)
             auswahl.append(a)
         auswahl.sort(key=lambda x: x["punkte"], reverse=True)
+        if r.get("vielfalt"):                       # jedes Thema nur einmal (z. B. nicht 3× dasselbe Spiel)
+            auswahl = vielfalt(auswahl, r["stichwoerter"])
         ausgabe.append((r, auswahl[:r.get("max", MAX_PRO_RESSORT)]))
     status_speichern(status, jetzt)
     return ausgabe, fehler
