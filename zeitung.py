@@ -223,7 +223,9 @@ RESSORTS = [
                F("https://www.mydealz.de/rss/gruppe/balkonkraftwerk", True),
                F("https://www.mydealz.de/rss/hot", True)]},
     {"id": "lokal", "dach": "HEIMAT", "titel": "Ebersbach & Göppingen", "stil": "welt",
-     "max": 5, "vielfalt": True,   # die 5 wichtigsten Meldungen aus der Heimat, jedes Thema nur einmal
+     "max": 5, "vielfalt": True,
+     "sperre": ["wetter ", "prognose", "blitzer", "stellenangebot", "jobs in", "immobilien", "öffnungszeiten", "veranstaltungskalender",
+                "stau ", "verkehrsmeldung", "tankstelle", "spritpreis"],   # die 5 wichtigsten Meldungen aus der Heimat, jedes Thema nur einmal
      "stichwoerter": ["ebersbach", "göppingen", "goeppingen", "uhingen", "faurndau", "eislingen", "filstal", "fils",
                       "reichenbach", "plochingen", "schlierbach", "rechberghausen", "salach", "süßen", "geislingen"],
      "max_alter": 24 * 7,
@@ -561,7 +563,7 @@ def zeitung_sammeln():
         for feed, liste in ergebnisse.get(r["id"], []):
             for a in liste:
                 text = f" {a['titel']} {a['teaser']} ".lower()
-                if any(s in text for s in SPERRLISTE):
+                if any(s in text for s in SPERRLISTE) or any(s in text for s in r.get("sperre", [])):
                     continue
                 if feed["filtern"] and r["stichwoerter"] and not any(s in text for s in r["stichwoerter"]):
                     continue
