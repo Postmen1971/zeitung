@@ -1255,7 +1255,7 @@ def termine_holen():
             url = re.search(r'href="([^"]+)"', k)
             if zeit and titel:
                 liste.append({"zeit": zeit.group(1), "titel": saeubern(titel.group(1)),
-                              "link": url.group(1).replace(".de//", ".de/") if url else "https://www.ebersbach.de/veranstaltung",
+                              "link": url.group(1) if url else "https://www.ebersbach.de/veranstaltung",
                               "mehr": saeubern((re.search(r'event-appointments[^>]*>([^<]*)<', k) or re.search("()", "")).group(1))})
         if liste:
             cache.write_text(json.dumps(liste, ensure_ascii=False), "utf-8")
@@ -1287,7 +1287,7 @@ def stadt_nachrichten():
         titel = re.search(r"<h3.*?<span>(.*?)</span>", k, re.S)
         url = re.search(r'href="([^"]+)"', k)
         if titel and url:
-            out.append({"titel": saeubern(titel.group(1)), "link": url.group(1).replace(".de//", ".de/"), "teaser": "",
+            out.append({"titel": saeubern(titel.group(1)), "link": url.group(1), "teaser": "",
                         "datum": None, "quelle": "Stadt Ebersbach", "bild": "", "stadt": True})
     return out
 
