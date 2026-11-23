@@ -73,7 +73,7 @@ FAVORITEN = {
     "tuya": 6, "smart life": 5, "home assistant": 4, "matter": 2, "zigbee": 2,
     "ebersbach": 8, "göppingen": 7, "uhingen": 6, "fils": 4, "plochingen": 4, "esslingen": 3, "stuttgart": 2,
     "ersparnis": 3, "sparen": 2, "förder": 3,
-    "balkonkraftwerk": 4, "angebot": 2, "deal": 2, "rabatt": 2, "tiefstpreis": 3, "bestpreis": 3,
+    "balkonkraftwerk": 4, "ecotracker": 6, "everhome": 5, "angebot": 2, "deal": 2, "rabatt": 2, "tiefstpreis": 3, "bestpreis": 3,
     "beamer": 4, "projektor": 3, "oled": 2, "fernseher": 2, "4k": 1,
     "roboter": 2, "erfindung": 3, "fusion": 2, "raumfahrt": 2, "quanten": 2,
 }
@@ -229,10 +229,14 @@ RESSORTS = [
     {"id": "balkon", "dach": "SOLAR", "titel": "Balkonkraftwerk-Angebote", "stil": "balkon",
      "stichwoerter": ["balkonkraftwerk", "balkon-kraftwerk", "steckersolar", "stecker-solar", "mini-pv",
                       "mini-solar", "solarmodul", "solaranlage für den balkon", "balkonsolar", "pv-speicher",
-                      "anker solix", "ecoflow", "zendure", "growatt", "hoymiles", "deye", "wechselrichter"],
+                      "anker solix", "ecoflow", "zendure", "growatt", "hoymiles", "deye", "wechselrichter", "marstek",
+                      "solarflow", "solarbank", "ecotracker", "everhome", "apsystems"],
      "feeds": [F(gnews("Balkonkraftwerk Angebot Göppingen OR Esslingen OR Stuttgart", tage=14)),
                F(gnews("Balkonkraftwerk Angebot")), F(gnews("Balkonkraftwerk Deal Preis")),
                F(gnews("Balkonkraftwerk mit Speicher Angebot")), F(gnews("Balkonkraftwerk Test")),
+               F(gnews("Zendure SolarFlow Angebot OR Deal OR Preis", tage=14)), F(gnews("EcoFlow Stream Angebot OR Deal OR Preis", tage=14)),
+               F(gnews("Marstek Venus Angebot OR Deal OR Preis", tage=14)), F(gnews("Anker SOLIX Solarbank Angebot OR Deal", tage=14)),
+               F(gnews("everHome EcoTracker", tage=30)),
                F("https://www.mydealz.de/rss/gruppe/balkonkraftwerk", True),
                F("https://www.mydealz.de/rss/hot", True)]},
     {"id": "lokal", "dach": "HEIMAT", "titel": "Ebersbach & Göppingen", "stil": "welt",
@@ -990,6 +994,58 @@ def angebot_lesen(a):
     return {"preis": min(preise), "wp": max(wps) if wps else 0, "kwh": max(kwhs) if kwhs else 0}
 
 
+# ── everHome EcoTracker: Aziz misst am Stromzähler per Lesekopf (kein Smart Meter im Sicherungskasten möglich).
+#    Angebote mit Speicher werden nur gezeigt, wenn der Speicher den EcoTracker als Messquelle nutzen kann.
+#    Stand Nov. 2026 aus Herstellerangaben und Tests – vor dem Kauf auf everhome.cloud gegenprüfen.
+ECOTRACKER = [
+    # (Suchwörter, Anzeigename, Status "ja" / "beta" / "nein", Hinweis)
+    (["growatt noah", "noah 2000", "noah2000"], "Growatt NOAH", "nein", "Nulleinspeisung mit EcoTracker laut Nutzern nicht möglich"),
+    (["zendure", "solarflow", "hyper 2000", "aio 2400"], "Zendure SolarFlow", "ja", "per Update offiziell unterstützt"),
+    (["stream ultra", "stream ac", "ecoflow stream"], "EcoFlow Stream", "ja", "Stream Ultra, Ultra X, AC Pro – direkte Verbindung"),
+    (["marstek", "venus-e", "venus e", "venus-c", "jupiter"], "Marstek Venus/Jupiter", "ja", "in der Herstellerliste, eigener Punkt in der App"),
+    (["apsystems ezhi", "ezhi"], "APsystems EZHI", "ja", "in der Herstellerliste"),
+    (["hoymiles ms-a2", "ms-a2"], "Hoymiles MS-A2", "ja", "Einbindung über die Hoymiles-App"),
+    (["maxxicharge", "maxxisun"], "Maxxisun MaxxiCharge", "ja", "in der Herstellerliste"),
+    (["sunpura"], "Sunpura S2400", "ja", "in der Herstellerliste"),
+    (["anker solix", "solarbank"], "Anker SOLIX Solarbank", "beta", "seit Update unterstützt, Nutzer berichten aber teils nur Anzeige ohne Regelung"),
+    (["jackery"], "Jackery", "beta", "Zusammenarbeit mit everHome angekündigt – Modell prüfen"),
+]
+SPEICHER_WOERTER = ["speicher", "akku", "batterie", "kwh", "wh ", "solarbank", "solarflow", "stream", "venus", "noah", "ezhi", "ms-a2", "battery"]
+
+
+def ecotracker_status(a):
+    """(Status, Name, Hinweis) – Status: ja / beta / nein / ohne (kein Speicher) / unbekannt."""
+    t = f" {a['titel']} {a.get('teaser', '')[:300]} ".lower()
+    for woerter, name, status, hinweis in ECOTRACKER:
+        if any(w in t for w in woerter):
+            return status, name, hinweis
+    if not any(w in t for w in SPEICHER_WOERTER):
+        return "ohne", "", "ohne Speicher – EcoTracker misst nur, keine Regelung nötig"
+    return "unbekannt", "", "Speicher ohne bekannte EcoTracker-Unterstützung"
+
+
+def eco_badge(status) -> str:
+    return {"ja": "✅ EcoTracker", "beta": "⚠️ EcoTracker (eingeschränkt)", "ohne": "☀️ ohne Speicher"}.get(status, "")
+
+
+def ist_angebot(a) -> bool:
+    return bool(re.search(r"\d\s?(€|euro\b|eur\b)|€\s?\d", f"{a['titel']} {a.get('teaser', '')[:200]}", re.I))
+
+
+def ecotracker_filtern(liste):
+    """Entfernt Angebote, die nicht mit dem EcoTracker funktionieren (Nachrichten ohne Preis bleiben)."""
+    raus = 0
+    out = []
+    for a in liste:
+        st = ecotracker_status(a)
+        a["eco"] = st
+        if ist_angebot(a) and st[0] in ("nein", "unbekannt"):
+            raus += 1
+            continue
+        out.append(a)
+    return out, raus
+
+
 def angebote_durchrechnen(liste):
     """Liste von (meldung, werte, rechnung) für alle auswertbaren Angebote."""
     if not werkstatt or not hasattr(werkstatt, "ersparnis_anlage"):
@@ -999,12 +1055,16 @@ def angebote_durchrechnen(liste):
         w = angebot_lesen(a)
         if not w:
             continue
+        st = a.get("eco") or ecotracker_status(a)
+        if st[0] in ("nein", "unbekannt"):
+            continue
         if w["wp"]:
             x = werkstatt.ersparnis_anlage(w["wp"], w["kwh"], w["preis"])
             art = "Komplettset"
         else:
             x = werkstatt.speicher_nachruesten(w["kwh"], w["preis"])
             art = "Speicher (zu 1.000 Wp)"
+        art += " · " + eco_badge(st[0])
         if x.get("jahre"):
             out.append((a, w, x, art))
     return out
@@ -1414,8 +1474,10 @@ def demo_sammeln():
                        "text": DEMO_TEXT, "fazit": "Hier steht das Fazit: In ein bis zwei Sätzen, was die Meldung bedeutet und was noch offen ist."},
                 "punkte": 20 - n - (0 if r["id"] == "gs" else 1)})
         if r["id"] == "balkon":     # Beispiel-Angebote, damit die Angebots-Rechnung in der Demo sichtbar ist
-            for a, t in zip(liste, ["Beispiel: 2.000 Wp Set mit 2,24 kWh Speicher für 899 €", "Beispiel: Speicher 2,2 kWh für 249 €",
-                                    "Beispiel: 1.000 W Balkonkraftwerk Set für 329 Euro", "Beispiel: 2000Wp Set ohne Speicher für 1.199,00€"]):
+            for a, t in zip(liste, ["Beispiel: Zendure SolarFlow 800 Pro 2.000 Wp Set mit 1,92 kWh Speicher für 899 €",
+                                    "Beispiel: Growatt NOAH 2000 Speicher 2 kWh für 449 €",
+                                    "Beispiel: 1.000 W Balkonkraftwerk Set für 329 Euro", "Beispiel: Noname Speicher 2,2 kWh für 249 €",
+                                    "Beispiel: Marstek Venus E 5,12 kWh Speicher für 1.099 €"]):
                 a["titel"] = t
                 a["ki"] = None
         ausgabe.append((r, liste))
@@ -1707,6 +1769,10 @@ def solar_html(r, liste, angebote=()) -> str:
 <p class="werkzeug">Grobe Schätzung für den Raum Göppingen (ca. {basis} kWh pro kWp bei optimaler Lage, max. 800-W-Wechselrichter).
 Genauer für deine Adresse: <a href="https://re.jrc.ec.europa.eu/pvg_tools/de/" target="_blank" rel="noopener" style="text-decoration:underline">PVGIS-Rechner der EU</a>.</p></article>
 <div class="wside">{f'<article class="wcard tipp" style="background:linear-gradient(135deg,#f59e0b,#ea580c)"><span class="eyebrow">🌞 Solar-Tipp des Tages</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></article>' if tipp else ''}
+<article class="wcard"><span class="eyebrow" style="--c:#16a34a">🔌 Passt zu deinem EcoTracker</span><p style="margin-top:8px;font-size:13.5px">
+Angebote mit Speicher zeigt die Zeitung nur, wenn der Speicher den everHome EcoTracker am Stromzähler nutzen kann – ohne Smart Meter im Sicherungskasten.</p>
+<ul class="ecol">{"".join(f"<li><b>{'✅' if st == 'ja' else '⚠️' if st == 'beta' else '❌'} {e(n)}</b> – {e(h)}</li>" for _, n, st, h in ECOTRACKER)}</ul>
+<p class="werkzeug">Stand Nov. 2026 laut Herstellern und Tests. Vor dem Kauf auf <a href="https://everhome.cloud/de/kompatible-geraete-fuer-den-ecotracker" target="_blank" rel="noopener" style="text-decoration:underline">everhome.cloud</a> gegenprüfen.</p></article>
 <article class="wcard"><span class="eyebrow" style="--c:#d97706">📋 Die Regeln 2026</span><p style="margin-top:8px">Bis <b>800 W</b> Wechselrichter und <b>2.000 Wp</b> Module:
 keine Anmeldung beim Netzbetreiber, aber Eintrag im <b>Marktstammdatenregister</b> innerhalb eines Monats. Ein Speicher wird dort gesondert angemeldet.</p></article></div></div>
 <script>(function(){{const B={basis},$=i=>document.getElementById(i);function rechne(){{const wp=+$('wp').value,f=+$('au').value,ev=+$('ev').value/100,
@@ -1737,7 +1803,8 @@ $('sp').addEventListener('input',()=>{{$('ev').value=$('sp').selectedOptions[0].
 <h3>Lohnt sich das Angebot? Sortiert nach Amortisation</h3><table class="bsp"><tr><th>Angebot</th><th>Leistung</th><th>Preis</th>
 <th>Ersparnis/Jahr</th><th>lohnt sich nach</th></tr>{zeilen}</table>
 <p class="werkzeug">Leistung, Speicher und Preis werden aus der Angebotsüberschrift gelesen – bitte vor dem Kauf prüfen (Versand, Halterung, Lieferumfang).
-Reine Speicher-Angebote sind als Nachrüstung zu einer vorhandenen 1.000-Wp-Anlage gerechnet. Gleiche Annahmen wie oben.</p></article>""")
+Reine Speicher-Angebote sind als Nachrüstung zu einer vorhandenen 1.000-Wp-Anlage gerechnet. Gleiche Annahmen wie oben.
+Es stehen nur Angebote hier, die mit dem EcoTracker funktionieren (✅) oder eingeschränkt laufen (⚠️) – oder Sets ohne Speicher (☀️).</p></article>""")
     if liste:
         erste = max(liste[:3], key=lambda a: a["punkte"] + (4 if a["bild"] else 0))
         teile.append('<div class="grid">' + karte(erste, r, gross=True) + "".join(karte(a, r) for a in liste if a is not erste) + "</div>")
@@ -1877,6 +1944,9 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .heimat .wetterw .wjetzt b{font-size:58px}.heimat .wetterw .wtage{margin-top:12px}
 .terminw .tz{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--rand);font-size:13.5px}
 .terminw .tz b{flex:0 0 108px;white-space:nowrap;color:#0f766e;font-size:12.5px}.terminw .tz span{flex:1}
+.ecob{align-self:flex-start;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534}
+.ecob.beta{background:#fef3c7;color:#92400e}.ecob.ohne{background:#fef9c3;color:#713f12}
+.ecol{list-style:none;margin:8px 0;display:flex;flex-direction:column;gap:5px;font-size:13px}
 .kf{margin-top:auto;font-size:12.5px;font-weight:600;color:var(--c)}.mc.ov .kf{color:#fff}
 .leser{position:fixed;inset:0;z-index:100;background:rgba(10,12,20,.6);backdrop-filter:blur(4px);overflow-y:auto;padding:30px 12px}
 .leser[hidden]{display:none}
@@ -1983,6 +2053,13 @@ def lese_schluessel(a, r) -> str:
     return k
 
 
+def eco_kachel(a) -> str:
+    st = a.get("eco")
+    if not st or not ist_angebot(a) or not eco_badge(st[0]):
+        return ""
+    return f'<span class="ecob {st[0]}" title="{e(st[2])}">{e(eco_badge(st[0]))}{" · " + e(st[1]) if st[1] else ""}</span>'
+
+
 def mkarte(a, r, ov=False, spaeter=False) -> str:
     """Kachel im MSN-Stil."""
     k = farbe(r)
@@ -1996,7 +2073,7 @@ def mkarte(a, r, ov=False, spaeter=False) -> str:
             f'{f" data-k={lk}" if lk else ""}>{bild_html}'
             f'{"<span class=neu>NEU</span>" if a.get("neu") else ""}<div class="mb"><div class="ms"><span class="av">{q[:1].upper()}</span>'
             f'<b>{q}</b> · {e(rel_zeit(a.get("datum")))}{" · 🌐 übersetzt" if a.get("uebersetzt_aus") else ""}</div>'
-            f'<h3>{e(schlagzeile(a))}</h3>{"<span class=kf>📖 Kurzfassung lesen</span>" if lk else ""}</div></a>')
+            f'<h3>{e(schlagzeile(a))}</h3>{eco_kachel(a)}{"<span class=kf>📖 Kurzfassung lesen</span>" if lk else ""}</div></a>')
 
 
 def wetter_widget() -> str:
@@ -3182,6 +3259,13 @@ def main():
         anreichern(ausgabe)
         artikel_schreiben(ausgabe)
         maschinell_uebersetzen(ausgabe)
+    for i, (r, l) in enumerate(ausgabe):
+        if r["id"] in ("balkon", "solar"):
+            l2, raus = ecotracker_filtern(l)
+            ausgabe[i] = (r, l2)
+            if raus:
+                print(f"  {r['titel']}: {raus} Angebot(e) ohne EcoTracker-Unterstützung ausgeblendet")
+    if not args.demo:
         deals = next((l for r, l in ausgabe if r["id"] == "balkon"), [])
         print(f"  Angebote durchgerechnet: {len(angebote_durchrechnen(deals))} von {len(deals)}")
 
