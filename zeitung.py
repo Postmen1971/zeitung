@@ -289,12 +289,14 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
 YOUTUBE_TUEFTLER = ["AndreasSpiess", "GreatScottLab", "JeffGeerling", "DroneBotWorkshop", "WorthMaking", "TechnikTueftler"]
 
 # Reihenfolge der Rubriken auf der Webseite
-WEB_REIHENFOLGE = ["lokal", "werkstatt", "claude", "ki", "tueftler", "community", "gs", "bundesliga", "europa", "national", "boxen", "welt",
-                   "smarthome", "smartideen", "solar", "balkon", "tv", "gesundheit", "forschung", "technik", "visionen"]
+WEB_REIHENFOLGE = ["lokal", "welt", "technik", "visionen", "werkstatt", "claude", "ki", "tueftler", "community",
+                   "solar", "balkon", "smarthome", "smartideen", "tv", "gesundheit", "forschung",
+                   "gs", "bundesliga", "europa", "national", "boxen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
-PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["lokal", "welt"], ["claude", "ki"], ["tueftler", "community"],
-              ["smarthome", "smartideen", "tv"], ["solar", "balkon"], ["gesundheit", "forschung"], ["technik", "visionen"]]
+PDF_SEITEN = [["lokal", "welt"], ["technik", "visionen"], ["werkstatt"], ["claude", "ki"], ["tueftler", "community"],
+              ["solar", "balkon"], ["smarthome", "smartideen", "tv"], ["gesundheit", "forschung"],
+              ["gs"], ["bundesliga"], ["europa", "national", "boxen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
     "Damlaya damlaya göl olur. – Tropfen für Tropfen wird ein See.",
@@ -1831,10 +1833,11 @@ MSN_JS = """
 """
 
 NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["lokal", "welt"]),
+       ("wissen", "Technik", ["technik", "visionen"]),
+       ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler", "community"]),
+       ("solar", "Solar", ["solar", "balkon"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
+       ("gesundheit", "Gesundheit", ["gesundheit", "forschung"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
-       ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler", "community"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
-       ("solar", "Solar", ["solar", "balkon"]), ("gesundheit", "Gesundheit", ["gesundheit", "forschung"]),
-       ("wissen", "Wissen & Technik", ["technik", "visionen"]),
        ("zeitung", "📰 Zeitung", "zeitung")]
 
 
