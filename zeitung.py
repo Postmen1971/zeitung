@@ -222,6 +222,14 @@ RESSORTS = [
                F(gnews("Balkonkraftwerk mit Speicher Angebot")), F(gnews("Balkonkraftwerk Test")),
                F("https://www.mydealz.de/rss/gruppe/balkonkraftwerk", True),
                F("https://www.mydealz.de/rss/hot", True)]},
+    {"id": "lokal", "dach": "HEIMAT", "titel": "Ebersbach & Göppingen", "stil": "welt",
+     "max": 5,                 # die 5 wichtigsten Meldungen aus der Heimat
+     "stichwoerter": ["ebersbach", "göppingen", "goeppingen", "uhingen", "faurndau", "eislingen", "filstal", "fils",
+                      "reichenbach", "plochingen", "schlierbach", "rechberghausen", "salach", "süßen", "geislingen"],
+     "max_alter": 24 * 7,
+     "feeds": [F(gnews("Ebersbach an der Fils", tage=7)), F(gnews("Ebersbach Fils", tage=7), True),
+               F(gnews("Göppingen", tage=3), True), F(gnews("Landkreis Göppingen", tage=4), True),
+               F(gnews("Uhingen OR Eislingen OR Faurndau OR Filstal", tage=4), True)]},
     {"id": "tv", "dach": "BEAMER & TV", "titel": "Beamer, Fernseher & Heimkino", "stil": "tv",
      "stichwoerter": ["beamer", "projektor", "projector", "fernseher", " tv", "tv-", "oled", "qled", "mini-led",
                       "micro-led", "heimkino", "soundbar", "fire tv", "google tv", "streaming-stick", "hdmi",
@@ -279,11 +287,11 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
 YOUTUBE_TUEFTLER = ["AndreasSpiess", "GreatScottLab", "JeffGeerling", "DroneBotWorkshop", "WorthMaking", "TechnikTueftler"]
 
 # Reihenfolge der Rubriken auf der Webseite
-WEB_REIHENFOLGE = ["werkstatt", "claude", "ki", "tueftler", "community", "gs", "bundesliga", "europa", "national", "boxen", "welt",
+WEB_REIHENFOLGE = ["lokal", "werkstatt", "claude", "ki", "tueftler", "community", "gs", "bundesliga", "europa", "national", "boxen", "welt",
                    "smarthome", "smartideen", "solar", "balkon", "tv", "gesundheit", "forschung", "technik", "visionen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
-PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["welt"], ["claude", "ki"], ["tueftler", "community"],
+PDF_SEITEN = [["werkstatt"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"], ["lokal", "welt"], ["claude", "ki"], ["tueftler", "community"],
               ["smarthome", "smartideen", "tv"], ["solar", "balkon"], ["gesundheit", "forschung"], ["technik", "visionen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
@@ -1601,9 +1609,9 @@ Reine Speicher-Angebote sind als Nachrüstung zu einer vorhandenen 1.000-Wp-Anla
 
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "lokal": "#0f766e", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "lokal": "📍", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1725,7 +1733,18 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .wbtn{margin-top:auto;align-self:flex-start;background:#fff;color:#111;font-weight:600;font-size:13px;padding:7px 13px;border-radius:999px;cursor:pointer;border:0}
 .solarw{background:linear-gradient(160deg,#f59e0b,#ea580c);color:#fff;border:0}.solarw h4{color:#fff}
 .solarw .gross{font:300 40px Inter,sans-serif}
-.muellw{grid-row:span 2}
+.heimat{display:grid;grid-template-columns:1.25fr 1.35fr 1fr;grid-template-areas:"w l m" "s l m";gap:14px;margin-bottom:14px}
+.heimat .hw{grid-area:w}.heimat .hl5{grid-area:l}.heimat .hm{grid-area:m}.heimat .hs{grid-area:s}
+.heimat>div>.wg{height:100%}
+.heimat .wetterw .wjetzt b{font-size:58px}.heimat .wetterw .wtage{margin-top:12px}
+.lokalw .lz{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rand)}
+.lokalw .lz:last-of-type{border:0}
+.lokalw .ln{flex:0 0 24px;height:24px;border-radius:50%;background:#0f766e;color:#fff;font:700 13px Inter,sans-serif;display:flex;align-items:center;justify-content:center}
+.lokalw .lb{flex:0 0 64px;height:46px;border-radius:8px;background:var(--fl2) center/cover}
+.lokalw .lt b{display:block;font-size:14px;line-height:1.3;font-weight:600}.lokalw .lt small{color:var(--tx3);font-size:12px}
+.lokalw .wbtn{background:#0f766e;color:#fff;margin-top:8px}
+@media(max-width:1000px){.heimat{grid-template-columns:1fr 1fr;grid-template-areas:"w l" "s l" "m m"}}
+@media(max-width:640px){.heimat{grid-template-columns:1fr;grid-template-areas:"w" "l" "m" "s"}}
 .muellw .mz{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--rand);font-size:13.5px}
 .muellw .mz i{flex:0 0 12px;height:12px;border-radius:3px}.muellw .mz span{flex:1}.muellw .mz small{display:block;color:var(--tx2);font-size:11.5px}
 .muellw .mz b{font-size:13px;white-space:nowrap}.muellw .mz.bald b{background:#d0021b;color:#fff;padding:2px 7px;border-radius:6px}
@@ -1788,7 +1807,7 @@ MSN_JS = """
 })();
 """
 
-NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["welt"]),
+NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["lokal", "welt"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
        ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler", "community"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
        ("solar", "Solar", ["solar", "balkon"]), ("gesundheit", "Gesundheit", ["gesundheit", "forschung"]),
@@ -1818,8 +1837,20 @@ def wetter_widget() -> str:
                    f'<b>{w["max"]}°</b> <span class="mn">{w["min"]}°</span></div>' for i, w in enumerate(WETTER[:5]))
     return (f'<div class="wg wetterw"><h4>📍 {e(WOHNORT["name"])}</h4><div class="wjetzt">{wetter_symbol(h.get("jetzt_code", h["code"]), "50px")}'
             f'<b>{h.get("jetzt", h["max"])}°</b><span class="wtx">{e(WETTER_TEXT.get(h["code"], ""))}, Regen {h["regen"]} %, '
-            f'{h["sonne_h"]:.1f} Std. Sonne</span></div><div class="wsolar">☀️ {BALKON_NAME} heute: ca. <b>{h["solar_kwh"]:.1f} kWh</b> '
-            f'(≈ {h["solar_kwh"] * 0.35:.2f} €)</div><div class="wtage">{tage}</div></div>').replace(".", ",", 0)
+            f'{de_zahl(h["sonne_h"], 1)} Std. Sonne</span></div><div class="wsolar">☀️ {BALKON_NAME} heute: ca. <b>{de_zahl(h["solar_kwh"], 1)} kWh</b> '
+            f'(≈ {de_zahl(h["solar_kwh"] * 0.35, 2)} €)</div><div class="wtage">{tage}</div></div>').replace(".", ",", 0)
+
+
+def lokal_widget(liste, r) -> str:
+    if not liste:
+        return ""
+    zeilen = "".join(
+        f'<a class="lz" href="{e(link(a))}" target="_blank" rel="noopener"><span class="ln">{i}</span>'
+        + (f'<span class="lb" style="background-image:url(\'{e(a["bild"])}\')"></span>' if a["bild"] else "")
+        + f'<span class="lt"><b>{e(schlagzeile(a))}</b><small>{e(a.get("quelle") or "")} · {e(rel_zeit(a.get("datum")))}</small></span></a>'
+        for i, a in enumerate(liste[:5], start=1))
+    return (f'<div class="wg lokalw"><h4>📍 Top 5 aus Ebersbach & Göppingen</h4>{zeilen}'
+            f'<button class="wbtn" data-geh="nachrichten">Mehr Nachrichten →</button></div>')
 
 
 def muell_widget() -> str:
@@ -1932,7 +1963,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
         return x[1]["punkte"] + (4 if x[1]["bild"] else 0)
     mix, rub_zahl = [], {}
     for r, a in sorted(alle, key=wert, reverse=True):
-        if rub_zahl.get(r["id"], 0) >= 4:
+        if rub_zahl.get(r["id"], 0) >= 4 or r["id"] == "lokal":
             continue
         rub_zahl[r["id"]] = rub_zahl.get(r["id"], 0) + 1
         mix.append((r, a))
@@ -1968,11 +1999,14 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
     for i, (r, a) in enumerate(rest):
         kacheln.append(mkarte(a, r, ov=(i in (7, 18)), spaeter=i >= 26))
     # Widgets an MSN-typische Stellen einsetzen
-    for pos, w in sorted([(1, wetter_widget()), (2, f'<div class="wg topst"><h4>🔥 Top-Storys</h4>{top}</div>'), (4, muell_widget()),
-                          (6, werk_w), (11, solar_w), (15, zeit_w)], reverse=True):
+    for pos, w in sorted([(1, f'<div class="wg topst"><h4>🔥 Top-Storys</h4>{top}</div>'),
+                          (5, werk_w), (10, zeit_w)], reverse=True):
         if w:
             kacheln.insert(min(pos, len(kacheln)), w)
-    entdecken = (f'<section class="tab" id="t-entdecken"><div class="mgrid">{hero_html}{"".join(kacheln)}</div>'
+    r_lok, l_lok = nach_id.get("lokal", (None, []))
+    heimat = (f'<div class="heimat"><div class="hw">{wetter_widget() or "<div class=wg>Wetter heute nicht verfügbar</div>"}</div>'
+              f'<div class="hl5">{lokal_widget(l_lok, r_lok)}</div><div class="hm">{muell_widget()}</div><div class="hs">{solar_w}</div></div>')
+    entdecken = (f'<section class="tab" id="t-entdecken">{heimat}<div class="mgrid">{hero_html}{"".join(kacheln)}</div>'
                  f'{"<button class=mehr>Mehr laden</button>" if len(rest) > 26 else ""}</section>')
 
     # ── Rubrik-Reiter ──
@@ -2909,12 +2943,22 @@ def main():
     args = ap.parse_args()
 
     global WETTER, SOLAR_MONAT
+    wcache = BASIS / "wetter_cache.json"
     try:
         WETTER = wetter_demo() if args.demo else wetter_holen()
         if args.demo:
             SOLAR_MONAT = solar_demo()
+        elif WETTER:
+            wcache.write_text(json.dumps(WETTER, default=str), "utf-8")
     except Exception as ex:
-        print(f"  Wetter nicht verfügbar: {type(ex).__name__}")
+        print(f"  Wetter nicht verfügbar: {type(ex).__name__} – nehme die letzte Vorhersage")
+        try:
+            alt = json.loads(wcache.read_text("utf-8"))
+            for w in alt:
+                w["datum"] = dt.date.fromisoformat(w["datum"])
+            WETTER = [w for w in alt if w["datum"] >= dt.date.today()]
+        except Exception:
+            WETTER = []
     b = solar_bilanz()
     if b:
         print(f"  Balkonkraftwerk {b['monat']}: bisher {b['bisher']:.1f} kWh (1.–{b['bis_tag']}.), heute erwartet {b['heute']:.1f} kWh, "
