@@ -67,7 +67,7 @@ FAVORITEN = {
     "bayern": 2, "real madrid": 2, "barcelona": 2, "nationalmannschaft": 2, "milli takım": 3,
     "durchbruch": 4, "weltrekord": 3, "weltmeister": 3, "k.o.": 3, "titel": 2,
     "usher": 8, "myo7a": 8, "diabetes": 3, "rheuma": 3, "rheumato": 3, "durchbruch bei": 3,
-    "gentherapie": 4, "crispr": 4, "heilung": 3, "zulassung": 2,
+    "gentherapie": 4, "crispr": 4, "fda": 3, "zugelassen": 4, "approves": 4, "approval": 3, "heilung": 3, "zulassung": 2,
     "claude code": 5, "tutorial": 2, "anleitung": 2, "automatisier": 3,
     "claude": 5, "anthropic": 4, "künstliche intelligenz": 2, "ki-modell": 2,
     "tuya": 6, "smart life": 5, "home assistant": 4, "matter": 2, "zigbee": 2,
@@ -190,10 +190,14 @@ RESSORTS = [
                F(gnews("Home Assistant")), F("https://www.home-assistant.io/atom.xml"),
                F("https://stadt-bremerhaven.de/feed/", True), F("https://www.smartdroid.de/feed/", True)]},
     {"id": "smartideen", "dach": "SMART HOME", "titel": "Smart-Home-Ideen aus der Community", "stil": "smarthome",
-     "stichwoerter": ["tuya", "smart life", "home assistant", "automation", "smart home", "smarthome", "zigbee",
-                      "sensor", "dashboard", "idee", "project", "setup", "diy"],
-     "max_alter": 24 * 14,     # Ideen dürfen bis zu 2 Wochen alt sein
-     "feeds": [F("https://hackaday.com/category/home-hacks/feed/"),
+     "stichwoerter": ["tuya", "smart life", "home assistant", "automation", "automated", "automatisier", "smart home", "smarthome",
+                      "zigbee", "switchbot", "sensor", "dashboard", "idee", "project", "setup", "diy"],
+     "max_alter": 24 * 14, "max": 12,     # Ideen dürfen bis zu 2 Wochen alt sein
+     "feeds": [F("https://www.xda-developers.com/feed/", True), F("https://www.howtogeek.com/feed/", True),
+               F(gnews("meine Home Assistant Automation OR Automatisierung Beispiel", tage=14), True),
+               F(gnews("\"I automated\" smart home OR Home Assistant", "en", tage=14), True),
+               F(gnews("SwitchBot Automation Idee OR Szene", tage=30), True),
+               F("https://hackaday.com/category/home-hacks/feed/"),
                F("https://smarthomescene.com/feed/"),
                F("https://dev.to/feed/tag/homeassistant"), F("https://dev.to/feed/tag/smarthome"),
                F("https://dev.to/feed/tag/iot", True),
@@ -201,6 +205,15 @@ RESSORTS = [
                F(gnews("Home Assistant Automation Beispiele", tage=14)),
                F(gnews("Tuya automation ideas", "en", tage=14), True),
                F(gnews("Smart Life App Szenen Tipps", tage=14))]},
+    {"id": "geraete", "dach": "SWITCHBOT & TUYA", "titel": "SwitchBot & Tuya: Updates, Neuheiten, Preise", "stil": "smarthome",
+     "stichwoerter": ["switchbot", "tuya", "smart life", "smartlife"],
+     "max_alter": 24 * 14, "max": 10,
+     "feeds": [F(gnews("SwitchBot", tage=14)), F(gnews("SwitchBot", "en", tage=14), True),
+               F(gnews("SwitchBot Angebot OR Deal OR Preis OR günstiger", tage=14), True),
+               F(gnews("SwitchBot Update OR Firmware OR Matter OR neu", tage=14), True),
+               F(gnews("Tuya Update OR Neuheit OR Angebot", tage=14), True), F(gnews("Smart Life App Update", tage=30), True),
+               F("https://www.mydealz.de/rss/hot", True), F("https://stadt-bremerhaven.de/feed/", True),
+               F("https://www.smartdroid.de/feed/", True)]},
     {"id": "solar", "dach": "SOLAR", "titel": "Solar aus Göppingen & Umgebung", "stil": "balkon",
      "stichwoerter": ["balkonkraftwerk", "steckersolar", "solar", "photovoltaik", "pv-anlage", " pv ", "energie",
                       "strom", "klima", "wärmepumpe", "förder", "sonne"],
@@ -224,7 +237,7 @@ RESSORTS = [
                F("https://www.mydealz.de/rss/hot", True)]},
     {"id": "lokal", "dach": "HEIMAT", "titel": "Ebersbach & Göppingen", "stil": "welt",
      "max": 5, "vielfalt": True,
-     "sperre": ["wetter ", "prognose", "blitzer", "stellenangebot", "jobs in", "immobilien", "öffnungszeiten", "veranstaltungskalender",
+     "sperre": ["tierseuchenkasse", "öffentliche zustellung", "wetter ", "prognose", "blitzer", "stellenangebot", "jobs in", "immobilien", "öffnungszeiten", "veranstaltungskalender",
                 "stau ", "verkehrsmeldung", "tankstelle", "spritpreis"],   # die 5 wichtigsten Meldungen aus der Heimat, jedes Thema nur einmal
      "stichwoerter": ["ebersbach", "göppingen", "goeppingen", "uhingen", "faurndau", "eislingen", "filstal", "fils",
                       "reichenbach", "plochingen", "schlierbach", "rechberghausen", "salach", "süßen", "geislingen"],
@@ -239,14 +252,33 @@ RESSORTS = [
      "feeds": [F(gnews("Beamer")), F(gnews("Fernseher OLED neu")), F(gnews("Heimkino Projektor")),
                F(gnews("4K projector", "en"), True), F("https://www.areadvd.de/feed/", True),
                F("https://stadt-bremerhaven.de/feed/", True)]},
+    {"id": "tvpi", "dach": "HEIMKINO-BASTLER", "titel": "Raspberry Pi fürs Heimkino: Projekte", "stil": "tv",
+     "stichwoerter": ["kodi", "libreelec", "osmc", "plex", "jellyfin", "beamer", "projector", "projektor", " tv", "fernseh",
+                      "hdmi", "mediacenter", "media center", "media player", "heimkino", "home theater", "ambilight",
+                      "hyperion", "retropie", "streaming", "display"],
+     "max_alter": 24 * 21, "max": 10,
+     "feeds": [F(gnews("Raspberry Pi Kodi OR LibreELEC OR Mediacenter OR Ambilight", tage=21), True),
+               F(gnews("Raspberry Pi Beamer OR Fernseher Projekt", tage=21), True),
+               F(gnews("Raspberry Pi media center OR projector OR Ambilight OR Hyperion project", "en", tage=21), True),
+               F("https://hackaday.com/blog/feed/", True), F("https://dev.to/feed/tag/raspberrypi", True),
+               F("https://www.raspberrypi.com/news/feed/", True)]},
     # ── WISSEN & ZUKUNFT ──
-    {"id": "gesundheit", "dach": "GESUNDHEIT", "titel": "Gesundheit: Diabetes, Usher 1B, Rheuma", "stil": "forschung",
+    {"id": "diabetes", "dach": "DIABETES", "titel": "Diabetes Typ 2: Forschung, Zulassungen, Erfolge", "stil": "forschung",
+     "stichwoerter": ["diabetes", "insulin", "glp-1", "semaglutid", "tirzepatid", "orforglipron", "retatrutid", "blutzucker",
+                      "hba1c", "betazell", "beta cell", "glucose", "glukose", "metformin", "sglt2"],
+     "max_alter": 24 * 30, "max": 10, "vielfalt": True,
+     "feeds": [F(gnews("Diabetes Typ 2 Studie OR Forschung", tage=14), True),
+               F(gnews("Diabetes Medikament Zulassung OR zugelassen", tage=30), True),
+               F(gnews("Diabetes Durchbruch OR Heilung OR Betazellen", tage=30), True),
+               F(gnews("FDA approves diabetes OR EMA diabetes approval", "en", tage=30), True),
+               F(gnews("type 2 diabetes breakthrough OR remission OR trial results", "en", tage=14), True),
+               F("https://www.sciencedaily.com/rss/health_medicine/diabetes.xml"),
+               F("https://www.aerzteblatt.de/rss/news.asp", True)]},
+    {"id": "gesundheit", "dach": "GESUNDHEIT", "titel": "Usher 1B, Rheuma & Gesundheit", "stil": "forschung",
      "stichwoerter": ["diabetes", "insulin", "glp-1", "semaglutid", "tirzepatid", "blutzucker", "usher", "myo7a",
                       "retinitis", "netzhaut", "rheuma", "rheumato", "arthritis", "gelenk", "gentherapie", "gene therapy"],
      "max_alter": 24 * 30,
-     "feeds": [F(gnews("Diabetes Typ 2 neue Therapie OR Medikament OR Studie", tage=14)),
-               F(gnews("type 2 diabetes new drug OR cure OR trial", "en", tage=14), True),
-               F(gnews("Usher-Syndrom", tage=60), True),
+     "feeds": [F(gnews("Usher-Syndrom", tage=60), True),
                F(gnews("Usher syndrome gene therapy OR MYO7A OR \"Usher 1B\"", "en", tage=60), True),
                F(gnews("Rheuma neue Therapie OR Medikament OR Studie", tage=14)),
                F(gnews("rheumatoid arthritis new treatment OR trial", "en", tage=14), True),
@@ -283,19 +315,19 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
            "aerzteblatt": "Ärzteblatt", "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
            "reddit.com/r/ClaudeCode": "r/ClaudeCode", "r/homeassistant": "r/homeassistant",
-           "hackaday": "Hackaday", "hnrss": "Hacker News · Show HN", "community.home-assistant.io": "Home-Assistant-Forum", "lobste.rs": "Lobsters", "makezine": "Make:", "heise.de/make": "Make (heise)", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+           "hackaday": "Hackaday", "sciencedaily": "ScienceDaily", "xda-developers": "XDA", "howtogeek": "How-To Geek", "raspberrypi.com": "Raspberry Pi News", "hnrss": "Hacker News · Show HN", "community.home-assistant.io": "Home-Assistant-Forum", "lobste.rs": "Lobsters", "makezine": "Make:", "heise.de/make": "Make (heise)", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
 
 # YouTube-Kanäle von Tüftlern und KI-Bastlern (Handle ohne @). Neue Kanäle einfach hier ergänzen.
 YOUTUBE_TUEFTLER = ["AndreasSpiess", "GreatScottLab", "JeffGeerling", "DroneBotWorkshop", "WorthMaking", "TechnikTueftler"]
 
 # Reihenfolge der Rubriken auf der Webseite
 WEB_REIHENFOLGE = ["lokal", "welt", "technik", "visionen", "werkstatt", "claude", "ki", "tueftler", "community",
-                   "solar", "balkon", "smarthome", "smartideen", "tv", "gesundheit", "forschung",
+                   "solar", "balkon", "geraete", "smartideen", "smarthome", "tv", "tvpi", "diabetes", "gesundheit", "forschung",
                    "gs", "bundesliga", "europa", "national", "boxen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
 PDF_SEITEN = [["lokal", "welt"], ["technik", "visionen"], ["werkstatt"], ["claude", "ki"], ["tueftler", "community"],
-              ["solar", "balkon"], ["smarthome", "smartideen", "tv"], ["gesundheit", "forschung"],
+              ["solar", "balkon"], ["geraete", "smartideen", "smarthome"], ["tv", "tvpi"], ["diabetes", "gesundheit", "forschung"],
               ["gs"], ["bundesliga"], ["europa", "national", "boxen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
@@ -459,6 +491,8 @@ def punkte(a: dict, jetzt: dt.datetime) -> float:
         p += 1.5
     if a.get("neu"):
         p += 2
+    if a.get("stadt"):          # Mitteilungen der Stadt Ebersbach
+        p += 9
     return p
 
 
@@ -557,6 +591,10 @@ def zeitung_sammeln():
             except Exception as e:  # Feed down? Egal, weiter.
                 fehler.append(f"{r['titel']}: {urllib.parse.urlparse(f['url']).netloc} ({type(e).__name__})")
 
+    try:
+        ergebnisse.setdefault("lokal", []).insert(0, (F("https://www.ebersbach.de/nachrichten"), stadt_nachrichten()))
+    except Exception as ex:
+        fehler.append(f"Ebersbach & Göppingen: www.ebersbach.de ({type(ex).__name__})")
     status = status_laden()
     gesehen_global = set()
     ausgabe = []
@@ -700,10 +738,11 @@ Regeln:
 - Nur Fakten aus der Quelle. Nichts erfinden, keine Zahlen, Namen oder Zitate ergänzen. Fehlen Infos, schreib kürzer.
 - Ton: lebendig und packend wie Boulevard, aber korrekt und fair. Keine Beleidigungen, keine Übertreibung von Tatsachen.
 - Ist die Quelle türkisch oder englisch: auf Deutsch übersetzen und erklären, was für deutsche Leser unklar sein könnte.
-- Länge des Artikeltextes: etwa {woerter} Wörter in 2–3 Absätzen.
+- Länge des Artikeltextes: etwa {woerter} Wörter in 3–4 Absätzen. Der Leser soll danach genau wissen, worum es geht: Wer, was, wann, wo, warum.
+- Fazit: 1–2 Sätze Einordnung – was bedeutet das für Leser in Deutschland, was ist neu, was bleibt offen. Keine Meinung erfinden, keine Ratschläge zu Medikamenten.
 
 Antworte NUR mit JSON in dieser Form:
-{{"dachzeile": "max. 4 Wörter", "schlagzeile": "max. 9 Wörter, knackig", "vorspann": "1 Satz, max. 25 Wörter", "text": "Absätze getrennt durch \\n\\n"}}
+{{"dachzeile": "max. 4 Wörter", "schlagzeile": "max. 9 Wörter, knackig", "vorspann": "1 Satz, max. 25 Wörter", "text": "Absätze getrennt durch \\n\\n", "fazit": "1–2 Sätze"}}
 
 Rubrik: {rubrik}
 Original-Schlagzeile: {titel}
@@ -742,7 +781,7 @@ def claude_fragen(prompt: str, schluessel: str) -> str:
         if erg.returncode != 0:
             raise RuntimeError((erg.stderr or erg.stdout)[:200])
         return erg.stdout
-    daten = json.dumps({"model": KI_MODELL, "max_tokens": 900,
+    daten = json.dumps({"model": KI_MODELL, "max_tokens": 1500,
                         "messages": [{"role": "user", "content": prompt}]}).encode()
     req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=daten, headers={
         "x-api-key": schluessel, "anthropic-version": "2023-06-01", "content-type": "application/json"})
@@ -765,7 +804,7 @@ def artikel_schreiben(ausgabe):
     jobs = []
     for r, liste in ausgabe:
         for i, a in enumerate(liste[:ARTIKEL_PRO_RESSORT]):
-            woerter = 170 if i == 0 else 90 if i < 3 else 60
+            woerter = 260 if i == 0 else 190 if i < 3 else 130
             jobs.append((r, a, woerter))
 
     fehler, neu = [], 0
@@ -780,7 +819,7 @@ def artikel_schreiben(ausgabe):
         except Exception:
             seite = ""
         if len(seite) < 300:
-            woerter = min(woerter, 60)          # wenig Material -> kurzer Artikel
+            woerter = min(woerter, 90)          # wenig Material -> kürzerer Artikel
         prompt = ARTIKEL_ANWEISUNG.format(woerter=woerter, rubrik=r["titel"], titel=a["titel"],
                                           quelle=a.get("quelle", ""), teaser=a["teaser"] or "-",
                                           seite=seite or "(nicht verfügbar – nur Schlagzeile und Kurzbeschreibung nutzen)")
@@ -851,7 +890,7 @@ def mymemory_uebersetzen(text: str, sprache: str) -> str:
 
 
 UEBERSETZ_CACHE = BASIS / "uebersetzt_cache.json"
-UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "community", "claude", "smartideen", "balkon", "solar"]
+UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "community", "diabetes", "geraete", "tvpi", "claude", "smartideen", "balkon", "solar"]
 
 
 def maschinell_uebersetzen(ausgabe):
@@ -1185,6 +1224,76 @@ MUELL_ARTEN = {"18": ("Restmüll", "#d32f2f", "🗑️"), "19": ("Papier (blaue 
                "59": ("Grüngut", "#2e7d32", "🌿"), "60": ("Schadstoffmobil", "#7b1fa2", "☣️")}
 
 
+# ── Stadt Ebersbach: Veranstaltungskalender und Stadtnachrichten (www.ebersbach.de) ──
+TERMINE = []         # anstehende Veranstaltungen
+
+
+def stadt_api(seite: str, endpunkt: str, extra=()):
+    """Liest eine Liste (Veranstaltungen oder Nachrichten) über die Schnittstelle der Stadt-Webseite."""
+    kopf = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131 Safari/537.36",
+            "Accept": "application/json", "X-Requested-With": "XMLHttpRequest"}
+    with urllib.request.urlopen(urllib.request.Request(f"https://www.ebersbach.de/{seite}", headers=kopf), timeout=20) as r:
+        doc = re.search(r'document="([^"]+)"', r.read().decode("utf-8", "replace")).group(1)
+    q = urllib.parse.urlencode([("document", doc), ("limit", "24"), ("page", "1")] + list(extra))
+    with urllib.request.urlopen(urllib.request.Request(f"https://www.ebersbach.de/api/{endpunkt}?{q}", headers=kopf), timeout=20) as r:
+        return re.findall(r"(?s)<article.*?</article>", json.loads(r.read().decode())["results"])
+
+
+def termine_holen():
+    global TERMINE
+    cache = BASIS / "termine_cache.json"
+    try:
+        karten = stadt_api("veranstaltung", "event/list/event-appointment",
+                           [("filters[date][from]", dt.date.today().isoformat() + " 00:00:00")])
+        liste = []
+        for k in karten:
+            zeit = re.search(r'datetime="([^"]+)"', k)
+            titel = re.search(r"<h3.*?<span>(.*?)</span>", k, re.S)
+            url = re.search(r'href="([^"]+)"', k)
+            if zeit and titel:
+                liste.append({"zeit": zeit.group(1), "titel": saeubern(titel.group(1)),
+                              "link": url.group(1).replace(".de//", ".de/") if url else "https://www.ebersbach.de/veranstaltung",
+                              "mehr": saeubern(re.search(r"button--event-appointments\">(.*?)<", k).group(1))
+                              if "button--event-appointments" in k else ""})
+        if liste:
+            cache.write_text(json.dumps(liste, ensure_ascii=False), "utf-8")
+    except Exception as ex:
+        print(f"  Veranstaltungen nicht abrufbar ({type(ex).__name__}) – nehme gespeicherte")
+        try:
+            liste = json.loads(cache.read_text("utf-8"))
+        except Exception:
+            liste = []
+    heute = dt.date.today().isoformat()
+    TERMINE = [t for t in liste if t["zeit"][:10] >= heute]
+    print(f"  Veranstaltungen Ebersbach: {len(TERMINE)} anstehend")
+
+
+def termine_demo():
+    global TERMINE
+    h = dt.datetime.now()
+    TERMINE = [{"zeit": (h + dt.timedelta(days=d, hours=s)).strftime("%Y-%m-%d %H:00:00"), "titel": t, "link": "#", "mehr": ""}
+               for d, s, t in [(1, 2, "Weihnachtsgeschenke basteln"), (2, 4, "Repair-Café"), (4, 0, "Wochenmarkt"),
+                               (5, 3, "Adventskonzert der Stadtkapelle"), (7, 1, "Weihnachtsmarkt Ebersbach"), (9, 2, "Seniorennachmittag")]]
+
+
+def stadt_nachrichten():
+    """Die neuesten Mitteilungen der Stadt als Meldungen für die Rubrik Heimat."""
+    out = []
+    for k in stadt_api("nachrichten", "news/list/news-article")[:8]:
+        titel = re.search(r"<h3.*?<span>(.*?)</span>", k, re.S)
+        url = re.search(r'href="([^"]+)"', k)
+        if titel and url:
+            out.append({"titel": saeubern(titel.group(1)), "link": url.group(1).replace(".de//", ".de/"), "teaser": "",
+                        "datum": None, "quelle": "Stadt Ebersbach", "bild": "", "stadt": True})
+    return out
+
+
+def wann_zeit(z: str) -> str:
+    d = dt.datetime.fromisoformat(z)
+    tag = wann(d.date())
+    return tag + ("" if d.hour == 0 and d.minute == 0 else f", {d.hour}:{d.minute:02d}")
+
+
 def muell_holen():
     """Holt die Abfuhrtermine; bei Ausfall werden die zuletzt gespeicherten Termine genutzt."""
     global MUELL
@@ -1298,7 +1407,7 @@ def demo_sammeln():
                 "bild": demo_bild(r["stil"], n) if n in (0, 1, 3) else "", "neu": n < 2,
                 "ki": {"dachzeile": f"{r['titel']} aktuell", "schlagzeile": f"Platzhalter-Schlagzeile Nr. {n + 1} aus {r['titel']}",
                        "vorspann": "Hier steht der fett gedruckte Vorspann: ein Satz, der neugierig macht und das Wichtigste verrät.",
-                       "text": DEMO_TEXT},
+                       "text": DEMO_TEXT, "fazit": "Hier steht das Fazit: In ein bis zwei Sätzen, was die Meldung bedeutet und was noch offen ist."},
                 "punkte": 20 - n - (0 if r["id"] == "gs" else 1)})
         if r["id"] == "balkon":     # Beispiel-Angebote, damit die Angebots-Rechnung in der Demo sichtbar ist
             for a, t in zip(liste, ["Beispiel: 2.000 Wp Set mit 2,24 kWh Speicher für 899 €", "Beispiel: Speicher 2,2 kWh für 249 €",
@@ -1634,9 +1743,9 @@ Reine Speicher-Angebote sind als Nachrüstung zu einer vorhandenen 1.000-Wp-Anla
 
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "lokal": "#0f766e", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "tvpi": "#be185d", "geraete": "#0369a1", "diabetes": "#15803d", "lokal": "#0f766e", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "lokal": "📍", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "tvpi": "🍓", "geraete": "🔌", "diabetes": "🩸", "lokal": "📍", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1758,18 +1867,32 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .wbtn{margin-top:auto;align-self:flex-start;background:#fff;color:#111;font-weight:600;font-size:13px;padding:7px 13px;border-radius:999px;cursor:pointer;border:0}
 .solarw{background:linear-gradient(160deg,#f59e0b,#ea580c);color:#fff;border:0}.solarw h4{color:#fff}
 .solarw .gross{font:300 40px Inter,sans-serif}
-.heimat{display:grid;grid-template-columns:1.25fr 1.35fr 1fr;grid-template-areas:"w l m" "s l m";gap:14px;margin-bottom:14px}
-.heimat .hw{grid-area:w}.heimat .hl5{grid-area:l}.heimat .hm{grid-area:m}.heimat .hs{grid-area:s}
+.heimat{display:grid;grid-template-columns:1.25fr 1.35fr 1fr;grid-template-areas:"w l m" "s l t";gap:14px;margin-bottom:14px}
+.heimat .ht{grid-area:t}.heimat .hw{grid-area:w}.heimat .hl5{grid-area:l}.heimat .hm{grid-area:m}.heimat .hs{grid-area:s}
 .heimat>div>.wg{height:100%}
 .heimat .wetterw .wjetzt b{font-size:58px}.heimat .wetterw .wtage{margin-top:12px}
+.terminw .tz{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--rand);font-size:13.5px}
+.terminw .tz b{flex:0 0 108px;white-space:nowrap;color:#0f766e;font-size:12.5px}.terminw .tz span{flex:1}
+.kf{margin-top:auto;font-size:12.5px;font-weight:600;color:var(--c)}.mc.ov .kf{color:#fff}
+.leser{position:fixed;inset:0;z-index:100;background:rgba(10,12,20,.6);backdrop-filter:blur(4px);overflow-y:auto;padding:30px 12px}
+.leser[hidden]{display:none}
+.lkarte{position:relative;max-width:720px;margin:0 auto;background:var(--fl);border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.lzu{position:absolute;top:10px;right:10px;z-index:2;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer}
+.lbild{aspect-ratio:16/9;background:var(--fl2) center/cover}
+.ltext{padding:22px 24px 26px}.ldach{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#d0021b}
+.ltext h2{font:700 26px/1.2 Inter,system-ui,sans-serif;margin:6px 0 12px}
+.ltext p{font-size:16.5px;line-height:1.6;margin-bottom:12px}.ltext .lvs{font-weight:600}
+.lfazit{background:color-mix(in srgb,#d0021b 9%,var(--fl));border-left:4px solid #d0021b;border-radius:8px;padding:12px 14px;margin:16px 0;font-size:15.5px}
+.lfazit b{display:block;color:#d0021b;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.lfuss{font-size:13px;color:var(--tx3)}.lfuss a{color:#2563eb;font-weight:600}
 .lokalw .lz{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rand)}
 .lokalw .lz:last-of-type{border:0}
 .lokalw .ln{flex:0 0 24px;height:24px;border-radius:50%;background:#0f766e;color:#fff;font:700 13px Inter,sans-serif;display:flex;align-items:center;justify-content:center}
 .lokalw .lb{flex:0 0 64px;height:46px;border-radius:8px;background:var(--fl2) center/cover}
 .lokalw .lt b{display:block;font-size:14px;line-height:1.3;font-weight:600}.lokalw .lt small{color:var(--tx3);font-size:12px}
 .lokalw .wbtn{background:#0f766e;color:#fff;margin-top:8px}
-@media(max-width:1000px){.heimat{grid-template-columns:1fr 1fr;grid-template-areas:"w l" "s l" "m m"}}
-@media(max-width:640px){.heimat{grid-template-columns:1fr;grid-template-areas:"w" "l" "m" "s"}}
+@media(max-width:1000px){.heimat{grid-template-columns:1fr 1fr;grid-template-areas:"w l" "s l" "m t"}}
+@media(max-width:640px){.heimat{grid-template-columns:1fr;grid-template-areas:"w" "l" "t" "m" "s"}}
 .muellw .mz{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--rand);font-size:13.5px}
 .muellw .mz i{flex:0 0 12px;height:12px;border-radius:3px}.muellw .mz span{flex:1}.muellw .mz small{display:block;color:var(--tx2);font-size:11.5px}
 .muellw .mz b{font-size:13px;white-space:nowrap}.muellw .mz.bald b{background:#d0021b;color:#fff;padding:2px 7px;border-radius:6px}
@@ -1835,10 +1958,25 @@ MSN_JS = """
 NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["lokal", "welt"]),
        ("wissen", "Technik", ["technik", "visionen"]),
        ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler", "community"]),
-       ("solar", "Solar", ["solar", "balkon"]), ("smarthome", "Smart Home", ["smarthome", "smartideen", "tv"]),
-       ("gesundheit", "Gesundheit", ["gesundheit", "forschung"]),
+       ("solar", "Solar", ["solar", "balkon"]), ("smarthome", "Smart Home", ["geraete", "smartideen", "smarthome"]),
+       ("tv", "TV & Beamer", ["tv", "tvpi"]),
+       ("gesundheit", "Gesundheit", ["diabetes", "gesundheit", "forschung"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
        ("zeitung", "📰 Zeitung", "zeitung")]
+
+
+LESE = {}            # Kurzfassungen für die Lese-Ansicht der Webseite
+
+
+def lese_schluessel(a, r) -> str:
+    """Merkt die Kurzfassung (wenn Claude sie geschrieben hat) und gibt den Schlüssel dafür zurück."""
+    ki = a.get("ki") or {}
+    if len(ki.get("text") or "") < 250:
+        return ""
+    k = hashlib.sha1(f'{a["link"]}|{a["titel"]}'.encode()).hexdigest()[:10]
+    LESE[k] = {"d": dachzeile(a, r), "t": schlagzeile(a), "v": ki.get("vorspann", ""), "x": ki["text"], "f": ki.get("fazit", ""),
+               "q": a.get("quelle") or "", "z": rel_zeit(a.get("datum")), "l": link(a), "b": a["bild"]}
+    return k
 
 
 def mkarte(a, r, ov=False, spaeter=False) -> str:
@@ -1849,10 +1987,12 @@ def mkarte(a, r, ov=False, spaeter=False) -> str:
                  else f'<div class="mi leer">{ICONS.get(r["id"], "📰")}</div>')
     such = e(f'{schlagzeile(a)} {a["titel"]} {r["titel"]} {a.get("quelle", "")}'.lower())
     kl = "mc" + (" ov" if ov and a["bild"] else "") + (" spaeter versteckt" if spaeter else "")
-    return (f'<a class="{kl}" style="--c:{k}" href="{e(link(a))}" target="_blank" rel="noopener" data-s="{such}">{bild_html}'
+    lk = lese_schluessel(a, r)
+    return (f'<a class="{kl}" style="--c:{k}" href="{e(link(a))}" target="_blank" rel="noopener" data-s="{such}"'
+            f'{f" data-k={lk}" if lk else ""}>{bild_html}'
             f'{"<span class=neu>NEU</span>" if a.get("neu") else ""}<div class="mb"><div class="ms"><span class="av">{q[:1].upper()}</span>'
             f'<b>{q}</b> · {e(rel_zeit(a.get("datum")))}{" · 🌐 übersetzt" if a.get("uebersetzt_aus") else ""}</div>'
-            f'<h3>{e(schlagzeile(a))}</h3></div></a>')
+            f'<h3>{e(schlagzeile(a))}</h3>{"<span class=kf>📖 Kurzfassung lesen</span>" if lk else ""}</div></a>')
 
 
 def wetter_widget() -> str:
@@ -1865,6 +2005,15 @@ def wetter_widget() -> str:
             f'<b>{h.get("jetzt", h["max"])}°</b><span class="wtx">{e(WETTER_TEXT.get(h["code"], ""))}, Regen {h["regen"]} %, '
             f'{de_zahl(h["sonne_h"], 1)} Std. Sonne</span></div><div class="wsolar">☀️ {BALKON_NAME} heute: ca. <b>{de_zahl(h["solar_kwh"], 1)} kWh</b> '
             f'(≈ {de_zahl(h["solar_kwh"] * 0.35, 2)} €)</div><div class="wtage">{tage}</div></div>').replace(".", ",", 0)
+
+
+def termine_widget() -> str:
+    if not TERMINE:
+        return ""
+    zeilen = "".join(f'<a class="tz" href="{e(t["link"])}" target="_blank" rel="noopener"><b>{e(wann_zeit(t["zeit"]))}</b>'
+                     f'<span>{e(t["titel"])}{" · " + e(t["mehr"]) if t["mehr"] else ""}</span></a>' for t in TERMINE[:7])
+    return (f'<div class="wg terminw"><h4>📅 Termine in Ebersbach</h4>{zeilen}'
+            f'<p class="mfuss"><a href="https://www.ebersbach.de/veranstaltung" target="_blank" rel="noopener">Alle Veranstaltungen der Stadt →</a></p></div>')
 
 
 def lokal_widget(liste, r) -> str:
@@ -1978,7 +2127,24 @@ gemessenen Sonneneinstrahlung in {e(WOHNORT['name'])} (Open-Meteo), heute als Vo
 Grobe Schätzung für 2.000 Wp senkrecht am Balkon; den genauen Wert zeigt dein Wechselrichter.</p></div>{solar_rueckblick_html()}</section>"""
 
 
+LESER_WEB_JS = """
+(function(){const L=document.getElementById('leser'),I=document.getElementById('linhalt');
+const esc=t=>(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+document.addEventListener('click',ev=>{const a=ev.target.closest('a[data-k]');if(!a||!LESE[a.dataset.k])return;ev.preventDefault();
+ const d=LESE[a.dataset.k];
+ I.innerHTML=(d.b?'<div class="lbild" style="background-image:url(&quot;'+esc(d.b)+'&quot;)"></div>':'')+'<div class="ltext"><div class="ldach">'+esc(d.d)+'</div><h2>'+esc(d.t)+'</h2>'
+  +(d.v?'<p class="lvs">'+esc(d.v)+'</p>':'')+d.x.split(/\\n+/).filter(Boolean).map(p=>'<p>'+esc(p)+'</p>').join('')
+  +(d.f?'<div class="lfazit"><b>Fazit</b>'+esc(d.f)+'</div>':'')
+  +'<div class="lfuss">'+esc(d.q)+' · '+esc(d.z)+' · <a href="'+esc(d.l)+'" target="_blank" rel="noopener">Originalartikel öffnen →</a></div></div>';
+ L.hidden=false;document.body.style.overflow='hidden';L.scrollTop=0;});
+function zu(){L.hidden=true;document.body.style.overflow='';}
+L.addEventListener('click',ev=>{if(ev.target===L||ev.target.closest('.lzu'))zu();});
+addEventListener('keydown',ev=>{if(ev.key==='Escape')zu();});})();
+"""
+
+
 def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_name="zeitung.pdf") -> str:
+    LESE.clear()
     heute = dt.datetime.now()
     nach_id = {r["id"]: (r, l) for r, l in ausgabe}
     alle = [(r, a) for r, l in ausgabe for a in l]
@@ -2031,7 +2197,8 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
             kacheln.insert(min(pos, len(kacheln)), w)
     r_lok, l_lok = nach_id.get("lokal", (None, []))
     heimat = (f'<div class="heimat"><div class="hw">{wetter_widget() or "<div class=wg>Wetter heute nicht verfügbar</div>"}</div>'
-              f'<div class="hl5">{lokal_widget(l_lok, r_lok)}</div><div class="hm">{muell_widget()}</div><div class="hs">{solar_w}</div></div>')
+              f'<div class="hl5">{lokal_widget(l_lok, r_lok)}</div><div class="hm">{muell_widget()}</div><div class="hs">{solar_w}</div>'
+              f'<div class="ht">{termine_widget()}</div></div>')
     entdecken = (f'<section class="tab" id="t-entdecken">{heimat}<div class="mgrid">{hero_html}{"".join(kacheln)}</div>'
                  f'{"<button class=mehr>Mehr laden</button>" if len(rest) > 26 else ""}</section>')
 
@@ -2039,6 +2206,8 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
     tabs_html = []
     for tid, name, ids in NAV[1:]:
         if ids == "zeitung":
+            if not zeit_w:
+                continue
             inhalt = (f'<div class="mgrid" style="grid-auto-rows:auto">{zeit_w.replace("wg zeitw", "wg zeitw")}</div>'
                       if zeit_w else '<p class="leerhinweis">Heute keine PDF-Ausgabe.</p>')
             tabs_html.append(f'<section class="tab" id="t-zeitung">{inhalt}</section>')
@@ -2061,7 +2230,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
                              f'von Claude schreiben – „Bau mir Schritt für Schritt: {e(t[0])}“.</p></article></div>')
             if not liste:
                 continue
-            if rid == "gesundheit":
+            if rid == "diabetes":
                 teile.append('<p class="ms" style="white-space:normal;margin:10px 4px">🩺 Meldungen und Studien aus der Presse, '
                              'von Claude zusammengefasst – keine medizinische Beratung. Neue Mittel und Studien bitte immer '
                              'mit dem Arzt besprechen.</p>')
@@ -2072,7 +2241,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
     # Suche: alle Meldungen
     tabs_html.append('<section class="tab" id="t-alle"><div class="mgrid">' + "".join(mkarte(a, r) for r, a in alle) + "</div></section>")
 
-    nav = "".join(f'<a href="#{tid}" data-t="{tid}">{e(name)}</a>' for tid, name, _ in NAV)
+    nav = "".join(f'<a href="#{tid}" data-t="{tid}">{e(name)}</a>' for tid, name, ids in NAV if ids != "zeitung" or zeit_w)
     teil1, teil2 = ZEITUNG_NAME.split("-")[0], "-".join(ZEITUNG_NAME.split("-")[1:])
     fehl = ""
     if fehler:
@@ -2088,7 +2257,8 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
 <main class="mpanel"><div class="ms" style="margin:0 4px 12px">{e(datum_heute())} · {len(alle)} Meldungen · {neu} neu{" · DEMO" if demo else ""}</div>
 {entdecken}{"".join(tabs_html)}</main>
 <footer><div class="wrap">{e(ZEITUNG_NAME)} · erstellt {heute.strftime('%d.%m.%Y, %H:%M Uhr')} aus RSS-Feeds. Alle Meldungen führen zur Originalquelle.{fehl}</div></footer>
-<script>{JS}{MSN_JS}</script></body></html>"""
+<div class="leser" id="leser" hidden><div class="lkarte"><button class="lzu" aria-label="Schließen">✕</button><div id="linhalt"></div></div></div>
+<script>const LESE={json.dumps(LESE, ensure_ascii=False).replace("</", "<\\/")};{JS}{MSN_JS}{LESER_WEB_JS}</script></body></html>"""
 
 
 
@@ -2302,6 +2472,7 @@ body{font-family:"PT Serif",Georgia,"Times New Roman",serif;font-size:8pt;line-h
 .monatd .mzahlen small{display:block;font-size:6pt;color:#555}.monatd .mzahlen b{font-size:11pt}
 .monatd .mzahlen .rotb{background:#d0021b;color:#fff}.monatd .mzahlen .rotb small{color:#fff}
 .vgl{font-size:7pt;margin:0 0 1mm}
+.fazit{border-left:1.2mm solid #d0021b;background:#fff3f3;padding:1mm 2mm;font-weight:700}
 .projliste{column-count:2;column-gap:5mm;column-rule:.2mm solid #bbb;font-size:7.2pt;line-height:1.25;padding-left:5mm;overflow:hidden;flex:1;min-height:0}
 .projliste li{break-inside:avoid;margin-bottom:1.6mm}.projliste li::marker{font-family:Anton,KnallerFett,Impact,sans-serif;color:#d0021b;font-size:9pt}
 .projliste b{font-size:8.6pt}.projliste .pq{color:#d0021b;font-weight:900;font-size:6.2pt;text-transform:uppercase}
@@ -2391,6 +2562,9 @@ def text_html(a, woerter: int, lead=True) -> str:
         teile.append(f"<p>{e(p)}</p>")
     if not teile:
         teile.append('<p>Mehr dazu in der Originalmeldung.</p>')
+    fz = (a.get("ki") or {}).get("fazit")
+    if fz:
+        teile.append(f'<p class="fazit"><b>FAZIT:</b> {e(fz)}</p>')
     teile.append(f'<div class="quelle">Quelle: {e(a.get("quelle") or "")} · {e(zeit_text(a.get("datum")))}</div>')
     return '<div class="txt">' + "".join(teile) + "</div>"
 
@@ -2990,6 +3164,7 @@ def main():
         print(f"  Balkonkraftwerk {b['monat']}: bisher {b['bisher']:.1f} kWh (1.–{b['bis_tag']}.), heute erwartet {b['heute']:.1f} kWh, "
               f"Summe {b['summe']:.1f} kWh ≈ {b['euro']:.2f} €")
     muell_demo() if args.demo else muell_holen()
+    termine_demo() if args.demo else termine_holen()
     if args.demo:
         ausgabe, fehler = demo_sammeln()
     else:
@@ -3011,6 +3186,12 @@ def main():
     tag = dt.date.today().isoformat()
 
     pdf_ok = False
+    alle_m = [a for _, l in ausgabe for a in l]
+    mit_artikel = sum(1 for a in alle_m if len((a.get("ki") or {}).get("text") or "") >= 250)
+    if args.pdf and not args.demo and mit_artikel < len(alle_m) * 0.5:
+        print(f"  PDF-Zeitung ausgelassen: nur {mit_artikel} von {len(alle_m)} Meldungen haben eine Kurzfassung "
+              "(dafür Claude-Zugang als Secret hinterlegen)")
+        args.pdf = False
     if args.pdf:
         if not args.demo:
             bild_einbetten(ausgabe)
