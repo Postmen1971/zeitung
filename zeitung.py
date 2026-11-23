@@ -191,7 +191,7 @@ RESSORTS = [
                F("https://stadt-bremerhaven.de/feed/", True), F("https://www.smartdroid.de/feed/", True)]},
     {"id": "smartideen", "dach": "SMART HOME", "titel": "Smart-Home-Ideen aus der Community", "stil": "smarthome",
      "stichwoerter": ["tuya", "smart life", "home assistant", "automation", "automated", "automatisier", "smart home", "smarthome",
-                      "zigbee", "switchbot", "sensor", "dashboard", "idee", "project", "setup", "diy"],
+                      "zigbee", "switchbot", "esphome", "smart plug", "steckdose", "thermostat", "diy"],
      "max_alter": 24 * 14, "max": 12,     # Ideen dürfen bis zu 2 Wochen alt sein
      "feeds": [F("https://www.xda-developers.com/feed/", True), F("https://www.howtogeek.com/feed/", True),
                F(gnews("meine Home Assistant Automation OR Automatisierung Beispiel", tage=14), True),
@@ -207,6 +207,7 @@ RESSORTS = [
                F(gnews("Smart Life App Szenen Tipps", tage=14))]},
     {"id": "geraete", "dach": "SWITCHBOT & TUYA", "titel": "SwitchBot & Tuya: Updates, Neuheiten, Preise", "stil": "smarthome",
      "stichwoerter": ["switchbot", "tuya", "smart life", "smartlife"],
+     "sperre": ["aktie", "aktienkurs", " stock", "shares", "nyse", "earnings", "quartalszahlen", "kursziel", "analyst"],
      "max_alter": 24 * 14, "max": 10,
      "feeds": [F(gnews("SwitchBot", tage=14)), F(gnews("SwitchBot", "en", tage=14), True),
                F(gnews("SwitchBot Angebot OR Deal OR Preis OR günstiger", tage=14), True),
@@ -255,13 +256,14 @@ RESSORTS = [
     {"id": "tvpi", "dach": "HEIMKINO-BASTLER", "titel": "Raspberry Pi fürs Heimkino: Projekte", "stil": "tv",
      "stichwoerter": ["kodi", "libreelec", "osmc", "plex", "jellyfin", "beamer", "projector", "projektor", " tv", "fernseh",
                       "hdmi", "mediacenter", "media center", "media player", "heimkino", "home theater", "ambilight",
-                      "hyperion", "retropie", "streaming", "display"],
+                      "hyperion", "fernbedienung", "remote control", "smart tv", "android tv"],
+     "muss": ["raspberry", "kodi", "libreelec", "osmc", "hyperion", "ambilight"],
      "max_alter": 24 * 21, "max": 10,
      "feeds": [F(gnews("Raspberry Pi Kodi OR LibreELEC OR Mediacenter OR Ambilight", tage=21), True),
                F(gnews("Raspberry Pi Beamer OR Fernseher Projekt", tage=21), True),
                F(gnews("Raspberry Pi media center OR projector OR Ambilight OR Hyperion project", "en", tage=21), True),
                F("https://hackaday.com/blog/feed/", True), F("https://dev.to/feed/tag/raspberrypi", True),
-               F("https://www.raspberrypi.com/news/feed/", True)]},
+               F("https://www.raspberrypi.com/news/feed/", True), F(gnews("Kodi OR LibreELEC Update", tage=21), True)]},
     # ── WISSEN & ZUKUNFT ──
     {"id": "diabetes", "dach": "DIABETES", "titel": "Diabetes Typ 2: Forschung, Zulassungen, Erfolge", "stil": "forschung",
      "stichwoerter": ["diabetes", "insulin", "glp-1", "semaglutid", "tirzepatid", "orforglipron", "retatrutid", "blutzucker",
@@ -606,6 +608,8 @@ def zeitung_sammeln():
                 if any(s in text for s in SPERRLISTE) or any(s in text for s in r.get("sperre", [])):
                     continue
                 if feed["filtern"] and r["stichwoerter"] and not any(s in text for s in r["stichwoerter"]):
+                    continue
+                if r.get("muss") and not any(m in text for m in r["muss"]):
                     continue
                 if a["datum"] and (jetzt - a["datum"]).total_seconds() > r.get("max_alter", MAX_ALTER_STUNDEN) * 3600:
                     continue
@@ -1253,12 +1257,13 @@ def termine_holen():
             if zeit and titel:
                 liste.append({"zeit": zeit.group(1), "titel": saeubern(titel.group(1)),
                               "link": url.group(1).replace(".de//", ".de/") if url else "https://www.ebersbach.de/veranstaltung",
-                              "mehr": saeubern(re.search(r"button--event-appointments\">(.*?)<", k).group(1))
-                              if "button--event-appointments" in k else ""})
+                              "mehr": saeubern((re.search(r'event-appointments[^>]*>([^<]*)<', k) or re.search("()", "")).group(1))})
         if liste:
             cache.write_text(json.dumps(liste, ensure_ascii=False), "utf-8")
     except Exception as ex:
-        print(f"  Veranstaltungen nicht abrufbar ({type(ex).__name__}) – nehme gespeicherte")
+        import traceback
+        print(f"  Veranstaltungen nicht abrufbar ({type(ex).__name__}: {ex}) – nehme gespeicherte\n"
+              + "".join(traceback.format_exc().splitlines(True)[-4:]))
         try:
             liste = json.loads(cache.read_text("utf-8"))
         except Exception:
