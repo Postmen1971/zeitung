@@ -515,7 +515,11 @@ def vielfalt(liste, ortsnamen):
     weg = {w.strip() for w in ortsnamen} | {"nach", "nicht", "gegen", "beim", "über", "eine", "einen", "einem", "einer",
                                              "dass", "werden", "wird", "sind", "frisch", "video", "highlights", "news"}
     def woerter(a):
-        return {w for w in re.findall(r"[a-zäöüß]{4,}", a["titel"].lower()) if w not in weg}
+        t = a["titel"].lower()
+        w = {x for x in re.findall(r"[a-zäöüß]{4,}", t) if x not in weg}
+        if any(k in t for k in ("frisch auf", "handball", "hbl", "fußball", "bundesliga", "oberliga", "regionalliga", "spieltag")):
+            w.add("#sportthema")                  # Sport bekommt höchstens einen Platz
+        return w
     out, gesehen = [], []
     for a in liste:
         w = woerter(a)
