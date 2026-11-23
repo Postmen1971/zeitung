@@ -199,7 +199,7 @@ RESSORTS = [
                F(gnews("SwitchBot Automation Idee OR Szene", tage=30), True),
                F("https://hackaday.com/category/home-hacks/feed/"),
                F("https://smarthomescene.com/feed/"),
-               F("https://dev.to/feed/tag/homeassistant"), F("https://dev.to/feed/tag/smarthome", True),
+
                F(gnews("Tuya Ideen Automation", tage=14)), F(gnews("Smart Home DIY Projekt", tage=14)),
                F(gnews("Home Assistant Automation Beispiele", tage=14)),
                F(gnews("Tuya automation ideas", "en", tage=14), True),
