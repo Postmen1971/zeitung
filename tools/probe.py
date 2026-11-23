@@ -7,7 +7,7 @@ def get(u):
             return r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode()[:300]
-for seite, ep, extra in [("veranstaltung", "event/list/event-appointment", [("filters[date][0]", "2026-11-23 00:00:00"), ("filters[date][1]", "")]),
+for seite, ep, extra in [("veranstaltung", "event/list/event-appointment", [("filters[date][from]", "2026-11-23 00:00:00")]),
                          ("nachrichten", "news/list/news-article", [])]:
     s = get("https://www.ebersbach.de/" + seite)[1]
     doc = re.search(r'document="([^"]+)"', s).group(1)
