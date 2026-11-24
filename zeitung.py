@@ -147,7 +147,6 @@ RESSORTS = [
      "stichwoerter": ["claude", "anthropic", "tutorial", "anleitung", "guide", "how to", "how i", "workflow",
                       "automat", "prompt", "tipps", "tips", "mcp", "agent", "skill", "hook"],
      "feeds": [F("https://dev.to/feed/tag/claudecode"), F("https://dev.to/feed/tag/claude", True),
-               F("https://www.reddit.com/r/ClaudeCode/top/.rss?t=day"),
                F("https://github.com/anthropics/claude-code/releases.atom"),
                F(gnews("Claude Code Anleitung")), F(gnews("Claude Code tutorial", "en"), True),
                F(gnews("KI Automatisierung Anleitung")), F(gnews("Claude Code Tipps"))]},
