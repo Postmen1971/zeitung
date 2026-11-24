@@ -266,11 +266,16 @@ RESSORTS = [
                F(gnews("Raspberry Pi media center OR projector OR Ambilight OR Hyperion project", "en", tage=21), True),
                F("https://hackaday.com/blog/feed/", True), F("https://dev.to/feed/tag/raspberrypi", True),
                F(gnews("Kodi OR LibreELEC Update", tage=21), True)]},
-    {"id": "creami", "dach": "SOFTEIS", "titel": "Ninja CREAMi Scoop & Swirl: Neues, Rezepte, Angebote", "stil": "creami",
+    {"id": "creami", "dach": "SOFTEIS", "titel": "Ninja CREAMi Scoop & Swirl: Neues, Rezepte, Zubehör-Angebote", "stil": "creami",
      "stichwoerter": ["creami", "swirl", "softeis", "soft serve", "soft-serve", "eismaschine", "ice cream maker", "frozen yogurt"],
      "max_alter": 24 * 30, "max": 10, "vielfalt": True,
+     # Maschine ist schon da: Angebote (mit Preis) nur für Zubehör
+     "angebot_nur": ["zubehör", "becher", "ersatzbecher", "pint", "tub", "deckel", "lid", "behälter", "container",
+                     "paddle", "messer", "klinge", "düse", "nozzle", "ersatzteil", "accessor"],
      "feeds": [F(gnews("Ninja Creami Swirl", tage=30)), F(gnews("Ninja Creami Rezept", tage=30), True),
-               F(gnews("Ninja Creami Angebot OR Deal OR Preis", tage=14), True),
+               F(gnews("Ninja Creami Zubehör OR Ersatzbecher OR Becher Angebot", tage=30), True),
+               F(gnews("Ninja Creami Swirl Becher OR Zubehör", tage=60), True),
+               F(gnews("Ninja Creami pints OR accessories deal", "en", tage=30), True),
                F(gnews("Ninja Swirl Creami soft serve recipe OR tips", "en", tage=30), True),
                F(gnews("Ninja Creami Softeis Tipps", tage=60), True),
                F("https://www.mydealz.de/rss/hot", True)]},
@@ -621,6 +626,8 @@ def zeitung_sammeln():
                     continue
                 if r.get("muss") and not any(m in text for m in r["muss"]):
                     continue
+                if r.get("angebot_nur") and ist_angebot(a) and not any(m in text for m in r["angebot_nur"]):
+                    continue          # z. B. Angebote für die Maschine selbst
                 if a["datum"] and (jetzt - a["datum"]).total_seconds() > r.get("max_alter", MAX_ALTER_STUNDEN) * 3600:
                     continue
                 kandidaten.append(a)
