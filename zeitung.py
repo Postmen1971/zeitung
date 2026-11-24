@@ -627,7 +627,7 @@ def zeitung_sammeln():
                 if r.get("muss") and not any(m in text for m in r["muss"]):
                     continue
                 if r.get("angebot_nur") and (ist_angebot(a) or any(w in text for w in DEAL_WOERTER)) \
-                        and not any(m in text for m in r["angebot_nur"]):
+                        and not any(m in a["titel"].lower() for m in r["angebot_nur"]):
                     continue          # z. B. Angebote für die Maschine selbst
                 if a["datum"] and (jetzt - a["datum"]).total_seconds() > r.get("max_alter", MAX_ALTER_STUNDEN) * 3600:
                     continue
@@ -1044,7 +1044,8 @@ def eco_badge(status) -> str:
 
 
 DEAL_WOERTER = ["angebot", "bestpreis", "tiefstpreis", "rabatt", "deal", "black friday", "cyber monday", "reduziert",
-                "günstig", "sale", "discount", "% off", "lowest price", "niedrigsten preis", "spar", "preissturz", "$"]
+                "günstig", "sale", "discount", "% off", "lowest price", "niedrigsten preis", "spar", "preissturz", "$",
+                "kostet", "weniger", "alternative", "lidl", "aldi", "kaufland", "bei amazon", "prime day"]
 
 
 def ist_angebot(a) -> bool:
