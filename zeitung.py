@@ -2046,7 +2046,7 @@ LESE = {}            # Kurzfassungen für die Lese-Ansicht der Webseite
 def lese_schluessel(a, r) -> str:
     """Merkt die Kurzfassung (wenn Claude sie geschrieben hat) und gibt den Schlüssel dafür zurück."""
     ki = a.get("ki") or {}
-    if len(ki.get("text") or "") < 250:
+    if len(ki.get("text") or "") < 250 or not (ki.get("fazit") or ki.get("vorspann")):   # nur echte Claude-Artikel
         return ""
     k = hashlib.sha1(f'{a["link"]}|{a["titel"]}'.encode()).hexdigest()[:10]
     LESE[k] = {"d": dachzeile(a, r), "t": schlagzeile(a), "v": ki.get("vorspann", ""), "x": ki["text"], "f": ki.get("fazit", ""),
@@ -3276,7 +3276,7 @@ def main():
 
     pdf_ok = False
     alle_m = [a for _, l in ausgabe for a in l]
-    mit_artikel = sum(1 for a in alle_m if len((a.get("ki") or {}).get("text") or "") >= 250)
+    mit_artikel = sum(1 for a in alle_m if len((a.get("ki") or {}).get("text") or "") >= 250 and (a.get("ki") or {}).get("vorspann"))
     if args.pdf and not args.demo and mit_artikel < len(alle_m) * 0.5:
         print(f"  PDF-Zeitung ausgelassen: nur {mit_artikel} von {len(alle_m)} Meldungen haben eine Kurzfassung "
               "(dafür Claude-Zugang als Secret hinterlegen)")
