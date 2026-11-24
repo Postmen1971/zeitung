@@ -269,6 +269,7 @@ RESSORTS = [
     {"id": "creami", "dach": "SOFTEIS", "titel": "Ninja CREAMi Scoop & Swirl: Neues, Rezepte, Zubehör-Angebote", "stil": "creami",
      "stichwoerter": ["creami", "swirl", "softeis", "soft serve", "soft-serve", "eismaschine", "ice cream maker", "frozen yogurt"],
      "max_alter": 24 * 30, "max": 10, "vielfalt": True,
+     "muss": ["creami", "softeis", "soft serve", "soft-serve"],
      # Maschine ist schon da: Angebote (mit Preis) nur für Zubehör
      "angebot_nur": ["zubehör", "becher", "ersatzbecher", "pint", "tub", "deckel", "lid", "behälter", "container",
                      "paddle", "messer", "klinge", "düse", "nozzle", "ersatzteil", "accessory", "accessories", "set"],
