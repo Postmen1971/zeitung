@@ -71,7 +71,7 @@ FAVORITEN = {
     "claude code": 5, "tutorial": 2, "anleitung": 2, "automatisier": 3,
     "claude": 5, "anthropic": 4, "künstliche intelligenz": 2, "ki-modell": 2,
     "tuya": 6, "smart life": 5, "home assistant": 4, "matter": 2, "zigbee": 2,
-    "ebersbach": 8, "göppingen": 7, "uhingen": 6, "fils": 4, "plochingen": 4, "esslingen": 3, "stuttgart": 2,
+    "creami": 3, "softeis": 3, "ebersbach": 8, "göppingen": 7, "uhingen": 6, "fils": 4, "plochingen": 4, "esslingen": 3, "stuttgart": 2,
     "ersparnis": 3, "sparen": 2, "förder": 3,
     "balkonkraftwerk": 4, "ecotracker": 6, "everhome": 5, "angebot": 2, "deal": 2, "rabatt": 2, "tiefstpreis": 3, "bestpreis": 3,
     "beamer": 4, "projektor": 3, "oled": 2, "fernseher": 2, "4k": 1,
@@ -266,6 +266,14 @@ RESSORTS = [
                F(gnews("Raspberry Pi media center OR projector OR Ambilight OR Hyperion project", "en", tage=21), True),
                F("https://hackaday.com/blog/feed/", True), F("https://dev.to/feed/tag/raspberrypi", True),
                F(gnews("Kodi OR LibreELEC Update", tage=21), True)]},
+    {"id": "creami", "dach": "SOFTEIS", "titel": "Ninja CREAMi Scoop & Swirl: Neues, Rezepte, Angebote", "stil": "creami",
+     "stichwoerter": ["creami", "swirl", "softeis", "soft serve", "soft-serve", "eismaschine", "ice cream maker", "frozen yogurt"],
+     "max_alter": 24 * 30, "max": 10, "vielfalt": True,
+     "feeds": [F(gnews("Ninja Creami Swirl", tage=30)), F(gnews("Ninja Creami Rezept", tage=30), True),
+               F(gnews("Ninja Creami Angebot OR Deal OR Preis", tage=14), True),
+               F(gnews("Ninja Swirl Creami soft serve recipe OR tips", "en", tage=30), True),
+               F(gnews("Ninja Creami Softeis Tipps", tage=60), True),
+               F("https://www.mydealz.de/rss/hot", True)]},
     # ── WISSEN & ZUKUNFT ──
     {"id": "diabetes", "dach": "DIABETES", "titel": "Diabetes Typ 2: Forschung, Zulassungen, Erfolge", "stil": "forschung",
      "stichwoerter": ["diabetes", "insulin", "glp-1", "semaglutid", "tirzepatid", "orforglipron", "retatrutid", "blutzucker",
@@ -327,12 +335,12 @@ YOUTUBE_TUEFTLER = ["AndreasSpiess", "GreatScottLab", "JeffGeerling", "DroneBotW
 # Reihenfolge der Rubriken auf der Webseite
 WEB_REIHENFOLGE = ["lokal", "welt", "technik", "visionen", "werkstatt", "claude", "ki", "tueftler", "community",
                    "solar", "balkon", "geraete", "smartideen", "smarthome", "tv", "tvpi", "diabetes", "gesundheit", "forschung",
-                   "gs", "bundesliga", "europa", "national", "boxen"]
+                   "creami", "gs", "bundesliga", "europa", "national", "boxen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
 PDF_SEITEN = [["lokal", "welt"], ["technik", "visionen"], ["werkstatt"], ["claude", "ki"], ["tueftler", "community"],
               ["solar", "balkon"], ["geraete", "smartideen", "smarthome"], ["tv", "tvpi"], ["diabetes", "gesundheit", "forschung"],
-              ["gs"], ["bundesliga"], ["europa", "national", "boxen"]]
+              ["creami"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
     "Damlaya damlaya göl olur. – Tropfen für Tropfen wird ein See.",
@@ -896,7 +904,7 @@ def mymemory_uebersetzen(text: str, sprache: str) -> str:
 
 
 UEBERSETZ_CACHE = BASIS / "uebersetzt_cache.json"
-UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "community", "diabetes", "geraete", "tvpi", "claude", "smartideen", "balkon", "solar"]
+UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "community", "diabetes", "geraete", "tvpi", "creami", "claude", "smartideen", "balkon", "solar"]
 
 
 def maschinell_uebersetzen(ausgabe):
@@ -1538,6 +1546,10 @@ try:
     import werkstatt
 except ImportError:          # Zeitung läuft auch ohne Werkstatt-Datei
     werkstatt = None
+try:
+    import creami
+except ImportError:
+    creami = None
 
 
 def werkstatt_heute():
@@ -1813,9 +1825,9 @@ Es stehen nur Angebote hier, die mit dem EcoTracker funktionieren (✅) oder ein
 
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "tvpi": "#be185d", "geraete": "#0369a1", "diabetes": "#15803d", "lokal": "#0f766e", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "creami": "#db2777", "tvpi": "#be185d", "geraete": "#0369a1", "diabetes": "#15803d", "lokal": "#0f766e", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "tvpi": "🍓", "geraete": "🔌", "diabetes": "🩸", "lokal": "📍", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "creami": "🍦", "tvpi": "🍓", "geraete": "🔌", "diabetes": "🩸", "lokal": "📍", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1944,6 +1956,13 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .heimat .wetterw .wjetzt b{font-size:58px}.heimat .wetterw .wtage{margin-top:12px}
 .terminw .tz{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--rand);font-size:13.5px}
 .terminw .tz b{flex:0 0 108px;white-space:nowrap;color:#0f766e;font-size:12.5px}.terminw .tz span{flex:1}
+.creamiw{background:linear-gradient(135deg,#db2777,#f59e0b);color:#fff;border:0}.creamiw h4,.creamiw p{color:#fff}
+.creamiw .t{font:700 20px/1.2 "Space Grotesk",Inter,sans-serif;margin:4px 0 8px}
+.rezept .rk{display:block;margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#be185d}
+.zut{margin:0 0 4px 18px;font-size:14.5px;line-height:1.55}.rezept p{color:var(--tx)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px}
+.aufklapp{margin-top:16px}.aufklapp summary{cursor:pointer;font:700 17px "Space Grotesk",Inter,sans-serif;list-style:none}
+.aufklapp summary::after{content:" ▾";color:var(--tx3)}.aufklapp[open] summary{margin-bottom:10px}
 .ecob{align-self:flex-start;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534}
 .ecob.beta{background:#fef3c7;color:#92400e}.ecob.ohne{background:#fef9c3;color:#713f12}
 .ecol{list-style:none;margin:8px 0;display:flex;flex-direction:column;gap:5px;font-size:13px}
@@ -2035,6 +2054,7 @@ NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["lokal"
        ("solar", "Solar", ["solar", "balkon"]), ("smarthome", "Smart Home", ["geraete", "smartideen", "smarthome"]),
        ("tv", "TV & Beamer", ["tv", "tvpi"]),
        ("gesundheit", "Gesundheit", ["diabetes", "gesundheit", "forschung"]),
+       ("creami", "🍦 Ninja CREAMi", ["creami"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
        ("zeitung", "📰 Zeitung", "zeitung")]
 
@@ -2107,6 +2127,50 @@ def lokal_widget(liste, r) -> str:
         for i, a in enumerate(liste[:5], start=1))
     return (f'<div class="wg lokalw"><h4>📍 Top 5 aus Ebersbach & Göppingen</h4>{zeilen}'
             f'<button class="wbtn" data-geh="nachrichten">Mehr Nachrichten →</button></div>')
+
+
+def rezept_karte(rz, gross=False) -> str:
+    name, programm, _, zutaten, schritt, topping = rz
+    z = "".join(f"<li>{e(x)}</li>" for x in zutaten)
+    return (f'<article class="wcard rezept{" haupt" if gross else ""}"><span class="eyebrow" style="--c:#db2777">'
+            f'{"🍦 Softeis des Tages" if gross else "🍨 Noch eine Idee"}</span><h3>{e(name)}</h3>'
+            f'<div class="badges"><span class="badge lv" style="background:#fce7f3;color:#be185d">Programm {e(programm)}</span>'
+            f'<span class="badge">1 Becher (480 ml) · bis zu 4 Waffeln</span></div>'
+            f'<b class="rk">Zutaten</b><ul class="zut">{z}</ul><b class="rk">So geht\'s</b><p>{e(schritt)} In den Swirl-Becher bis höchstens zur Fülllinie füllen, '
+            f'24 Stunden gerade einfrieren, dann <b>{e(programm.split(": ")[-1])}</b> wählen und zapfen.</p>'
+            f'<p class="werkzeug">Topping-Idee: {e(topping)}</p></article>')
+
+
+def creami_html() -> str:
+    if not creami:
+        return ""
+    jetzt = dt.date.today()
+    rz, weitere, tipp = creami.heute(jetzt.toordinal(), jetzt.month)
+    progs = "".join(f"<li><b>{e(n)}</b> – {e(t)}</li>" for n, t in creami.PROGRAMME_SOFTEIS)
+    anleitung = "".join(f"<li><span>{e(x)}</span></li>" for x in creami.KURZANLEITUNG)
+    alle_tipps = "".join(f"<li><b>{e(t)}:</b> {e(x)}</li>" for t, x in creami.TIPPS)
+    return f"""<section class="werkstatt" style="--c:#db2777"><div class="whead"><div><span class="eyebrow">🍦 Ninja CREAMi Scoop & Swirl</span>
+<h2>Softeis selbst gemacht – Rezept, Tipp und Anleitung</h2></div></div>
+<div class="wgrid">{rezept_karte(rz, True)}<div class="wside">
+<article class="wcard tipp" style="background:linear-gradient(135deg,#db2777,#f59e0b)"><span class="eyebrow">💡 Tipp des Tages</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></article>
+<article class="wcard"><span class="eyebrow" style="--c:#db2777">🎛️ Die 6 Softeis-Programme</span><ul class="ecol">{progs}</ul>
+<p class="werkzeug">Außerdem: {e(creami.PROGRAMME_SCOOP)}.</p></article></div></div>
+<div class="rgrid">{"".join(rezept_karte(x) for x in weitere)}</div>
+<details class="wcard aufklapp"><summary>📘 Kurzanleitung: So machst du Softeis</summary><ol class="schritte">{anleitung}</ol>
+<p class="werkzeug">Für Zusammenbau und Reinigung gilt die Anleitung von Ninja, die dem Gerät beiliegt.</p></details>
+<details class="wcard aufklapp"><summary>💡 Alle {len(creami.TIPPS)} Tipps für die Maschine</summary><ul class="ecol">{alle_tipps}</ul></details>
+<details class="wcard aufklapp"><summary>📚 Alle {len(creami.REZEPTE)} Rezepte</summary><div class="rgrid">{"".join(rezept_karte(x) for x in creami.REZEPTE)}</div></details>
+</section>"""
+
+
+def creami_widget() -> str:
+    if not creami:
+        return ""
+    jetzt = dt.date.today()
+    rz, _, _ = creami.heute(jetzt.toordinal(), jetzt.month)
+    return (f'<div class="wg creamiw"><h4>🍦 Softeis des Tages</h4><div class="t">{e(rz[0])}</div>'
+            f'<p style="font-size:13px;opacity:.92">Programm {e(rz[1].split(": ")[-1])} · {len(rz[3])} Zutaten · 24 Std. einfrieren</p>'
+            f'<button class="wbtn" data-geh="creami">Zum Rezept →</button></div>')
 
 
 def muell_widget() -> str:
@@ -2273,7 +2337,7 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
         kacheln.append(mkarte(a, r, ov=(i in (7, 18)), spaeter=i >= 26))
     # Widgets an MSN-typische Stellen einsetzen
     for pos, w in sorted([(1, f'<div class="wg topst"><h4>🔥 Top-Storys</h4>{top}</div>'),
-                          (5, werk_w), (10, zeit_w)], reverse=True):
+                          (5, werk_w), (8, creami_widget()), (10, zeit_w)], reverse=True):
         if w:
             kacheln.insert(min(pos, len(kacheln)), w)
     r_lok, l_lok = nach_id.get("lokal", (None, []))
@@ -2300,6 +2364,8 @@ def html_bauen(ausgabe, fehler, demo=False, pdf_name="", leser=False, download_n
             r, liste = nach_id[rid]
             if rid == "werkstatt":
                 teile.append(werkstatt_html(r, []))
+            if rid == "creami":
+                teile.append(creami_html())
             if rid == "solar":
                 teile.append(solar_monat_html())
                 teile.append(solar_html(r, [], nach_id.get("balkon", (None, []))[1]))
