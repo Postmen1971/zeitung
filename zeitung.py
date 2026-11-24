@@ -271,7 +271,7 @@ RESSORTS = [
      "max_alter": 24 * 30, "max": 10, "vielfalt": True,
      # Maschine ist schon da: Angebote (mit Preis) nur für Zubehör
      "angebot_nur": ["zubehör", "becher", "ersatzbecher", "pint", "tub", "deckel", "lid", "behälter", "container",
-                     "paddle", "messer", "klinge", "düse", "nozzle", "ersatzteil", "accessor"],
+                     "paddle", "messer", "klinge", "düse", "nozzle", "ersatzteil", "accessory", "accessories", "set"],
      "feeds": [F(gnews("Ninja Creami Swirl", tage=30)), F(gnews("Ninja Creami Rezept", tage=30), True),
                F(gnews("Ninja Creami Zubehör OR Ersatzbecher OR Becher Angebot", tage=30), True),
                F(gnews("Ninja Creami Swirl Becher OR Zubehör", tage=60), True),
@@ -627,7 +627,7 @@ def zeitung_sammeln():
                 if r.get("muss") and not any(m in text for m in r["muss"]):
                     continue
                 if r.get("angebot_nur") and (ist_angebot(a) or any(w in text for w in DEAL_WOERTER)) \
-                        and not any(m in a["titel"].lower() for m in r["angebot_nur"]):
+                        and not re.search(r"\b(" + "|".join(r["angebot_nur"]) + r")(s|n|e|en|er)?\b", a["titel"].lower()):
                     continue          # z. B. Angebote für die Maschine selbst
                 if a["datum"] and (jetzt - a["datum"]).total_seconds() > r.get("max_alter", MAX_ALTER_STUNDEN) * 3600:
                     continue
@@ -1045,7 +1045,8 @@ def eco_badge(status) -> str:
 
 DEAL_WOERTER = ["angebot", "bestpreis", "tiefstpreis", "rabatt", "deal", "black friday", "cyber monday", "reduziert",
                 "günstig", "sale", "discount", "% off", "lowest price", "niedrigsten preis", "spar", "preissturz", "$",
-                "kostet", "weniger", "alternative", "lidl", "aldi", "kaufland", "bei amazon", "prime day"]
+                "kostet", "weniger", "alternative", "lidl", "aldi", "kaufland", "bei amazon", "prime day", "bundle",
+                "kostenlos", "gratis", "gutschein"]
 
 
 def ist_angebot(a) -> bool:
