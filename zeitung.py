@@ -181,6 +181,20 @@ RESSORTS = [
                F("https://dev.to/feed/tag/showdev", True),
                F("https://dev.to/feed/tag/sideprojects", True),
                F("https://lobste.rs/t/show.rss", True)]},
+    {"id": "nachgebaut", "dach": "KI-IDEENGEBER", "titel": "Mit KI nachgebaut: eigene Programme & Open-Source-Alternativen",
+     "stil": "digital", "max": 15, "vielfalt": True, "max_alter": 24 * 14,
+     "stichwoerter": ["alternative", "clone", "klon", "nachgebaut", "rebuilt", "built", "baut", "gebaut", "open source", "open-source",
+                      "vibe cod", "claude code", "cursor", "made with ai", "with claude", "mit ki", "programmiert", "photoshop",
+                      "adobe", "figma", "premiere", "lightroom", "illustrator", "office", "excel"],
+     "muss": [" ai ", " ai-", " ai,", "(ai", "ai-powered", " ki ", " ki-", "claude", "gpt", "llm", "vibe", "cursor", "copilot",
+              "agent", "alternative", "clone", "klon", "open source", "open-source"],
+     "feeds": [F("https://hnrss.org/show?q=alternative+OR+clone+OR+%22open+source%22&count=60", True),
+               F("https://hnrss.org/show?q=Claude+OR+%22vibe+coded%22+OR+%22built+with%22&count=40", True),
+               F(gnews("\"open source alternative\" Photoshop OR Adobe OR Figma OR Lightroom OR Premiere", "en", tage=21), True),
+               F(gnews("\"built with Claude\" OR \"vibe coded\" OR \"vibe coding\" app", "en", tage=14), True),
+               F(gnews("Vibe Coding App selbst programmiert OR gebaut", tage=21), True),
+               F(gnews("kostenlose Alternative zu Photoshop OR Adobe OR Office KI", tage=21), True),
+               F("https://dev.to/feed/tag/opensource", True), F("https://dev.to/feed/tag/vibecoding")]},
     {"id": "smarthome", "dach": "SMART HOME", "titel": "Smart Home & Tuya", "stil": "smarthome",
      "stichwoerter": ["smart home", "smarthome", "smart-home", "tuya", "smart life", "home assistant",
                       "zigbee", "homekit", "philips hue", "matter-", "saugroboter", "smarte steckdose",
@@ -281,6 +295,18 @@ RESSORTS = [
                F(gnews("Ninja Creami Softeis Tipps", tage=60), True),
                F("https://www.mydealz.de/rss/hot", True)]},
     # ── WISSEN & ZUKUNFT ──
+    {"id": "kimedizin", "dach": "KI & MEDIZIN", "titel": "Was sich in der Medizin dank KI tut", "stil": "forschung",
+     "max": 12, "vielfalt": True, "max_alter": 24 * 14,
+     "stichwoerter": [" ki ", "ki-", "künstliche intelligenz", " ai ", "ai-", "artificial intelligence", "machine learning",
+                      "deep learning", "algorithm", "algorithmus", "neural", "llm", "chatbot", "alphafold"],
+     "muss": ["medizin", "medical", "medicine", "klinik", "clinic", "patient", "diagnos", "krebs", "cancer", "therap", "arzt",
+              "doctor", "radiolog", "medikament", "drug", "protein", "krankenhaus", "hospital", "gesundheit", "health", "pflege"],
+     "feeds": [F(gnews("KI Medizin Durchbruch OR Diagnose OR Studie", tage=14), True),
+               F(gnews("künstliche Intelligenz Krebs OR Arzt OR Klinik", tage=14), True),
+               F(gnews("AI medicine breakthrough OR diagnosis OR \"drug discovery\"", "en", tage=14), True),
+               F(gnews("AI cancer detection OR AlphaFold OR clinical trial AI", "en", tage=14), True),
+               F("https://www.aerzteblatt.de/rss/news.asp", True), F("https://the-decoder.de/feed/", True),
+               F("https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml", True)]},
     {"id": "diabetes", "dach": "DIABETES", "titel": "Diabetes Typ 2: Forschung, Zulassungen, Erfolge", "stil": "forschung",
      "stichwoerter": ["diabetes", "insulin", "glp-1", "semaglutid", "tirzepatid", "orforglipron", "retatrutid", "blutzucker",
                       "hba1c", "betazell", "beta cell", "glucose", "glukose", "metformin", "sglt2"],
@@ -333,19 +359,19 @@ QUELLEN = {"fotomac": "Fotomaç", "aspor": "A Spor", "hurriyet": "Hürriyet", "h
            "home-assistant.io": "Home Assistant", "stadt-bremerhaven": "Caschys Blog", "smartdroid": "smartdroid",
            "aerzteblatt": "Ärzteblatt", "areadvd": "AREA DVD", "flatpanelshd": "FlatpanelsHD", "dev.to": "DEV Community",
            "reddit.com/r/ClaudeCode": "r/ClaudeCode", "r/homeassistant": "r/homeassistant",
-           "hackaday": "Hackaday", "sciencedaily": "ScienceDaily", "xda-developers": "XDA", "howtogeek": "How-To Geek", "raspberrypi.com": "Raspberry Pi News", "hnrss": "Hacker News · Show HN", "community.home-assistant.io": "Home-Assistant-Forum", "lobste.rs": "Lobsters", "makezine": "Make:", "heise.de/make": "Make (heise)", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
+           "hackaday": "Hackaday", "dev.to/feed/tag/vibecoding": "DEV · Vibe Coding", "sciencedaily": "ScienceDaily", "xda-developers": "XDA", "howtogeek": "How-To Geek", "raspberrypi.com": "Raspberry Pi News", "hnrss": "Hacker News · Show HN", "community.home-assistant.io": "Home-Assistant-Forum", "lobste.rs": "Lobsters", "makezine": "Make:", "heise.de/make": "Make (heise)", "smarthomescene": "SmartHomeScene", "mydealz": "mydealz", "anthropics/claude-code": "Claude Code (GitHub)"}
 
 # YouTube-Kanäle von Tüftlern und KI-Bastlern (Handle ohne @). Neue Kanäle einfach hier ergänzen.
 YOUTUBE_TUEFTLER = ["AndreasSpiess", "GreatScottLab", "JeffGeerling", "DroneBotWorkshop", "WorthMaking", "TechnikTueftler"]
 
 # Reihenfolge der Rubriken auf der Webseite
-WEB_REIHENFOLGE = ["lokal", "welt", "technik", "visionen", "werkstatt", "claude", "ki", "tueftler", "community",
-                   "solar", "balkon", "geraete", "smartideen", "smarthome", "tv", "tvpi", "diabetes", "gesundheit", "forschung",
+WEB_REIHENFOLGE = ["lokal", "welt", "technik", "visionen", "werkstatt", "claude", "ki", "nachgebaut", "community", "tueftler",
+                   "solar", "balkon", "geraete", "smartideen", "smarthome", "tv", "tvpi", "diabetes", "kimedizin", "gesundheit", "forschung",
                    "creami", "gs", "bundesliga", "europa", "national", "boxen"]
 
 # Aufbau der PDF-Zeitung: Seite 1 = Titelseite, danach je Seite eine oder zwei Rubriken
-PDF_SEITEN = [["lokal", "welt"], ["technik", "visionen"], ["werkstatt"], ["claude", "ki"], ["tueftler", "community"],
-              ["solar", "balkon"], ["geraete", "smartideen", "smarthome"], ["tv", "tvpi"], ["diabetes", "gesundheit", "forschung"],
+PDF_SEITEN = [["lokal", "welt"], ["technik", "visionen"], ["werkstatt"], ["claude", "ki"], ["nachgebaut", "community"], ["tueftler"],
+              ["solar", "balkon"], ["geraete", "smartideen", "smarthome"], ["tv", "tvpi"], ["diabetes", "kimedizin"], ["gesundheit", "forschung"],
               ["creami"], ["gs"], ["bundesliga"], ["europa", "national", "boxen"]]
 
 SPRUECHE = [  # Sprichwörter (gemeinfrei)
@@ -913,7 +939,7 @@ def mymemory_uebersetzen(text: str, sprache: str) -> str:
 
 
 UEBERSETZ_CACHE = BASIS / "uebersetzt_cache.json"
-UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "community", "diabetes", "geraete", "tvpi", "creami", "claude", "smartideen", "balkon", "solar"]
+UEBERSETZ_VORRANG = ["gesundheit", "gs", "national", "werkstatt", "tueftler", "community", "nachgebaut", "kimedizin", "diabetes", "geraete", "tvpi", "creami", "claude", "smartideen", "balkon", "solar"]
 
 
 def maschinell_uebersetzen(ausgabe):
@@ -1840,9 +1866,9 @@ Es stehen nur Angebote hier, die mit dem EcoTracker funktionieren (✅) oder ein
 
 AKZENT = {"gs": "#a90432", "national": "#0ea5e9", "bundesliga": "#e11d48", "europa": "#6366f1", "boxen": "#f97316",
           "welt": "#2563eb", "werkstatt": "#8b5cf6", "claude": "#d97757", "ki": "#14b8a6", "smarthome": "#0891b2",
-          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "creami": "#db2777", "tvpi": "#be185d", "geraete": "#0369a1", "diabetes": "#15803d", "lokal": "#0f766e", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
+          "tv": "#db2777", "gesundheit": "#16a34a", "balkon": "#eab308", "solar": "#f59e0b", "smartideen": "#0d9488", "tueftler": "#0891b2", "nachgebaut": "#4f46e5", "kimedizin": "#0e7490", "creami": "#db2777", "tvpi": "#be185d", "geraete": "#0369a1", "diabetes": "#15803d", "lokal": "#0f766e", "community": "#9333ea", "forschung": "#059669", "technik": "#64748b", "visionen": "#7c3aed"}
 ICONS = {"gs": "🦁", "national": "🌍", "bundesliga": "⚽", "europa": "🏆", "boxen": "🥊", "welt": "🌐",
-         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "creami": "🍦", "tvpi": "🍓", "geraete": "🔌", "diabetes": "🩸", "lokal": "📍", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
+         "werkstatt": "🛠️", "claude": "✳️", "ki": "🤖", "smarthome": "🏠", "gesundheit": "🩺", "smartideen": "💡", "tueftler": "🔧", "nachgebaut": "🧩", "kimedizin": "🧠", "creami": "🍦", "tvpi": "🍓", "geraete": "🔌", "diabetes": "🩸", "lokal": "📍", "community": "🧑‍💻", "solar": "🌞", "balkon": "🏷️", "tv": "📽️", "forschung": "🧬",
          "technik": "⚙️", "visionen": "🚀"}
 
 
@@ -1983,6 +2009,13 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .rezept{background:var(--fl);border-radius:20px;overflow:hidden;border:1px solid var(--rand);box-shadow:var(--schatten);display:flex;flex-direction:column}
 .rezept.gross{flex-direction:row}.rezept.gross .rbild{flex:0 0 40%;min-height:340px}
 .rbild{position:relative;display:flex;align-items:center;justify-content:center;padding:16px;min-height:180px}
+.rbild.mitfoto{padding:0;overflow:hidden}.rfoto{width:100%;height:100%;min-height:200px;object-fit:cover;display:block}
+.rezept.gross .rfoto{position:absolute;inset:0;height:100%}
+.fquelle{position:absolute;left:0;right:0;bottom:0;font-size:10.5px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.65));padding:14px 10px 5px;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chfoto{position:relative;flex:0 0 300px;height:190px;border-radius:16px;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.hfoto{width:100%;height:100%;object-fit:cover;display:block}
+.cwfoto{width:110px;height:110px;object-fit:cover;border-radius:50%;border:4px solid rgba(255,255,255,.7)}
 .rbild svg{filter:drop-shadow(0 10px 14px rgba(0,0,0,.18))}
 .rprog{position:absolute;left:14px;top:14px;color:#fff;font:700 12px Inter,sans-serif;padding:4px 10px;border-radius:999px}
 .rtext{padding:18px 22px 22px;flex:1}.rtext h3{font:700 22px/1.2 "Space Grotesk",Inter,sans-serif;margin:6px 0 10px}
@@ -2001,7 +2034,7 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .pchip span{font-size:28px}.pchip b{font-size:15px}.pchip small{color:var(--tx2);font-size:12.5px;line-height:1.35}
 .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .tkarte{background:var(--fl2);border-radius:14px;padding:12px 14px}.tkarte p{font-size:13.5px;color:var(--tx2);margin-top:4px}
-@media(max-width:760px){.rezept.gross{flex-direction:column}.rezept.gross .rbild{min-height:240px}.chero{flex-direction:column;align-items:flex-start;padding:22px}
+@media(max-width:760px){.chfoto{flex-basis:auto;width:100%;height:180px}.rezept.gross{flex-direction:column}.rezept.gross .rbild{min-height:240px}.chero{flex-direction:column;align-items:flex-start;padding:22px}
  .chero h2{font-size:28px}.chwaffeln{justify-content:flex-start}.rezept.gross .rtext h3{font-size:24px}}
 .aufklapp{margin-top:16px}.aufklapp summary{cursor:pointer;font:700 17px "Space Grotesk",Inter,sans-serif;list-style:none}
 .aufklapp summary::after{content:" ▾";color:var(--tx3)}.aufklapp[open] summary{margin-bottom:10px}
@@ -2092,10 +2125,10 @@ MSN_JS = """
 
 NAV = [("entdecken", "Entdecken", None), ("nachrichten", "Nachrichten", ["lokal", "welt"]),
        ("wissen", "Technik", ["technik", "visionen"]),
-       ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "tueftler", "community"]),
+       ("ki", "KI & Claude", ["werkstatt", "claude", "ki", "nachgebaut", "community", "tueftler"]),
        ("solar", "Solar", ["solar", "balkon"]), ("smarthome", "Smart Home", ["geraete", "smartideen", "smarthome"]),
        ("tv", "TV & Beamer", ["tv", "tvpi"]),
-       ("gesundheit", "Gesundheit", ["diabetes", "gesundheit", "forschung"]),
+       ("gesundheit", "Gesundheit", ["diabetes", "kimedizin", "gesundheit", "forschung"]),
        ("creami", "🍦 Ninja CREAMi", ["creami"]),
        ("sport", "Sport", ["gs", "bundesliga", "europa", "national", "boxen"]),
        ("zeitung", "📰 Zeitung", "zeitung")]
@@ -2234,8 +2267,9 @@ def rezept_karte(rz, gross=False) -> str:
     eis, rand, top, hg = eis_farbe(name)
     z = "".join(f"<li>{e(x)}</li>" for x in zutaten)
     prog = programm.split(": ")[-1]
-    bild = (f'<div class="rbild" style="background:radial-gradient(circle at 30% 20%,#fff 0,{hg} 55%,{eis} 140%)">'
-            f'{eis_svg(name, 230 if gross else 150)}<span class="rprog" style="background:{rand}">{e(prog)}</span></div>')
+    foto = foto_html(name)
+    bild = (f'<div class="rbild{" mitfoto" if foto else ""}" style="background:radial-gradient(circle at 30% 20%,#fff 0,{hg} 55%,{eis} 140%)">'
+            f'{foto or eis_svg(name, 230 if gross else 150)}<span class="rprog" style="background:{rand}">{e(prog)}</span></div>')
     inhalt = (f'<div class="rtext"><span class="eyebrow" style="--c:#db2777">{"🍦 Softeis des Tages" if gross else "🍨 Noch eine Idee"}</span>'
               f'<h3>{e(name)}</h3><div class="rinfo"><span>🥄 {len(zutaten)} {"Zutat" if len(zutaten) == 1 else "Zutaten"}</span><span>❄️ 24 Std.</span><span>🍦 bis 4 Waffeln</span></div>'
               f'<b class="rk">Zutaten für 1 Becher (480 ml)</b><ul class="zut">{z}</ul>'
@@ -2243,6 +2277,62 @@ def rezept_karte(rz, gross=False) -> str:
               f'<li>24 Stunden gerade einfrieren.</li><li>Programm <b>{e(prog)}</b> wählen und zapfen.</li></ol>'
               f'<div class="rtop" style="background:{hg};border-color:{rand}">✨ <b>Topping:</b> {e(topping)}</div></div>')
     return f'<article class="rezept{" gross" if gross else ""}">{bild}{inhalt}</article>'
+
+
+CREAMI_FOTOS = {}    # Rezeptname -> {"url", "autor", "lizenz", "seite"}
+
+
+def creami_fotos_holen():
+    """Holt die Foto-Adressen und Urheberangaben von Wikimedia Commons (einmal pro Woche, sonst aus dem Zwischenspeicher)."""
+    global CREAMI_FOTOS
+    if not creami or not hasattr(creami, "BILDER"):
+        return
+    pfad = BASIS / "creami_fotos.json"
+    try:
+        alt = json.loads(pfad.read_text("utf-8"))
+    except Exception:
+        alt = {}
+    namen = dict(creami.BILDER, **{"_titel": creami.TITELBILD})
+    frisch = alt.get("_stand", "") >= (dt.date.today() - dt.timedelta(days=7)).isoformat()
+    if frisch and all(n in alt for n in namen):
+        CREAMI_FOTOS = alt
+        return
+    neu = {"_stand": dt.date.today().isoformat()}
+    datei_zu_name = {"File:" + d: n for n, d in namen.items()}
+    titel = list(datei_zu_name)
+    try:
+        for i in range(0, len(titel), 40):
+            url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({
+                "action": "query", "format": "json", "titles": "|".join(titel[i:i + 40]), "prop": "imageinfo",
+                "iiprop": "url|extmetadata", "iiurlwidth": 900})
+            req = urllib.request.Request(url, headers={"User-Agent": "MorgenKnaller/1.0 (https://github.com/Postmen1971/zeitung)"})
+            with urllib.request.urlopen(req, timeout=25) as r:
+                daten = json.loads(r.read().decode())
+            norm = {x["to"]: x["from"] for x in daten.get("query", {}).get("normalized", [])}
+            for seite in daten.get("query", {}).get("pages", {}).values():
+                if "imageinfo" not in seite:
+                    continue
+                ii = seite["imageinfo"][0]
+                m = ii.get("extmetadata", {})
+                name = datei_zu_name.get(norm.get(seite["title"], seite["title"]))
+                if name:
+                    neu[name] = {"url": ii.get("thumburl") or ii["url"], "seite": ii.get("descriptionurl", ""),
+                                 "autor": saeubern(m.get("Artist", {}).get("value", ""))[:60] or "unbekannt",
+                                 "lizenz": m.get("LicenseShortName", {}).get("value", "")}
+        pfad.write_text(json.dumps(neu, ensure_ascii=False), "utf-8")
+        CREAMI_FOTOS = neu
+        print(f"  CREAMi-Fotos: {len(neu) - 1} von {len(namen)} von Wikimedia Commons geladen")
+    except Exception as ex:
+        print(f"  CREAMi-Fotos nicht abrufbar ({type(ex).__name__}) – nehme gespeicherte")
+        CREAMI_FOTOS = alt
+
+
+def foto_html(name: str, klasse: str = "rfoto") -> str:
+    f = CREAMI_FOTOS.get(name)
+    if not f:
+        return ""
+    return (f'<img class="{klasse}" src="{e(f["url"])}" alt="{e(name)}" loading="lazy">'
+            f'<a class="fquelle" href="{e(f["seite"])}" target="_blank" rel="noopener">Foto: {e(f["autor"])} · {e(f["lizenz"])} · Wikimedia Commons</a>')
 
 
 PROG_SYMBOL = {"Ice Cream": "🍦", "Light Ice Cream": "🪶", "Frozen Yoghurt": "🥣", "Fruiti": "🍓", "Soft Serve Gelato": "🍨", "CreamiFit": "💪"}
@@ -2261,7 +2351,7 @@ def creami_html() -> str:
     return f"""<section class="creami">
 <div class="chero"><div class="chtext"><span class="eyebrow" style="--c:#fff">🍦 Ninja CREAMi Scoop & Swirl</span>
 <h2>Softeis selbst gemacht</h2><p>Jeden Tag ein neues Rezept, ein Profi-Tipp und alles zur Maschine – für einen 480-ml-Becher.</p></div>
-<div class="chwaffeln">{eiswaffeln}</div></div>
+{('<div class="chfoto">' + foto_html("_titel", "hfoto") + '</div>') if CREAMI_FOTOS.get("_titel") else f'<div class="chwaffeln">{eiswaffeln}</div>'}</div>
 {rezept_karte(rz, True)}
 <div class="ctipp"><div class="ctico">💡</div><div><span class="eyebrow" style="--c:#fff">Tipp des Tages</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></div></div>
 <h3 class="czw">🍨 Noch mehr Ideen für heute</h3>
@@ -2280,7 +2370,9 @@ def creami_widget() -> str:
         return ""
     jetzt = dt.date.today()
     rz, _, _ = creami.heute(jetzt.toordinal(), jetzt.month)
-    return (f'<div class="wg creamiw"><div class="cwbild">{eis_svg(rz[0], 120)}</div><div><h4>🍦 Softeis des Tages</h4><div class="t">{e(rz[0])}</div>'
+    f = CREAMI_FOTOS.get(rz[0])
+    bildchen = f'<img class="cwfoto" src="{e(f["url"])}" alt="">' if f else eis_svg(rz[0], 120)
+    return (f'<div class="wg creamiw"><div class="cwbild">{bildchen}</div><div><h4>🍦 Softeis des Tages</h4><div class="t">{e(rz[0])}</div>'
             f'<p style="font-size:13px;opacity:.92">Programm {e(rz[1].split(": ")[-1])} · {len(rz[3])} {"Zutat" if len(rz[3]) == 1 else "Zutaten"}</p>'
             f'<button class="wbtn" data-geh="creami">Zum Rezept →</button></div></div>')
 
@@ -3424,6 +3516,8 @@ def main():
               f"Summe {b['summe']:.1f} kWh ≈ {b['euro']:.2f} €")
     muell_demo() if args.demo else muell_holen()
     termine_demo() if args.demo else termine_holen()
+    if not args.demo:
+        creami_fotos_holen()
     if args.demo:
         ausgabe, fehler = demo_sammeln()
     else:

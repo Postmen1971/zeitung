@@ -161,3 +161,31 @@ def heute(tag_nr: int, monat: int):
         if len(weitere) == 3:
             break
     return rezept, weitere, TIPPS[tag_nr % len(TIPPS)]
+
+
+# Fotos von Wikimedia Commons (freie Lizenzen, Urheber wird angezeigt). Dateiname auf commons.wikimedia.org
+BILDER = {
+    "Klassisches Vanille-Softeis": "Vanilla ice cream cone.JPG",
+    "Schoko-Softeis": "2018-06-09 18 06 38 A chocolate soft-serve ice cream cone at the Dairy Lou Recreation Center in the Franklin Farm section of Oak Hill, Fairfax County, Virginia.jpg",
+    "Erdbeer-Frozen-Joghurt": "Strawberry Frozen Yogurt (2552806737).jpg",
+    "Mango-Softeis ohne Zucker": "Mangos - single and halved.jpg",
+    "Ananas-Softeis wie im Freizeitpark": "Pineapple Dole Whip.jpg",
+    "Bananen-Softeis": "Vegan ice cream, banana nice cream.jpg",
+    "Pistazien-Gelato-Softeis": "Pistachio ice cream.jpg",
+    "Sahlep-Softeis (türkische Art)": "Maraş dondurma.jpg",
+    "Vanille-Protein-Softeis": "Dairy Queen Soft Serve Vanilla Cone (17400892134).jpg",
+    "Schoko-Banane-Protein": "Chocolate Banana Ice Cream Recipe By Sonia Goyal.jpg",
+    "Zitronen-Joghurt light": "Lemon ice cream in Rome.jpg",
+    "Kaffee-Softeis": "Coffee ice-cream at siri mane.jpg",
+    "Kokos-Softeis (vegan)": "Coconut ice cream - Bangkok - 2017-05-03 (001).jpg",
+    "Haselnuss-Nougat-Softeis": "Nutella gelato.jpg",
+    "Himbeer-Frozen-Joghurt": "Berry Frozen Yogurt (4723048814).jpg",
+    "Salted-Caramel-Softeis": "Salted caramel ice cream (26314112816).jpg",
+    "Spekulatius-Softeis": "Spekulatius four pieces of.jpg",
+    "Bratapfel-Softeis": "AppleCinnamonIceCream.jpg",
+    "Lebkuchen-Schoko-Softeis": "Lebkuchen-pile.jpg",
+    "Heidelbeer-Joghurt-Softeis": "Blueberry frozen yoghurt (4937999312).jpg",
+    "Pfirsich-Softeis": "Mitchell's Peach Ice Cream (19156805683).jpg",
+    "Kinder-Liebling: Cookies-Softeis": "Udders Cookies and Cream Ice Cream (cropped).jpg",
+}
+TITELBILD = "Liat Portal for Foodie Disorder - Chocolate and vanilla soft serve ice cream cone.jpg"
