@@ -1971,11 +1971,38 @@ body{background:linear-gradient(135deg,#c9d6ff 0%,#e2e2f5 35%,#f5e1ea 70%,#ffe9d
 .heimat .wetterw .wjetzt b{font-size:58px}.heimat .wetterw .wtage{margin-top:12px}
 .terminw .tz{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--rand);font-size:13.5px}
 .terminw .tz b{flex:0 0 108px;white-space:nowrap;color:#0f766e;font-size:12.5px}.terminw .tz span{flex:1}
-.creamiw{background:linear-gradient(135deg,#db2777,#f59e0b);color:#fff;border:0}.creamiw h4,.creamiw p{color:#fff}
-.creamiw .t{font:700 20px/1.2 "Space Grotesk",Inter,sans-serif;margin:4px 0 8px}
-.rezept .rk{display:block;margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#be185d}
-.zut{margin:0 0 4px 18px;font-size:14.5px;line-height:1.55}.rezept p{color:var(--tx)}
-.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;margin-top:6px}
+.creamiw{background:linear-gradient(135deg,#ec4899,#f59e0b);color:#fff;border:0;flex-direction:row;align-items:center;gap:6px}
+.creamiw h4,.creamiw p{color:#fff}.creamiw .t{font:700 20px/1.2 "Space Grotesk",Inter,sans-serif;margin:4px 0 8px}
+.cwbild{flex:0 0 auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.2))}
+.creami{display:flex;flex-direction:column;gap:18px}
+.chero{display:flex;align-items:center;gap:16px;justify-content:space-between;padding:26px 28px;border-radius:22px;color:#fff;overflow:hidden;
+ background:linear-gradient(120deg,#ec4899 0%,#f472b6 35%,#fb923c 75%,#facc15 100%);box-shadow:0 12px 30px rgba(236,72,153,.3)}
+.chero h2{font:800 34px/1.1 "Space Grotesk",Inter,sans-serif;margin:6px 0 8px}.chero p{max-width:520px;opacity:.95}
+.chwaffeln{display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:360px;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18))}
+.rezept{background:var(--fl);border-radius:20px;overflow:hidden;border:1px solid var(--rand);box-shadow:var(--schatten);display:flex;flex-direction:column}
+.rezept.gross{flex-direction:row}.rezept.gross .rbild{flex:0 0 40%;min-height:340px}
+.rbild{position:relative;display:flex;align-items:center;justify-content:center;padding:16px;min-height:180px}
+.rbild svg{filter:drop-shadow(0 10px 14px rgba(0,0,0,.18))}
+.rprog{position:absolute;left:14px;top:14px;color:#fff;font:700 12px Inter,sans-serif;padding:4px 10px;border-radius:999px}
+.rtext{padding:18px 22px 22px;flex:1}.rtext h3{font:700 22px/1.2 "Space Grotesk",Inter,sans-serif;margin:6px 0 10px}
+.rezept.gross .rtext h3{font-size:30px}
+.rinfo{display:flex;flex-wrap:wrap;gap:6px}.rinfo span{font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--fl2)}
+.rezept .rk{display:block;margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#be185d}
+.zut{margin:0 0 4px 18px;font-size:14.5px;line-height:1.6}
+.rschritte{margin:0 0 4px 20px;font-size:14.5px;line-height:1.55}.rschritte li{margin-bottom:3px}
+.rtop{margin-top:12px;border-left:4px solid;border-radius:10px;padding:9px 12px;font-size:14px;color:#3b2416}
+.ctipp{display:flex;gap:16px;align-items:center;padding:20px 24px;border-radius:20px;color:#fff;background:linear-gradient(135deg,#7c3aed,#db2777)}
+.ctipp h3{font:700 21px "Space Grotesk",Inter,sans-serif;margin:4px 0 6px}.ctipp p{opacity:.95}
+.ctico{flex:0 0 58px;height:58px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:30px}
+.czw{font:700 21px "Space Grotesk",Inter,sans-serif;margin-top:6px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.pchip{background:var(--fl);border:1px solid var(--rand);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.pchip span{font-size:28px}.pchip b{font-size:15px}.pchip small{color:var(--tx2);font-size:12.5px;line-height:1.35}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tkarte{background:var(--fl2);border-radius:14px;padding:12px 14px}.tkarte p{font-size:13.5px;color:var(--tx2);margin-top:4px}
+@media(max-width:760px){.rezept.gross{flex-direction:column}.rezept.gross .rbild{min-height:240px}.chero{flex-direction:column;align-items:flex-start;padding:22px}
+ .chero h2{font-size:28px}.chwaffeln{justify-content:flex-start}.rezept.gross .rtext h3{font-size:24px}}
 .aufklapp{margin-top:16px}.aufklapp summary{cursor:pointer;font:700 17px "Space Grotesk",Inter,sans-serif;list-style:none}
 .aufklapp summary::after{content:" ▾";color:var(--tx3)}.aufklapp[open] summary{margin-bottom:10px}
 .ecob{align-self:flex-start;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534}
@@ -2144,16 +2171,81 @@ def lokal_widget(liste, r) -> str:
             f'<button class="wbtn" data-geh="nachrichten">Mehr Nachrichten →</button></div>')
 
 
+# Farben je Sorte: (Eis, dunklerer Rand, Topping-Farben, Hintergrund)
+EIS_FARBEN = [
+    (["schoko-banane"], "#9b6a43", "#6e4a2e", ["#ffe066", "#3b2416"], "#fff4dc"),
+    (["lebkuchen"], "#6b4430", "#4a2e20", ["#f6a04d", "#ffffff"], "#f7e6d6"),
+    (["schoko", "cookies"], "#6b3e26", "#4a2a19", ["#f5e6c8", "#3b2416"], "#f3e3d3"),
+    (["erdbeer"], "#f7a8c4", "#e07aa0", ["#e63946", "#2a9d8f"], "#ffe4ee"),
+    (["himbeer"], "#e86a92", "#c44a73", ["#ffffff", "#7b2d4a"], "#ffe0ea"),
+    (["heidelbeer"], "#9a86cf", "#7461ad", ["#3d348b", "#ffffff"], "#ece8fb"),
+    (["mango"], "#ffb347", "#e8922a", ["#ffffff", "#ffd166"], "#fff0d9"),
+    (["ananas"], "#ffe27a", "#e7c24f", ["#d62828", "#2a9d8f"], "#fff9d8"),
+    (["banane"], "#fff0a8", "#e2cf72", ["#7a4a24", "#ffd166"], "#fffbe0"),
+    (["pfirsich"], "#ffc69a", "#eea46e", ["#c97b4a", "#ffffff"], "#fff0e4"),
+    (["pistazie"], "#b9dc98", "#8fbb6c", ["#5a8f3c", "#ffffff"], "#ecf7e3"),
+    (["sahlep"], "#f4e9d6", "#d9c7a8", ["#9c6b3c", "#6aa84f"], "#f9f1e4"),
+    (["zitrone"], "#fff59d", "#e3d65f", ["#9ccc65", "#ffffff"], "#fffde3"),
+    (["kaffee"], "#b08463", "#8a6244", ["#3b2416", "#f5e6c8"], "#f4ebe2"),
+    (["kokos"], "#fffdf6", "#e4ddcb", ["#c9b38a", "#ffffff"], "#f3f0e8"),
+    (["haselnuss", "nougat"], "#a8714a", "#7f5232", ["#d9a066", "#3b2416"], "#f5e7da"),
+    (["caramel", "karamell"], "#e0b07a", "#c28b52", ["#8c5a2b", "#ffffff"], "#fbeedd"),
+    (["spekulatius"], "#d4975f", "#b07440", ["#8c5a2b", "#f5e6c8"], "#f8ead9"),
+    (["bratapfel"], "#ecc08f", "#d29d63", ["#b5651d", "#c1121f"], "#fbeee0"),
+    (["protein", "vanille"], "#fbefc9", "#e3cf93", ["#e63946", "#457b9d", "#ffd166"], "#fff8e1"),
+]
+
+
+def eis_farbe(name: str):
+    n = name.lower()
+    for woerter, eis, rand, top, hg in EIS_FARBEN:
+        if any(w in n for w in woerter):
+            return eis, rand, top, hg
+    return "#fbefc9", "#e3cf93", ["#e63946", "#457b9d"], "#fff8e1"
+
+
+def eis_svg(name: str, hoehe: int = 180) -> str:
+    """Gezeichnete Softeis-Waffel in der Farbe der Sorte (keine fremden Fotos nötig)."""
+    eis, rand, top, hg = eis_farbe(name)
+    import random
+    zufall = random.Random(name)
+    streusel = "".join(
+        f'<rect x="{zufall.uniform(62, 138):.0f}" y="{zufall.uniform(48, 108):.0f}" width="7" height="2.6" rx="1.3" '
+        f'fill="{zufall.choice(top)}" transform="rotate({zufall.randint(0, 179)} {zufall.uniform(62, 138):.0f} {zufall.uniform(48, 108):.0f})"/>'
+        for _ in range(16))
+    punkte = "".join(f'<circle cx="{zufall.uniform(20, 180):.0f}" cy="{zufall.uniform(10, 190):.0f}" r="{zufall.uniform(2, 5):.1f}" '
+                     f'fill="#fff" opacity=".55"/>' for _ in range(10))
+    return f"""<svg viewBox="0 0 200 200" style="height:{hoehe}px;width:auto;display:block" aria-hidden="true">
+<defs><linearGradient id="w{abs(hash(name))%9999}" x1="0" x2="1"><stop offset="0" stop-color="#e9b46b"/><stop offset="1" stop-color="#c98a3e"/></linearGradient></defs>
+{punkte}
+<path d="M68 112 L100 190 L132 112 Z" fill="url(#w{abs(hash(name))%9999})" stroke="#a8702f" stroke-width="2" stroke-linejoin="round"/>
+<path d="M76 122 L120 152 M84 116 L127 140 M73 136 L112 166 M118 118 L82 160 M128 124 L92 176 M104 116 L76 140" stroke="#a8702f" stroke-width="1.6" opacity=".7"/>
+<ellipse cx="100" cy="110" rx="38" ry="12" fill="{eis}" stroke="{rand}" stroke-width="2"/>
+<path d="M58 108 Q58 86 100 86 Q142 86 142 108 Q142 118 100 118 Q58 118 58 108 Z" fill="{eis}" stroke="{rand}" stroke-width="2"/>
+<path d="M66 88 Q66 68 100 68 Q134 68 134 88 Q134 98 100 98 Q66 98 66 88 Z" fill="{eis}" stroke="{rand}" stroke-width="2"/>
+<path d="M76 70 Q76 52 100 52 Q124 52 124 70 Q124 79 100 79 Q76 79 76 70 Z" fill="{eis}" stroke="{rand}" stroke-width="2"/>
+<path d="M88 54 Q90 36 100 30 Q104 40 112 46 Q114 56 100 58 Q88 58 88 54 Z" fill="{eis}" stroke="{rand}" stroke-width="2"/>
+<path d="M72 92 Q86 98 100 94 M80 74 Q92 80 104 76 M64 110 Q82 116 98 112" stroke="#fff" stroke-width="3" opacity=".45" fill="none" stroke-linecap="round"/>
+{streusel}</svg>"""
+
+
 def rezept_karte(rz, gross=False) -> str:
     name, programm, _, zutaten, schritt, topping = rz
+    eis, rand, top, hg = eis_farbe(name)
     z = "".join(f"<li>{e(x)}</li>" for x in zutaten)
-    return (f'<article class="wcard rezept{" haupt" if gross else ""}"><span class="eyebrow" style="--c:#db2777">'
-            f'{"🍦 Softeis des Tages" if gross else "🍨 Noch eine Idee"}</span><h3>{e(name)}</h3>'
-            f'<div class="badges"><span class="badge lv" style="background:#fce7f3;color:#be185d">Programm {e(programm)}</span>'
-            f'<span class="badge">1 Becher (480 ml) · bis zu 4 Waffeln</span></div>'
-            f'<b class="rk">Zutaten</b><ul class="zut">{z}</ul><b class="rk">So geht\'s</b><p>{e(schritt)} In den Swirl-Becher bis höchstens zur Fülllinie füllen, '
-            f'24 Stunden gerade einfrieren, dann <b>{e(programm.split(": ")[-1])}</b> wählen und zapfen.</p>'
-            f'<p class="werkzeug">Topping-Idee: {e(topping)}</p></article>')
+    prog = programm.split(": ")[-1]
+    bild = (f'<div class="rbild" style="background:radial-gradient(circle at 30% 20%,#fff 0,{hg} 55%,{eis} 140%)">'
+            f'{eis_svg(name, 230 if gross else 150)}<span class="rprog" style="background:{rand}">{e(prog)}</span></div>')
+    inhalt = (f'<div class="rtext"><span class="eyebrow" style="--c:#db2777">{"🍦 Softeis des Tages" if gross else "🍨 Noch eine Idee"}</span>'
+              f'<h3>{e(name)}</h3><div class="rinfo"><span>🥄 {len(zutaten)} {"Zutat" if len(zutaten) == 1 else "Zutaten"}</span><span>❄️ 24 Std.</span><span>🍦 bis 4 Waffeln</span></div>'
+              f'<b class="rk">Zutaten für 1 Becher (480 ml)</b><ul class="zut">{z}</ul>'
+              f'<b class="rk">So geht\'s</b><ol class="rschritte"><li>{e(schritt)}</li><li>In den Swirl-Becher bis höchstens zur Fülllinie füllen.</li>'
+              f'<li>24 Stunden gerade einfrieren.</li><li>Programm <b>{e(prog)}</b> wählen und zapfen.</li></ol>'
+              f'<div class="rtop" style="background:{hg};border-color:{rand}">✨ <b>Topping:</b> {e(topping)}</div></div>')
+    return f'<article class="rezept{" gross" if gross else ""}">{bild}{inhalt}</article>'
+
+
+PROG_SYMBOL = {"Ice Cream": "🍦", "Light Ice Cream": "🪶", "Frozen Yoghurt": "🥣", "Fruiti": "🍓", "Soft Serve Gelato": "🍨", "CreamiFit": "💪"}
 
 
 def creami_html() -> str:
@@ -2161,19 +2253,24 @@ def creami_html() -> str:
         return ""
     jetzt = dt.date.today()
     rz, weitere, tipp = creami.heute(jetzt.toordinal(), jetzt.month)
-    progs = "".join(f"<li><b>{e(n)}</b> – {e(t)}</li>" for n, t in creami.PROGRAMME_SOFTEIS)
+    progs = "".join(f'<div class="pchip"><span>{PROG_SYMBOL.get(n, "🍦")}</span><b>{e(n)}</b><small>{e(t)}</small></div>'
+                    for n, t in creami.PROGRAMME_SOFTEIS)
     anleitung = "".join(f"<li><span>{e(x)}</span></li>" for x in creami.KURZANLEITUNG)
-    alle_tipps = "".join(f"<li><b>{e(t)}:</b> {e(x)}</li>" for t, x in creami.TIPPS)
-    return f"""<section class="werkstatt" style="--c:#db2777"><div class="whead"><div><span class="eyebrow">🍦 Ninja CREAMi Scoop & Swirl</span>
-<h2>Softeis selbst gemacht – Rezept, Tipp und Anleitung</h2></div></div>
-<div class="wgrid">{rezept_karte(rz, True)}<div class="wside">
-<article class="wcard tipp" style="background:linear-gradient(135deg,#db2777,#f59e0b)"><span class="eyebrow">💡 Tipp des Tages</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></article>
-<article class="wcard"><span class="eyebrow" style="--c:#db2777">🎛️ Die 6 Softeis-Programme</span><ul class="ecol">{progs}</ul>
-<p class="werkzeug">Außerdem: {e(creami.PROGRAMME_SCOOP)}.</p></article></div></div>
+    alle_tipps = "".join(f'<div class="tkarte"><b>💡 {e(t)}</b><p>{e(x)}</p></div>' for t, x in creami.TIPPS)
+    eiswaffeln = "".join(f'<span title="{e(r[0])}">{eis_svg(r[0], 64)}</span>' for r in creami.REZEPTE[:9])
+    return f"""<section class="creami">
+<div class="chero"><div class="chtext"><span class="eyebrow" style="--c:#fff">🍦 Ninja CREAMi Scoop & Swirl</span>
+<h2>Softeis selbst gemacht</h2><p>Jeden Tag ein neues Rezept, ein Profi-Tipp und alles zur Maschine – für einen 480-ml-Becher.</p></div>
+<div class="chwaffeln">{eiswaffeln}</div></div>
+{rezept_karte(rz, True)}
+<div class="ctipp"><div class="ctico">💡</div><div><span class="eyebrow" style="--c:#fff">Tipp des Tages</span><h3>{e(tipp[0])}</h3><p>{e(tipp[1])}</p></div></div>
+<h3 class="czw">🍨 Noch mehr Ideen für heute</h3>
 <div class="rgrid">{"".join(rezept_karte(x) for x in weitere)}</div>
+<h3 class="czw">🎛️ Die 6 Softeis-Programme</h3>
+<div class="pgrid">{progs}</div><p class="werkzeug">Außerdem: {e(creami.PROGRAMME_SCOOP)}.</p>
 <details class="wcard aufklapp"><summary>📘 Kurzanleitung: So machst du Softeis</summary><ol class="schritte">{anleitung}</ol>
 <p class="werkzeug">Für Zusammenbau und Reinigung gilt die Anleitung von Ninja, die dem Gerät beiliegt.</p></details>
-<details class="wcard aufklapp"><summary>💡 Alle {len(creami.TIPPS)} Tipps für die Maschine</summary><ul class="ecol">{alle_tipps}</ul></details>
+<details class="wcard aufklapp"><summary>💡 Alle {len(creami.TIPPS)} Tipps für die Maschine</summary><div class="tgrid">{alle_tipps}</div></details>
 <details class="wcard aufklapp"><summary>📚 Alle {len(creami.REZEPTE)} Rezepte</summary><div class="rgrid">{"".join(rezept_karte(x) for x in creami.REZEPTE)}</div></details>
 </section>"""
 
@@ -2183,9 +2280,9 @@ def creami_widget() -> str:
         return ""
     jetzt = dt.date.today()
     rz, _, _ = creami.heute(jetzt.toordinal(), jetzt.month)
-    return (f'<div class="wg creamiw"><h4>🍦 Softeis des Tages</h4><div class="t">{e(rz[0])}</div>'
-            f'<p style="font-size:13px;opacity:.92">Programm {e(rz[1].split(": ")[-1])} · {len(rz[3])} Zutaten · 24 Std. einfrieren</p>'
-            f'<button class="wbtn" data-geh="creami">Zum Rezept →</button></div>')
+    return (f'<div class="wg creamiw"><div class="cwbild">{eis_svg(rz[0], 120)}</div><div><h4>🍦 Softeis des Tages</h4><div class="t">{e(rz[0])}</div>'
+            f'<p style="font-size:13px;opacity:.92">Programm {e(rz[1].split(": ")[-1])} · {len(rz[3])} {"Zutat" if len(rz[3]) == 1 else "Zutaten"}</p>'
+            f'<button class="wbtn" data-geh="creami">Zum Rezept →</button></div></div>')
 
 
 def muell_widget() -> str:
