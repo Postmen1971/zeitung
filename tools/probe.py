@@ -13,10 +13,8 @@ def suche(q):
         art = re.sub("<[^>]+>", "", m.get("Artist", {}).get("value", ""))[:40]
         out.append((p["title"][5:], lic, art, ii.get("width"), ii.get("thumburl", "")[:90]))
     return out
-QS = ["vanilla soft serve cone", "chocolate soft serve cone", "strawberry frozen yogurt", "mango ice cream", "dole whip pineapple",
-      "banana nice cream", "pistachio gelato cone", "salep ice cream dondurma", "maraş dondurması", "lemon frozen yogurt", "coffee ice cream",
-      "coconut ice cream", "hazelnut gelato", "raspberry frozen yogurt", "salted caramel ice cream", "speculoos ice cream", "cinnamon ice cream apple",
-      "gingerbread ice cream", "blueberry frozen yogurt", "peach ice cream", "cookies and cream soft serve", "protein ice cream", "chocolate banana ice cream", "nutella ice cream"]
+QS = ["pistachio ice cream", "pistachio ice cream cone", "lemon ice cream", "lemon sorbet cone", "speculoos", "cookie butter ice cream",
+      "spekulatius", "lebkuchen", "gingerbread", "cookies and cream ice cream", "oreo ice cream", "soft serve cup", "soft-serve ice cream swirl"]
 for q in QS:
     print("##", q)
     for x in suche(q)[:7]:
